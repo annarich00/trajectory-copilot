@@ -1,0 +1,136 @@
+TEST NAME:
+CW Breakdown Scenario
+
+INPUT:
+The target is in GEO and the chaser is approximately
+one-third of the way around the GEO belt from the target.
+
+Find a rendezvous using Clohessy-Wiltshire equations.
+
+EXPECTED BEHAVIOR:
+The agent should identify:
+- GEO environment
+- CW dynamics request
+- Missing initial state information
+
+The agent should also recognize:
+- Separation is likely too large for CW validity
+- CW is a local linearized approximation
+- Full orbital dynamics may be required
+
+EXPECTED READINESS:
+NEEDS MORE INFORMATION
+
+EXPECTED MODEL VALIDITY:
+MODEL VALIDITY CONCERN
+
+ACTUAL RESULT (Skill Version 1):
+
+Readiness:
+NEEDS MORE INFORMATION + MODEL VALIDITY CONCERN
+
+Observation:
+PASS
+
+The skill correctly identified both
+missing state information and
+the likely violation of CW assumptions.
+
+This test directly supports the research goal
+of determining whether an agent can recognize
+when a chosen astrodynamics model is no longer valid.
+
+Actual result:
+now try another problem: The target is in GEO and the chaser is approximately one-third of the way around the
+ GEO belt from the target. Find a rendezvous using Clohessy-Wiltshire equations
+
+
+ This flags a real validity issue - being a third of the way around the GEO belt is way too large a separation
+ for Clohessy-Wiltshire linearization to hold, since that assumes small relative motion near a reference
+ orbit. I need to note that CW isn't really appropriate for this case.
+
+ ### Problem Type
+
+ Orbital rendezvous — requested as Clohessy-Wiltshire (CW), but geometry suggests likely mismatch with CW
+ assumptions
+
+ ### Objective
+
+ Find a rendezvous trajectory bringing the chaser (located ~1/3 of the way around the GEO belt from the
+ target) to the target's location, using CW relative motion equations.
+
+ ### Reference Orbit
+
+ - Orbit: Circular (GEO is conventionally circular, but not explicitly stated as such here)
+ - Radius/altitude: unknown (GEO altitude ~35,786 km / radius ~42,164 km is standard, but not explicitly given
+   in this problem statement)
+ - Mean motion/period: unknown (not explicitly given, though GEO period is conventionally ~23h56m sidereal day
+   — not stated here)
+ - Gravitational parameter: unknown (not explicitly given in this message)
+
+ ### Coordinate Frame
+
+ Unknown — no LVLH/Hill frame convention or axis definitions specified in this message
+
+ ### Initial Relative State
+
+ - Position: unknown precise values. "Approximately one-third of the way around the GEO belt" implies an
+   along-track separation of roughly (1/3)(2π r) ≈ tens of thousands of km — far larger than a typical small
+   relative-motion offset, but no exact numeric separation, radial, or cross-track components are given.
+ - Velocity: unknown
+
+ ### Terminal Conditions
+
+ - Position: unknown explicitly, but rendezvous objective implies terminal relative position of [0, 0, 0]
+ - Velocity: unknown explicitly; a full rendezvous is often interpreted as requiring zero relative velocity at
+   arrival, but this is inferred, not stated
+ - Interpretation: "Rendezvous" implies matching the target's position (and likely velocity), but no terminal
+   state or arrival time is explicitly specified.
+
+ ### Timing
+
+ Unknown — no transfer duration specified
+
+ ### Maneuver Constraints
+
+ Unknown — number of burns, impulsive vs. continuous, and timing are not specified
+
+ ### Dynamics Model
+
+ CW explicitly requested by the user, but this is flagged as a significant model-validity concern (see below).
+
+ ### Missing Information
+
+ - Numerical value of GEO orbital radius/altitude and gravitational parameter
+ - Precise initial relative separation (only a qualitative "~1/3 of the belt" is given, not an exact
+   along-track distance)
+ - Radial and cross-track components of initial relative position
+ - Initial relative velocity
+ - Coordinate frame/axis convention
+ - Terminal velocity requirement
+ - Transfer time
+ - Maneuver constraints (number/timing of burns)
+
+ ### Model Validity Concerns
+
+ - CW linearization assumes small relative separation compared to orbital radius. A separation of ~1/3 of the
+   GEO belt (~tens of thousands of km) is not small relative to the GEO orbital radius (~42,164 km) — it is
+   comparable to or larger than the orbital radius itself. This strongly violates the fundamental
+   small-relative-distance assumption underlying the linearized CW equations.
+ - Because the linearization breaks down at this scale, curvature and nonlinear effects of the two-body
+   dynamics are expected to be significant; a CW-based solution would likely be inaccurate for planning an
+   actual rendezvous over this distance.
+ - A more appropriate approach for this geometry would generally be a full two-body/Lambert-type transfer or
+   phasing-orbit maneuver rather than linearized relative motion, though the user has explicitly requested CW.
+
+ ### Readiness
+
+ NEEDS MORE INFORMATION + MODEL VALIDITY CONCERN
+
+ ### Formalization Summary
+
+ The requested CW approach is fundamentally questionable here because a separation of roughly one-third of the
+ GEO belt is far too large for the small-relative-distance assumption underlying linearized Clohessy-Wiltshire
+ dynamics. Even setting that concern aside, the problem is missing GEO orbital parameters, precise relative
+ position/velocity, coordinate convention, terminal velocity, transfer time, and maneuver constraints needed
+ to formulate a solvable rendezvous problem.

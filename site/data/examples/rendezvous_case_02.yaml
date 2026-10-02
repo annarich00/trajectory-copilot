@@ -1,0 +1,23 @@
+problem_type: rendezvous
+objective: minimize_transfer_time
+reference_orbit:
+  orbit: circular
+  altitude_m: 350000
+  radius_m: 6728000
+  gravitational_parameter_m3_s2: 398600441800000.0
+coordinate_frame:
+  frame: RIC
+  convention: radial, intrack, crosstrack
+initial_relative_state:
+  position_m: [25.0, 100.0, 0.0]
+  velocity_mps: [0.0, 0.0, 0.0]
+terminal_conditions:
+  position_m: [0.0, 0.0, 0.0]
+  velocity_mps: [0.0, 0.0, 0.0]
+timing:
+  transfer_time_s: unknown
+maneuver_constraints:
+  burns: 2
+  burn_type: impulsive
+  max_delta_v_mps: unknown
+dynamics_model: CW

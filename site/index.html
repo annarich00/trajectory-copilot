@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trajectory CoPilot — Interactive Physics &amp; Verification Lab</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar">
+    <div class="brand">Trajectory CoPilot<small>Interactive Physics &amp; Verification Lab</small></div>
+
+    <div class="nav-section">
+      <h4>Start Here</h4>
+      <a class="nav-link" data-route="overview">Overview / Architecture</a>
+    </div>
+
+    <div class="nav-section">
+      <h4>Learn the Physics</h4>
+      <a class="nav-link" data-route="physics-basics">Orbital Motion Basics</a>
+      <a class="nav-link" data-route="cw-lvlh">CW / LVLH Lesson</a>
+      <a class="nav-link" data-route="cw-stm">CW State-Transition Matrix</a>
+    </div>
+
+    <div class="nav-section">
+      <h4>Targeting &amp; Singularities</h4>
+      <a class="nav-link" data-route="targeting">Two-Burn Targeting, Step by Step</a>
+      <a class="nav-link" data-route="singularity">Why the Singularity Matters</a>
+    </div>
+
+    <div class="nav-section">
+      <h4>Tests &amp; Verification</h4>
+      <a class="nav-link" data-route="tests">Test Explorer</a>
+      <a class="nav-link" data-route="test-classification">Software vs. Physical Tests</a>
+      <a class="nav-link" data-route="verification">Two-Body Verification Lesson</a>
+      <a class="nav-link" data-route="experiment">CW vs Two-Body Experiment</a>
+    </div>
+
+    <div class="nav-section">
+      <h4>Model Validity</h4>
+      <a class="nav-link" data-route="model-validity">Model Validity</a>
+      <a class="nav-link" data-route="failure-museum">Failure Museum</a>
+    </div>
+
+    <div class="nav-section">
+      <h4>Code &amp; Architecture</h4>
+      <a class="nav-link" data-route="source-explorer">Source Code Explorer</a>
+      <a class="nav-link" data-route="llm-vs-code">What the LLM Actually Does</a>
+    </div>
+
+    <div class="nav-section">
+      <h4>Worked Example</h4>
+      <a class="nav-link" data-route="trace-problem">Trace a Problem (350 km case)</a>
+    </div>
+
+    <div class="nav-section">
+      <h4>Project</h4>
+      <a class="nav-link" data-route="research">Research Connection</a>
+      <a class="nav-link" data-route="project-map">Project Map</a>
+    </div>
+  </nav>
+
+  <main class="main" id="content">
+    <p>Loading…</p>
+  </main>
+</div>
+
+<script src="js/physics.js"></script>
+<script src="js/lib.js"></script>
+<script src="js/pages/overview.js"></script>
+<script src="js/pages/physics-basics.js"></script>
+<script src="js/pages/cw-lvlh.js"></script>
+<script src="js/pages/cw-stm.js"></script>
+<script src="js/pages/targeting.js"></script>
+<script src="js/pages/singularity.js"></script>
+<script src="js/pages/tests.js"></script>
+<script src="js/pages/test-classification.js"></script>
+<script src="js/pages/verification.js"></script>
+<script src="js/pages/experiment.js"></script>
+<script src="js/pages/model-validity.js"></script>
+<script src="js/pages/source-explorer.js"></script>
+<script src="js/pages/llm-vs-code.js"></script>
+<script src="js/pages/trace-problem.js"></script>
+<script src="js/pages/failure-museum.js"></script>
+<script src="js/pages/research.js"></script>
+<script src="js/pages/project-map.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
