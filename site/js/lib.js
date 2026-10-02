@@ -134,11 +134,24 @@ const TC = (function () {
     return `<div class="authority-banner"><strong>Authoritative source.</strong> ${esc(label)}</div>`;
   }
 
+  function teachingContract({ assumptions, symbols, mapping, evidence, limitations }) {
+    return `<section class="teaching-contract">
+      <h2>Teaching contract</h2>
+      <div class="grid-2">
+        <div class="panel"><div class="panel-title">Assumptions & conventions</div><p>${assumptions}</p></div>
+        <div class="panel"><div class="panel-title">Symbol definitions</div><p>${symbols}</p></div>
+        <div class="panel"><div class="panel-title">Exact source mapping</div><p>${mapping}</p><p><a href="data/reference/SOURCE.md">Verbatim reference/SOURCE.md</a> · <a href="#/source-explorer">deterministic Python mirrors</a></p></div>
+        <div class="panel"><div class="panel-title">Tests & evidence</div><p>${evidence}</p></div>
+      </div>
+      <div class="callout warn"><div class="callout-title">Limitations / audit boundary</div><p>${limitations}</p></div>
+    </section>`;
+  }
+
   // simple debounce
   function debounce(fn, ms) {
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
   }
 
-  return { esc, el, fetchText, badge, codeBlock, codeRef, mirrorTag, mirrorBanner, authorityBanner, extractPySymbol, fmt, vecStr, mat3Str, pageHeader, callout, debounce };
+  return { esc, el, fetchText, badge, codeBlock, codeRef, mirrorTag, mirrorBanner, authorityBanner, teachingContract, extractPySymbol, fmt, vecStr, mat3Str, pageHeader, callout, debounce };
 })();

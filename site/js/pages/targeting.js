@@ -6,6 +6,13 @@ window.TCPages['targeting'] = async function (root) {
 
   root.innerHTML = `
     ${TC.pageHeader('Two-Burn Targeting, Step by Step', 'A full walkthrough of two_burn_targeting() in src/cw.py — the function that actually solves a rendezvous problem.')}
+    ${TC.teachingContract({
+      assumptions: 'Impulsive two-burn CW transfer with a well-conditioned <code>Φrv</code> and specified transfer time.',
+      symbols: '<code>r0,v0</code>: initial state; <code>rf,vf</code>: requested terminal state; <code>Δv0,Δv1</code>: impulsive burns.',
+      mapping: '<code>reference/SOURCE.md §C</code> → <code>src/cw.py::two_burn_targeting</code> and <code>check_phi_rv_conditioning</code>.',
+      evidence: '<code>tests/test_cw.py::test_cw_rendezvous_benchmark</code> and exact-one-orbit rejection.',
+      limitations: 'TJC-1.4 owns the targeting/singularity audit. This task preserves current equations and makes no unverified correction.'
+    })}
 
     <p>Goal: given an initial relative state, find the first burn Δv0 that puts the deputy on a trajectory
     arriving exactly at a target final state at time <code>t_final</code>, then find the second burn Δv1 that

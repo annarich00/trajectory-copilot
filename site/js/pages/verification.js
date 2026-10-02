@@ -14,6 +14,13 @@ window.TCPages['verification'] = async function (root) {
 
   root.innerHTML = `
     ${TC.pageHeader('Two-Body Verification Lesson', 'Why checking CW against an independent nonlinear model is a fundamentally stronger test than running the CW function twice.')}
+    ${TC.teachingContract({
+      assumptions: 'Central-body two-body gravity, circular chief construction, repository LVLH convention, and declared numerical tolerances.',
+      symbols: '<code>μ</code>: gravitational parameter; <code>r,v</code>: inertial state; <code>r̂,t̂,ĥ</code>: LVLH basis.',
+      mapping: '<code>reference/SOURCE.md §§A,B,D</code> → <code>src/twobody.py</code> and <code>src/verify.py</code>.',
+      evidence: '<code>tests/test_twobody.py</code> and <code>tests/test_validation.py</code>; full transformation path remains incompletely tested.',
+      limitations: 'TJC-1.5 owns fallback hardening and TJC-1.6 owns frame-transform verification. GMAT comparison and screenshot return are not implemented yet.'
+    })}
 
     <h2>The architecture</h2>
     <div class="chain">

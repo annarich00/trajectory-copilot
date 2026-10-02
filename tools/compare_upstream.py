@@ -9,7 +9,21 @@ EXCLUDED_SUFFIXES = {'.pyc', '.pyo', '.swp', '.tmp'}
 EXCLUDED_NAMES = {'.coverage', 'nohup.out'}
 PROTECTED_PREFIXES = ('backlog/', 'docs/', 'tools/')
 PROTECTED_FILES = {'.gitignore', 'AGENTS.md', 'README.md', 'pytest.ini', 'requirements-dev.txt'}
-POST_IMPORT_EDITS = {'site/js/pages/project-map.js'}
+# Approved local alignment surface for TJC-1.25. This exception is deliberately
+# limited to site presentation/tooling; shared authoritative source, tests, and
+# reference mirrors remain checksum-strict and any other upstream drift fails.
+APPROVED_LOCAL_SITE_ALIGNMENT = {
+    'site/README.md',
+    'site/index.html',
+    'site/js/lib.js',
+    'site/js/pages/cw-lvlh.js',
+    'site/js/pages/cw-stm.js',
+    'site/js/pages/overview.js',
+    'site/js/pages/project-map.js',
+    'site/js/pages/research.js',
+    'site/js/pages/targeting.js',
+    'site/js/pages/verification.js',
+}
 
 def manifest(root: Path) -> dict[str, str]:
     result = {}
@@ -29,8 +43,8 @@ def main() -> int:
     upstream, local = manifest(Path(args.upstream)), manifest(Path.cwd())
     upstream_only = sorted(upstream.keys() - local.keys())
     different = sorted(p for p in upstream.keys() & local.keys() if upstream[p] != local[p])
-    accepted_different = sorted(set(different) & POST_IMPORT_EDITS)
-    unaccounted = sorted((set(upstream_only) | set(different)) - POST_IMPORT_EDITS)
+    accepted_different = sorted(set(different) & APPROVED_LOCAL_SITE_ALIGNMENT)
+    unaccounted = sorted((set(upstream_only) | set(different)) - APPROVED_LOCAL_SITE_ALIGNMENT)
     local_only = sorted(local.keys() - upstream.keys())
     protected = [p for p in local_only if p in PROTECTED_FILES or p.startswith(PROTECTED_PREFIXES)]
     other_local = sorted(set(local_only) - set(protected))

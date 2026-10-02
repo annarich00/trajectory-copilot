@@ -5,6 +5,13 @@ window.TCPages['cw-lvlh'] = async function (root) {
 
   root.innerHTML = `
     ${TC.pageHeader('CW / LVLH Lesson', 'Clohessy-Wiltshire (Hill\'s equations) describe how one spacecraft moves relative to another, in a rotating frame centered on a reference ("chief") spacecraft.')}
+    ${TC.teachingContract({
+      assumptions: 'Circular chief orbit, small relative separation, impulsive maneuvers, and the repository’s stated radial/along-track/cross-track LVLH convention.',
+      symbols: '<code>x,y,z</code>: relative LVLH position; overdots: time derivatives; <code>n</code>: chief mean motion.',
+      mapping: '<code>reference/SOURCE.md §B</code> → <code>src/cw.py::cw_stm</code> and <code>src/verify.py</code> frame helpers.',
+      evidence: '<code>tests/test_cw.py</code> exercises the resulting STM; this prose is not independent audit evidence.',
+      limitations: 'TJC-1.2 and TJC-1.3 own reference alignment and the independent CW audit. No scientific correction is claimed here.'
+    })}
 
     <h2>The two spacecraft</h2>
     <div class="grid-2">

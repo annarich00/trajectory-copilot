@@ -1,49 +1,60 @@
-# Trajectory CoPilot — Interactive Physics & Verification Lab
+# Trajectory CoPilot — local educational site
 
-A local, dependency-free educational website for this repository. Run it with:
+Run from the repository root:
 
-```
+```sh
 ./run_site.sh
 ```
 
-then open `http://127.0.0.1:4173` in a browser. No internet access, no npm
-install, no external services — just the Node.js runtime already present in
-this environment serving static files from this `site/` directory.
+Open `http://127.0.0.1:4173`. The site is static and dependency-free: Node built-ins only, no npm install, build step, CDN, external font/asset, or runtime internet request.
 
-## What this is
+## Scope and truthfulness
 
-An interactive walkthrough of the actual `trajectory-copilot` source code,
-tests, skills, and reference material — connecting natural-language operator
-requests to problem formalization, model selection, deterministic physics
-(`src/cw.py`, `src/twobody.py`), independent verification (`src/verify.py`),
-and the tests that establish correctness (`tests/`).
+This is the living progress/demo surface for the approved semester flow:
 
-## Source of truth
+> natural-language rendezvous request → structured problem → assumption-based CW applicability → deterministic CW or bounded two-body fallback → GMAT numerical comparison plus returned trajectory screenshot → explanation
 
-- **Authoritative physics implementation:** the Python in `src/cw.py`,
-  `src/twobody.py`, `src/verify.py`, `src/optimization.py` (copied verbatim
-  into `site/data/src/` for display — never edited for presentation).
-- **Authoritative test results:** running `pytest tests/` in the repository
-  root. This website cannot execute Python/pytest; it is a static browser
-  page.
-- **Pedagogical browser mirror:** `site/js/physics.js` is a hand-ported
-  JavaScript copy of specific Python functions, used ONLY to drive
-  interactive sliders/tables in the browser. It is explicitly labeled
-  throughout the site ("PEDAGOGICAL BROWSER MIRROR") and is never presented
-  as verifying, confirming, or substituting for the Python implementation or
-  its test suite. If the Python changes, this mirror must be updated by hand
-  — there is no shared code path, so treat any disagreement as a bug in the
-  mirror, not in the Python.
+The complete flow and GMAT integration do **not** work yet. Pages distinguish implemented primitives from planned tasks. Optimization/Pareto fronts, learned validity boundaries, broad sweeps, CR3BP/cislunar dynamics, and general mission planning are deferred/excluded.
+
+## Authority boundaries
+
+- Authoritative implementation: repository Python under `src/`.
+- Authoritative tests: `.venv/bin/python -m pytest -q tests` from the repository root.
+- Authoritative controlled text: repository `reference/`, skills, examples, evaluations, and baseline document.
+- `site/data/` contains verbatim display mirrors. Never edit these copies for presentation.
+- `site/js/physics.js` is a **non-authoritative pedagogical browser mirror**. It is deliberately absent from the sync mapping and cannot verify Python.
+- Site prose/derivations teach the current implementation but are not independent physics audits. TJC-1.2–1.6 own those audits and corrections.
+
+## Synchronize authoritative display mirrors
+
+The Python-built-in-only command has an explicit source-to-mirror mapping in `tools/sync_site_data.py`:
+
+```sh
+python3 tools/sync_site_data.py          # refresh mirrors
+python3 tools/sync_site_data.py --check  # non-mutating; exits 1 on drift
+```
+
+Add an explicit mapping when a later task exposes another authoritative file. Do not map generated artifacts or `site/js/physics.js`.
+
+## Task completion / site maintenance checklist
+
+Before an in-scope task is marked Done:
+
+1. Update `site/data/project-progress.js` with truthful status, date, final commit subject, outcome, limitations, and links to code/docs/site/evidence.
+2. Update every affected route; avoid claiming planned GMAT or integration work operates.
+3. Refresh mirrors with `python3 tools/sync_site_data.py`, then require `--check` to pass.
+4. If Python physics changed, separately review/update the pedagogical JS hand port and preserve its non-authoritative labels.
+5. Run repository tests and `python3 tools/compare_upstream.py --check`.
+6. Launch `./run_site.sh`; smoke-check every changed route and representative CSS, JS, and data artifact locally without internet access.
+7. Run JS syntax checks, offline URL scan, `git diff --check`, generated/process-artifact scan, and secret scan.
+8. Record objective evidence in Backlog, verify every AC/DoD, and use one atomic task commit.
 
 ## Structure
 
-- `site/index.html` — single-page app shell + sidebar nav
-- `site/js/app.js` — tiny hash router
-- `site/js/lib.js` — shared rendering helpers (badges, code blocks, mirror/
-  authority banners)
-- `site/js/physics.js` — the pedagogical browser mirror described above
-- `site/js/pages/*.js` — one module per page, each registering itself on
-  `window.TCPages[routeName]`
-- `site/data/` — verbatim copies of repository source/tests/reference/
-  skills/examples/evaluations, fetched at runtime for display
-- `site/server.js` — minimal static file server (no dependencies)
+- `site/index.html`: SPA shell and navigation
+- `site/js/app.js`: hash router
+- `site/js/lib.js`: shared rendering and teaching-contract helpers
+- `site/js/pages/`: route modules
+- `site/data/project-progress.js`: manually maintained static progress model
+- `site/data/`: synchronized verbatim authoritative mirrors
+- `site/server.js`: minimal built-in Node static server

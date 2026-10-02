@@ -56,6 +56,13 @@ window.TCPages['cw-stm'] = async function (root) {
 
   root.innerHTML = `
     ${TC.pageHeader('CW State-Transition Matrix (STM)', 'The CW equations are linear and time-invariant, so their exact solution can be written as a single 6×6 matrix Φ(t) applied to the initial state.')}
+    ${TC.teachingContract({
+      assumptions: 'The CW circular-chief, local-motion, LVLH assumptions stated on the preceding lesson apply.',
+      symbols: '<code>Φrr, Φrv, Φvr, Φvv</code> map initial position/velocity to final position/velocity; <code>n</code> is mean motion and <code>t</code> elapsed time.',
+      mapping: '<code>reference/SOURCE.md §B</code> → <code>src/cw.py::cw_stm</code> and <code>propagate_relative_state</code>.',
+      evidence: '<code>tests/test_cw.py</code> benchmark and singular-transfer tests exercise these blocks.',
+      limitations: 'TJC-1.3 owns independent sign, convention, and derivation audit. Browser values are pedagogical mirrors only.'
+    })}
 
     <div class="formula" style="display:block;max-width:360px;">
       [ r(t) ]&nbsp;&nbsp; [ Φrr&nbsp;&nbsp;Φrv ]&nbsp; [ r(0) ]<br/>
