@@ -1,0 +1,117 @@
+TEST NAME:
+Underspecified Rendezvous Problem
+
+INPUT:
+The chaser is 200 meters behind the target. Find a one-orbit rendezvous.
+
+EXPECTED BEHAVIOR:
+The agent should not attempt to solve the problem.
+
+The agent should identify:
+- Missing reference orbit information
+- Missing coordinate frame
+- Missing relative velocity
+- Missing axis convention
+- Ambiguity in the phrase "200 meters behind"
+
+The agent should recognize that:
+- A rendezvous objective is implied
+- A one-orbit transfer duration is requested
+- A solution cannot be uniquely determined
+
+EXPECTED READINESS:
+NEEDS MORE INFORMATION
+
+EXPECTED MODEL VALIDITY:
+MODEL VALIDITY CONCERN
+
+ACTUAL RESULT (Skill Version 1):
+
+Readiness:
+NEEDS MORE INFORMATION + MODEL VALIDITY CONCERN
+
+Observation:
+PASS
+
+The skill successfully prevented assumption generation and identified major missing problem parameters.
+
+actual result:
+ ### Problem Type
+
+ Orbital rendezvous (relative motion, one-orbit transfer)
+
+ ### Objective
+
+ Bring the chaser, initially 200 m behind the target, into rendezvous (co-location) with the target within one
+ orbital period.
+
+ ### Reference Orbit
+
+ - Orbit: unknown (not established as circular)
+ - Radius/altitude: unknown
+ - Mean motion/period: unknown
+ - Gravitational parameter: unknown
+
+ ### Coordinate Frame
+
+ Unknown (not specified whether LVLH/Hill frame is used, or axis convention — e.g., which axis "behind"
+ corresponds to, typically along-track/x in RSW/Hill convention, but not explicitly stated)
+
+ ### Initial Relative State
+
+ - Position: [-200, unknown, unknown] m (assuming "behind" = negative along-track; sign/axis convention not
+   confirmed)
+ - Velocity: [unknown, unknown, unknown]
+
+ ### Terminal Conditions
+
+ - Position: unknown (explicitly not given)
+ - Velocity: unknown (explicitly not given)
+ - Interpretation: "Rendezvous" implies terminal relative position of [0, 0, 0]; "one-orbit" implies transfer
+   time equal to one orbital period of the reference orbit (value unknown without orbit data). No terminal
+   velocity condition is stated, though rendezvous is often interpreted as requiring zero relative velocity at
+   arrival — this is inferred, not given.
+
+ ### Timing
+
+ One orbital period (numeric value unknown — depends on unknown reference orbit)
+
+ ### Maneuver Constraints
+
+ Unknown (not specified: number of burns, impulsive vs. continuous, timing of burns)
+
+ ### Dynamics Model
+
+ Not explicitly requested; CW (Clohessy-Wiltshire) is a plausible candidate given "one-orbit rendezvous"
+ phrasing, but not confirmed.
+
+ ### Missing Information
+
+ - Reference orbit (altitude, semi-major axis, or period) and gravitational parameter (needed to compute mean
+   motion n)
+ - Full 3D initial relative position (only along-track/behind component given; radial and cross-track
+   components unknown)
+ - Initial relative velocity (all components)
+ - Explicit terminal velocity requirement (zero-velocity rendezvous assumed but not stated)
+ - Coordinate frame and axis convention (e.g., which axis is "along-track/behind")
+ - Maneuver constraints (number of burns, impulsive/continuous, timing)
+ - Confirmation of circular vs. eccentric reference orbit
+
+ ### Model Validity Concerns
+
+ - Cannot yet confirm CW applicability: circularity of reference orbit and smallness of separation relative to
+   orbital radius are not established (200 m is small in absolute terms, but "small" is orbit-radius-dependent
+   and radius is unknown).
+ - No coordinate convention specified, so "behind" cannot be unambiguously mapped to CW state-vector
+   components.
+
+ ### Readiness
+
+ NEEDS MORE INFORMATION + MODEL VALIDITY CONCERN
+
+ ### Formalization Summary
+
+ The problem specifies only a 200 m along-track separation and a one-orbit rendezvous objective, but lacks the
+ reference orbit, gravitational parameter, coordinate convention, initial relative velocity, and explicit
+ terminal/maneuver conditions needed to pose or validate a CW-based solution. Additional mission data (e.g.,
+ circular LEO altitude, Hill-frame convention, burn constraints) must be supplied before this can be solved.
