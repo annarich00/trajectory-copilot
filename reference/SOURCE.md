@@ -137,17 +137,48 @@ For a circular orbit, \(a = r_0\).
 \]
 where \(r\) is the instantaneous radius.
 
-### State propagation concepts
-Two-body propagation in Cartesian coordinates is performed by numerically integrating:
+### Bounded deterministic fallback contract
+The implemented fallback is a **coast propagator**, not a generalized rendezvous solver. It accepts an initial inertial Cartesian state
 \[
-\ddot{\mathbf{r}} = -\mu \mathbf{r}/\|\mathbf{r}\|^3
+\mathbf{x}_0=[x,y,z,v_x,v_y,v_z]^T
 \]
-or by using Keplerian element propagation for Keplerian arcs.
+in SI units: position in metres, velocity in metres per second, positive \(\mu\) in m³/s², a finite duration in seconds, and a positive fixed RK4 step count. Its output is the final state in the same SI inertial Cartesian frame. The stable like-for-like metadata is `frame="inertial-cartesian"`, `central_body="Earth"`, `dynamics="point-mass-two-body"`, and `integrator="fixed-step-rk4"`; an optional epoch may accompany a case for an external verifier.
 
-This model is nonlinear but much more general than CW.
+`src/twobody.py::TwoBodyCase` carries those inputs and metadata for the later pinned Poliastro adapter. The core propagator imports neither Poliastro nor Astropy.
 
-### Assumptions and limitations
-Two-body propagation is appropriate when central gravity dominates and perturbations are small enough to ignore over the arc. It does not capture drag, J2, third-body effects, solar radiation pressure, or thrust unless added.
+### Point-mass equation and state derivative
+For \(\mathbf{x}=[\mathbf{r},\mathbf{v}]^T\), the point-mass coast dynamics are:
+\[
+\dot{\mathbf{r}}=\mathbf{v},\qquad
+\dot{\mathbf{v}}=-\mu\frac{\mathbf{r}}{\|\mathbf{r}\|^3}.
+\]
+The central-body singularity \(\|\mathbf{r}\|=0\), non-finite values, non-positive \(\mu\), and a non-positive step count are rejected explicitly.
+
+### Fixed-step classical RK4 stages
+For derivative \(f(\mathbf{x})\) and step \(h=\Delta t/N\), the implementation evaluates:
+\[
+k_1=f(\mathbf{x}_i),\quad k_2=f(\mathbf{x}_i+h k_1/2),\quad
+k_3=f(\mathbf{x}_i+h k_2/2),\quad k_4=f(\mathbf{x}_i+h k_3),
+\]
+then advances
+\[
+\mathbf{x}_{i+1}=\mathbf{x}_i+\frac{h}{6}(k_1+2k_2+2k_3+k_4).
+\]
+In code this is split into position and velocity stages in `src/twobody.py::kepler_propagate_state`; `propagate_cartesian_state` is the six-element wrapper.
+
+### Invariants and verification evidence
+For an unperturbed coast arc, the specific energy
+\[
+\epsilon=\frac{1}{2}\|\mathbf{v}\|^2-\frac{\mu}{\|\mathbf{r}\|}
+\]
+and specific angular momentum
+\[
+\mathbf{h}=\mathbf{r}\times\mathbf{v}
+\]
+should remain constant to numerical integration error. `tests/test_twobody.py` checks a circular LEO state against its analytical one-period return (2 cm position and 2e-5 m/s velocity tolerances) and checks these invariants over three periods. It also shows that a deliberately CW-invalid, 1,000 km radial-separation absolute state propagates deterministically under the same bounded coast contract.
+
+### Unsupported requests and limitations
+`unsupported_request()` returns `UNSUPPORTED` for targeting, maneuver design, trajectory optimization, thrust, and perturbation requests rather than improvising a result. The fallback supports no LVLH-relative input or unspecified frame, no burn execution, and no J2, drag, third bodies, solar radiation pressure, or thrust. It is suitable as a deterministic point-mass propagation result for later GMAT comparison, not a claim that a rendezvous has been solved. GMAT remains the required end-to-end numerical and visual verifier; the pinned Poliastro adapter is intentionally deferred to TJC-1.7.
 
 ## D. Model Selection Guidance
 

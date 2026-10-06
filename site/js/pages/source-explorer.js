@@ -42,17 +42,15 @@ window.TCPages['source-explorer'] = async function (root) {
       <tr><th>Problem solved</th><td>Nonlinear two-body (point-mass gravity) orbital dynamics: orbital period,
         vis-viva speed, and Cartesian-state propagation via RK4 integration of <code>r̈ = −μr/|r|³</code>.</td></tr>
       <tr><th>Public functions</th><td class="mono">orbital_period, vis_viva_speed, kepler_propagate_state,
-        propagate_cartesian_state</td></tr>
-      <tr><th>Data in</th><td>Scalars (μ, a, r, dt, steps), 3-vectors (r0, v0) or 6-vectors (state0).</td></tr>
+        propagate_cartesian_state, specific_orbital_energy, specific_angular_momentum, unsupported_request</td></tr>
+      <tr><th>Public type</th><td class="mono">TwoBodyCase — stable SI Cartesian case metadata for a later like-for-like external verifier.</td></tr>
+      <tr><th>Data in</th><td>Positive μ [m³/s²], finite duration [s], positive steps, and 3-vectors (r0, v0) or six-element SI inertial Cartesian state.</td></tr>
       <tr><th>Data out</th><td>Scalars (period, speed) or propagated position/velocity vectors / 6-vector
         state.</td></tr>
       <tr><th>Assumptions</th><td>Pure point-mass central gravity; no perturbations (no J2, drag, SRP,
         third-body); no thrust during the propagated interval; fixed-step RK4 (not adaptive).</td></tr>
-      <tr><th>Tests</th><td class="mono">tests/test_twobody.py (2 tests, both software-consistency smoke tests
-        — see <a href="#/test-classification">Software vs. Physical Tests</a>)</td></tr>
-      <tr><th>Known limitations</th><td><code>vis_viva_speed()</code> has no test at all. Neither test checks a
-        numeric value against a known physical answer — only "runs without crashing / returns the right
-        shape."</td></tr>
+      <tr><th>Tests</th><td class="mono">tests/test_twobody.py: circular analytical return, energy/angular-momentum invariants, CW-invalid deterministic coast case, metadata, unsupported request, and invalid-input tests.</td></tr>
+      <tr><th>Known limitations</th><td>Coast propagation only: no burns, targeting, optimization, LVLH-relative input, perturbations, or adaptive integration. Poliastro is not imported; its isolated adapter is deferred to TJC-1.7.</td></tr>
     </table>
     <details><summary style="cursor:pointer;color:var(--accent)">Full annotated source</summary>
       ${TC.authorityBanner('Exact, unmodified contents of src/twobody.py.')}

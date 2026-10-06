@@ -315,6 +315,18 @@ function propagateCartesianState(state0, mu, dt, steps = 2000) {
   return r.concat(v);
 }
 
+// Mirrors: src/twobody.py :: specific_orbital_energy(state, mu)
+function specificOrbitalEnergy(state, mu) {
+  const r = state.slice(0, 3);
+  const v = state.slice(3, 6);
+  return 0.5 * vDot(v, v) - mu / vNorm(r);
+}
+
+// Mirrors: src/twobody.py :: specific_angular_momentum(state)
+function specificAngularMomentum(state) {
+  return vCross(state.slice(0, 3), state.slice(3, 6));
+}
+
 /* ---------------------------------------------------------------------
  * Mirrors of src/verify.py
  * ------------------------------------------------------------------- */
@@ -408,6 +420,7 @@ window.TCPhysics = {
   CW_CONDITION_NUMBER_LIMIT, CWSingularTransferError, checkPhiRvConditioning, twoBurnTargeting,
   // twobody.py mirror
   orbitalPeriod, visVivaSpeed, keplerPropagateState, propagateCartesianState,
+  specificOrbitalEnergy, specificAngularMomentum,
   // verify.py mirror
   compareCwTwoBody, chiefCircularState, lvlhBasis, relLvlhToAbsolute, absoluteToRelLvlh, validateAgainstTwoBody,
 };

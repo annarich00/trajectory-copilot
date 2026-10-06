@@ -23,6 +23,19 @@ APPROVED_LOCAL_SITE_ALIGNMENT = {
     'site/js/pages/research.js',
     'site/js/pages/targeting.js',
     'site/js/pages/verification.js',
+    'site/js/pages/source-explorer.js',
+    'site/js/pages/tests.js',
+    'site/js/physics.js',
+}
+# Post-import authoritative and verbatim-mirror changes completed by scoped
+# Backlog tasks. They are compared through their own synchronization checks.
+APPROVED_TASK_OWNED_DIFFERENCES = {
+    'reference/SOURCE.md',
+    'site/data/reference/SOURCE.md',
+    'site/data/src/twobody.py',
+    'site/data/tests/test_twobody.py',
+    'src/twobody.py',
+    'tests/test_twobody.py',
 }
 
 def manifest(root: Path) -> dict[str, str]:
@@ -43,8 +56,9 @@ def main() -> int:
     upstream, local = manifest(Path(args.upstream)), manifest(Path.cwd())
     upstream_only = sorted(upstream.keys() - local.keys())
     different = sorted(p for p in upstream.keys() & local.keys() if upstream[p] != local[p])
-    accepted_different = sorted(set(different) & APPROVED_LOCAL_SITE_ALIGNMENT)
-    unaccounted = sorted((set(upstream_only) | set(different)) - APPROVED_LOCAL_SITE_ALIGNMENT)
+    accepted_different = sorted(set(different) & (APPROVED_LOCAL_SITE_ALIGNMENT | APPROVED_TASK_OWNED_DIFFERENCES))
+    approved_differences = APPROVED_LOCAL_SITE_ALIGNMENT | APPROVED_TASK_OWNED_DIFFERENCES
+    unaccounted = sorted((set(upstream_only) | set(different)) - approved_differences)
     local_only = sorted(local.keys() - upstream.keys())
     protected = [p for p in local_only if p in PROTECTED_FILES or p.startswith(PROTECTED_PREFIXES)]
     other_local = sorted(set(local_only) - set(protected))
