@@ -3,13 +3,15 @@ id: doc-1
 title: Trajectory CoPilot Semester Scope
 type: specification
 created_date: '2026-10-01 18:07'
-updated_date: '2026-10-02 14:11'
+updated_date: '2026-10-06 15:28'
 tags:
   - scope
   - semester
   - trajectory-copilot
   - educational-site
   - git-policy
+  - poliastro
+  - verification
 ---
 # Trajectory CoPilot semester scope
 
@@ -89,3 +91,9 @@ Each post-policy Backlog task must finish as one independently reviewable and re
 If task-finalization metadata is added after an initial task commit, the worker amends that same commit instead of creating a separate bookkeeping commit. Unrelated work, generated caches, credentials, and secrets must not enter the commit. Parallel tasks use separate branches or worktrees and retain separate commits. The educational site progress entry records the task ID and final commit subject so a demonstration can be mapped back to Git history.
 
 TJC-1.1 was completed before Git history existed. TJC-1.26 creates the initial known-good checkpoint containing that recovered baseline and the approved project plan; every later task follows the atomic-commit rule directly.
+
+## Poliastro implementation cross-check
+
+The project keeps its current deterministic two-body propagator and adds pinned Poliastro as an external implementation cross-check for like-for-like models. Poliastro 0.17.0 is pinned to immutable commit `c7d12e9b715d3fd60f2be233af707d5b97617d39` and runs in a separate compatible Python 3.10 environment; it is never imported by the core solver. Verification records units, frame, central body, duration/epoch semantics, errors, tolerances, version provenance, and PASS/WARNING/FAIL/UNSUPPORTED/UNAVAILABLE status.
+
+Poliastro is archived and has legacy dependencies, so it is not a universal oracle. Current and future astrodynamics capabilities use it when the pinned release supports the same physical model. Unsupported cases must say so and name another independent verifier rather than extending claims beyond Poliastro’s API. GMAT remains the required semester end-to-end numerical and visual verification layer. The detailed contract is in `docs/poliastro-verification-architecture.md`.

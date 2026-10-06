@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MAPPINGS = {
     "baseline_comparison.md": "site/data/baseline_comparison.md",
     "reference/SOURCE.md": "site/data/reference/SOURCE.md",
+    "docs/poliastro-verification-architecture.md": "site/data/docs/poliastro-verification-architecture.md",
     "src/cw.py": "site/data/src/cw.py",
     "src/optimization.py": "site/data/src/optimization.py",
     "src/twobody.py": "site/data/src/twobody.py",

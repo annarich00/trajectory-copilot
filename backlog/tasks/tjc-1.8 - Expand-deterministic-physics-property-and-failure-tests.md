@@ -4,7 +4,7 @@ title: Add focused tests for the scoped end-to-end workflow
 status: To Do
 assignee: []
 created_date: '2026-10-01 14:18'
-updated_date: '2026-10-02 14:11'
+updated_date: '2026-10-06 15:27'
 labels: []
 dependencies:
   - TJC-1.16
@@ -29,6 +29,7 @@ Add only the unit, physical-property, routing, failure, and integration tests ne
 - [ ] #3 A verification result cannot pass when numerical output or the required screenshot artifact is missing
 - [ ] #4 Tests confirm the LLM-facing layer never supplies authoritative orbital states or delta-v without deterministic tool output
 - [ ] #5 The full focused suite runs from the documented clean-checkout command
+- [ ] #6 Tests enforce that supported two-body outputs invoke or retain pinned Poliastro evidence, while UNAVAILABLE, UNSUPPORTED, and disagreement outcomes cannot be represented as verified
 <!-- AC:END -->
 
 ## Definition of Done

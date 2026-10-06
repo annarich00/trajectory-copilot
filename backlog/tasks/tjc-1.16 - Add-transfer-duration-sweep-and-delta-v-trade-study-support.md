@@ -4,10 +4,10 @@ title: Harden the complete workflow after the early vertical slice
 status: To Do
 assignee: []
 created_date: '2026-10-01 14:18'
-updated_date: '2026-10-02 14:11'
+updated_date: '2026-10-06 15:27'
 labels: []
 dependencies:
-  - TJC-1.5
+  - TJC-1.7
   - TJC-1.12
   - TJC-1.14
   - TJC-1.15

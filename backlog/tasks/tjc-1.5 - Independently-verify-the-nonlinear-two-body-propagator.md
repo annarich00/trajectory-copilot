@@ -4,12 +4,14 @@ title: Harden the deterministic two-body rendezvous fallback
 status: To Do
 assignee: []
 created_date: '2026-10-01 14:18'
-updated_date: '2026-10-02 14:11'
+updated_date: '2026-10-06 15:27'
 labels: []
 dependencies:
   - TJC-1.25
 references:
   - /mnt/c/Users/Anna Ford/Downloads/Planning_Trajectory_Copilot.pdf
+documentation:
+  - docs/poliastro-verification-architecture.md
 parent_task_id: TJC-1
 priority: high
 type: task
@@ -29,6 +31,7 @@ Preserve the recovered nonlinear two-body propagator and make it sufficient for 
 - [ ] #3 A known two-body orbit agrees with an analytical or independent reference within declared position and velocity tolerances
 - [ ] #4 Specific orbital energy and angular momentum behavior are tested over representative supported durations
 - [ ] #5 Unsupported targeting, perturbations, or optimization requests return an explicit limitation rather than an improvised result
+- [ ] #6 The hardened current propagator exposes stable like-for-like Cartesian cases and metadata required by the pinned Poliastro verification adapter in TJC-1.7
 <!-- AC:END -->
 
 ## Definition of Done

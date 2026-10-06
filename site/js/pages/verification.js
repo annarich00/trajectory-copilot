@@ -13,16 +13,25 @@ window.TCPages['verification'] = async function (root) {
   const keplerSym = TC.extractPySymbol(tbSrc, 'kepler_propagate_state');
 
   root.innerHTML = `
-    ${TC.pageHeader('Two-Body Verification Lesson', 'Why checking CW against an independent nonlinear model is a fundamentally stronger test than running the CW function twice.')}
+    ${TC.pageHeader('Verification Layers', 'Internal CW-versus-two-body comparison, planned pinned Poliastro implementation cross-check, and required GMAT numerical plus visual verification.')}
     ${TC.teachingContract({
       assumptions: 'Central-body two-body gravity, circular chief construction, repository LVLH convention, and declared numerical tolerances.',
       symbols: '<code>μ</code>: gravitational parameter; <code>r,v</code>: inertial state; <code>r̂,t̂,ĥ</code>: LVLH basis.',
       mapping: '<code>reference/SOURCE.md §§A,B,D</code> → <code>src/twobody.py</code> and <code>src/verify.py</code>.',
       evidence: '<code>tests/test_twobody.py</code> and <code>tests/test_validation.py</code>; full transformation path remains incompletely tested.',
-      limitations: 'TJC-1.5 owns fallback hardening and TJC-1.6 owns frame-transform verification. GMAT comparison and screenshot return are not implemented yet.'
+      limitations: 'TJC-1.5 owns fallback hardening, TJC-1.6 owns frame-transform verification, and TJC-1.7 owns the pinned Poliastro cross-check. Poliastro and GMAT verification are not implemented yet.'
     })}
 
-    <h2>The architecture</h2>
+    <h2>Three distinct verification layers</h2>
+    <table>
+      <tr><th>Layer</th><th>What it checks</th><th>Current status</th></tr>
+      <tr><td>Repository two-body path</td><td>Checks CW linearization against the project’s nonlinear point-mass RK4 implementation.</td><td>Implemented but incompletely audited/tested.</td></tr>
+      <tr><td>Pinned Poliastro</td><td>Checks <code>src/twobody.py</code> against a separate like-for-like implementation in archived Poliastro 0.17.0, isolated under Python 3.10.</td><td>Architecture defined by TJC-1.27; adapter/environment planned in TJC-1.7.</td></tr>
+      <tr><td>GMAT</td><td>Required end-to-end numerical propagation and returned trajectory screenshot.</td><td>Planned; not yet integrated.</td></tr>
+    </table>
+    ${TC.callout('info', 'Pinned external implementation', '<p>Poliastro is pinned to immutable commit <code>c7d12e9b715d3fd60f2be233af707d5b97617d39</code> and must run outside the core environment because v0.17.0 requires Python &lt;3.11 and legacy scientific dependencies. It is archived, so it is evidence—not a universal oracle. <a href="data/docs/poliastro-verification-architecture.md">Read the full request/result and future-model policy →</a></p>')}
+
+    <h2>The current internal architecture</h2>
     <div class="chain">
       <div class="node">CW relative state (LVLH)</div><div class="arr">↓</div>
       <div class="node">LVLH → inertial (chief + deputy absolute states)</div><div class="arr">↓</div>

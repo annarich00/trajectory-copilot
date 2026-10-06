@@ -4,15 +4,13 @@ title: Deliver the scoped Trajectory CoPilot rendezvous prototype
 status: To Do
 assignee: []
 created_date: '2026-10-01 14:16'
-updated_date: '2026-10-02 14:11'
+updated_date: '2026-10-06 15:27'
 labels: []
 dependencies: []
 references:
   - /mnt/c/Users/Anna Ford/Downloads/Planning_Trajectory_Copilot.pdf
 documentation:
-  - >-
-    backlog/docs/specifications/semester-scope/doc-1 -
-    Trajectory-CoPilot-Semester-Scope.md
+  - docs/poliastro-verification-architecture.md
 priority: high
 type: feature
 ordinal: 1000
@@ -33,6 +31,7 @@ Build and evaluate a deliberately narrow rendezvous workflow: natural-language r
 - [ ] #5 A reproducible benchmark covers straightforward CW, boundary, CW-invalid, and ambiguous cases and compares the structured workflow with a direct-LLM baseline
 - [ ] #6 No semester deliverable implements generalized optimization, Pareto analysis, CR3BP, cislunar dynamics, broad mission planning, or a learned CW-validity boundary
 - [ ] #7 The dependency-free educational site runs through `./run_site.sh` and reflects the current completed-task state, code, derivations, evidence, and scoped roadmap
+- [ ] #8 Supported two-body propagation is cross-checked against the pinned isolated Poliastro verifier when models overlap, with unsupported/unavailable coverage reported explicitly and without replacing GMAT
 <!-- AC:END -->
 
 ## Definition of Done
