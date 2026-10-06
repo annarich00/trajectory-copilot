@@ -90,3 +90,54 @@ Every future deterministic astrodynamics capability must declare whether the pin
 - GMAT verification requirements remain in force for the semester end-to-end workflow.
 
 This policy means “rely on Poliastro” means use it whenever it provides a like-for-like independent implementation—not treat an archived library as an oracle for every future orbital model.
+
+## Implemented adapter and reproducibility procedure
+
+The executable boundary is `verification/poliastro/adapter.py`; its host API is
+`src/poliastro_verify.py::verify_against_poliastro`. Both use schema version `1.0`.
+The host accepts `TwoBodyCase` SI Cartesian inputs, obtains the candidate from
+`src/twobody.py`, sends JSON on stdin, and retains the parsed raw adapter JSON in
+`raw_adapter_response`. The adapter converts metres, metres/second, and seconds
+explicitly to Astropy quantities and returns SI values.
+
+Provisioning is deliberately explicit and never occurs during a verification run:
+
+```bash
+uv venv --python 3.10 .poliastro-venv
+uv pip install --python .poliastro-venv/bin/python -r verification/poliastro/requirements.lock
+export TRAJECTORY_COPILOT_POLIASTRO_PYTHON="$PWD/.poliastro-venv/bin/python"
+PYTHONPATH=. .venv/bin/pytest -q tests/test_poliastro_verify.py
+```
+
+`verification/poliastro/provenance.json` and the requirements file identify the
+immutable release source. The core `.venv` and `requirements-dev.txt` remain free
+of Poliastro and Astropy. A missing executable, import failure, malformed output,
+or subprocess failure returns `UNAVAILABLE`; an unsupported frame/model returns
+`UNSUPPORTED`; neither can pass. A deliberately perturbed candidate is retained
+as `FAIL` rather than normalized.
+
+The currently retained contract evidence is `evidence/poliastro/contract-test-evidence.json`.
+It is generated with a deterministic subprocess stand-in so CI can test the
+boundary without putting Poliastro in the core environment. It is not a claim of
+a live Poliastro run. A provisioned external run is required for final independent
+numerical evidence. GMAT is still separately required for end-to-end numerical
+and visual verification.
+
+### Recorded live external run (2026-10-06)
+
+A disposable `/tmp/tjc-poliastro-venv` was provisioned with `uv venv --python
+3.10` and the locked source requirement. Initial resolution selected NumPy 2.2.6,
+which caused the archived adapter import error `module 'numpy' has no attribute
+'product'`; the lock therefore constrains `numpy<2`, and the isolated environment
+was reinstalled with NumPy 1.26.4. The three live pinned comparisons then passed:
+
+| Case | Position error [m] | Velocity error [m/s] |
+| --- | ---: | ---: |
+| circular short (600 s) | 1.30e-08 | 4.07e-12 |
+| circular one period | 9.70e-05 | 1.10e-07 |
+| bounded eccentric (900 s) | 1.63e-08 | 3.00e-11 |
+
+The declared 0.05 m and 5e-5 m/s tolerances are conservatively above those
+measured RK4 differences. Complete raw versioned results, requests, candidate and
+Poliastro states, and adapter provenance are retained in
+`evidence/poliastro/live-poliastro-evidence.json`.

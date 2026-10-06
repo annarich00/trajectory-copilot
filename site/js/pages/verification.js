@@ -2,9 +2,13 @@
 
 window.TCPages['verification'] = async function (root) {
   const tbSrc = await TC.fetchText('data/src/twobody.py');
+  const poliastroSrc = await TC.fetchText('data/src/poliastro_verify.py');
+  const poliastroTest = await TC.fetchText('data/tests/test_poliastro_verify.py');
   const testSrc = await TC.fetchText('data/tests/test_twobody.py');
   const sourceMd = await TC.fetchText('data/reference/SOURCE.md');
   const propagation = TC.extractPySymbol(tbSrc, 'kepler_propagate_state');
+  const poliastroContract = TC.extractPySymbol(poliastroSrc, 'verify_against_poliastro');
+  const perturbationTest = TC.extractPySymbol(poliastroTest, 'test_deliberate_candidate_perturbation_fails');
   const contract = TC.extractPySymbol(tbSrc, 'TwoBodyCase');
   const unsupported = TC.extractPySymbol(tbSrc, 'unsupported_request');
   const energy = TC.extractPySymbol(tbSrc, 'specific_orbital_energy');
@@ -19,7 +23,7 @@ window.TCPages['verification'] = async function (root) {
       symbols: '<code>r</code>: position [m]; <code>v</code>: velocity [m/s]; <code>μ</code>: gravitational parameter [m³/s²]; <code>h</code>: RK4 step [s].',
       mapping: '<code>reference/SOURCE.md §C</code> → <code>src/twobody.py</code> → exact mirrored tests in <code>tests/test_twobody.py</code>.',
       evidence: 'Circular one-period analytical return: 2 cm position and 2e-5 m/s velocity tolerance; energy and angular momentum invariant test over three periods.',
-      limitations: 'No burns, rendezvous targeting, optimization, LVLH-relative input, J2, drag, third bodies, SRP, or thrust. GMAT remains required end-to-end verification; the isolated pinned Poliastro adapter is TJC-1.7 and is not implemented.'
+      limitations: 'No burns, rendezvous targeting, optimization, LVLH-relative input, J2, drag, third bodies, SRP, or thrust. The pinned Poliastro 0.17.0 adapter is an optional like-for-like point-mass cross-check, not a universal oracle. GMAT remains required end-to-end numerical and visual verification.'
     })}
 
     <h2>Supported fallback contract</h2>
@@ -59,6 +63,14 @@ window.TCPages['verification'] = async function (root) {
     ${analyticalTest ? TC.codeBlock(analyticalTest.code, analyticalTest.startLine) : ''}
     ${invariantTest ? TC.codeBlock(invariantTest.code, invariantTest.startLine) : ''}
     ${invalidTest ? TC.codeBlock(invalidTest.code, invalidTest.startLine) : ''}
+
+    <h2>External Poliastro cross-check</h2>
+    <p><strong>TJC-1.7:</strong> <code>src/poliastro_verify.py</code> invokes a separately provisioned Python 3.10 subprocess using versioned JSON stdin/stdout. It compares the same SI inertial Cartesian point-mass coast state against pinned Poliastro 0.17.0 commit <code>c7d12e9b715d3fd60f2be233af707d5b97617d39</code>. Missing/broken environments return <code>UNAVAILABLE</code>; unsupported frames/models return <code>UNSUPPORTED</code>; disagreement remains <code>FAIL</code>. None can become PASS.</p>
+    ${TC.codeRef('src/poliastro_verify.py', 'verify_against_poliastro')}
+    ${poliastroContract ? TC.codeBlock(poliastroContract.code, poliastroContract.startLine) : ''}
+    <p>Retained machine-readable contract evidence covers circular short, circular one-period, and bounded eccentric cases: <a href="../evidence/poliastro/contract-test-evidence.json">contract-test-evidence.json</a>. The evidence uses a deterministic subprocess stand-in because core Python does not install legacy Poliastro; it is not a live-Python/Poliastro claim. Provisioning, provenance, compatibility limits, and extension policy are in the <a href="data/docs/poliastro-verification-architecture.md">authoritative architecture</a>.</p>
+    <h3>Failure visibility test</h3>
+    ${perturbationTest ? TC.codeBlock(perturbationTest.code, perturbationTest.startLine) : ''}
 
     <h2>Explicit limitations</h2>
     ${TC.codeRef('src/twobody.py', 'unsupported_request')}

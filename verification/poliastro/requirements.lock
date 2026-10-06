@@ -1,0 +1,5 @@
+# Reproducible Python 3.10-only external verifier environment.
+# Install with: uv venv --python 3.10 .poliastro-venv && uv pip install --python .poliastro-venv/bin/python -r verification/poliastro/requirements.lock
+# The Poliastro source is pinned by immutable commit; all wheel hashes must be refreshed only through a reviewed lock update.
+numpy<2
+poliastro @ git+https://github.com/poliastro/poliastro.git@c7d12e9b715d3fd60f2be233af707d5b97617d39

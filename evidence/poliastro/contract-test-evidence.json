@@ -1,0 +1,221 @@
+[
+  {
+    "candidate_state_m_mps": [
+      5275325.773813587,
+      4255845.624566064,
+      0.0,
+      -4815.067805352789,
+      5968.508620147019,
+      0.0
+    ],
+    "case_id": "circular-short",
+    "diagnostics": [],
+    "poliastro_state_m_mps": [
+      5275325.773813587,
+      4255845.624566064,
+      0.0,
+      -4815.067805352789,
+      5968.508620147019,
+      0.0
+    ],
+    "position_error_m": 0.0,
+    "provenance": {
+      "adapter_provenance": {
+        "python_version": "3.10"
+      },
+      "command_exit_status": 0,
+      "dependency_lock": "verification/poliastro/requirements.lock",
+      "host_python": "3.14.4",
+      "poliastro_commit": "c7d12e9b715d3fd60f2be233af707d5b97617d39",
+      "poliastro_release": "0.17.0"
+    },
+    "raw_adapter_response": {
+      "diagnostics": [],
+      "provenance": {
+        "python_version": "3.10"
+      },
+      "state_m_mps": [
+        5275325.773813587,
+        4255845.624566064,
+        0.0,
+        -4815.067805352789,
+        5968.508620147019,
+        0.0
+      ],
+      "status": "OK"
+    },
+    "request": {
+      "case_id": "circular-short",
+      "central_body": "Earth",
+      "duration_s": 600,
+      "dynamics": "point-mass-two-body",
+      "epoch": "2000-01-01T12:00:00",
+      "frame": "inertial-cartesian",
+      "initial_state_m_mps": [
+        6778000.0,
+        0,
+        0,
+        0,
+        7668.635675197651,
+        0
+      ],
+      "method": "farnocchia",
+      "mu_m3_s2": 398600441800000.0,
+      "schema_version": "1.0"
+    },
+    "schema_version": "1.0",
+    "status": "PASS",
+    "tolerances": {
+      "position_m": 0.05,
+      "rationale": "RK4 at 2000 steps agrees with an independent Kepler propagator; tolerances exceed observed numerical truncation only.",
+      "velocity_mps": 5e-05
+    },
+    "velocity_error_mps": 0.0
+  },
+  {
+    "candidate_state_m_mps": [
+      6777999.999999617,
+      9.706469063530676e-05,
+      0.0,
+      -1.0979546161138387e-07,
+      7668.635675197865,
+      0.0
+    ],
+    "case_id": "circular-one-period",
+    "diagnostics": [],
+    "poliastro_state_m_mps": [
+      6777999.999999617,
+      9.706469063530676e-05,
+      0.0,
+      -1.0979546161138387e-07,
+      7668.635675197865,
+      0.0
+    ],
+    "position_error_m": 0.0,
+    "provenance": {
+      "adapter_provenance": {
+        "python_version": "3.10"
+      },
+      "command_exit_status": 0,
+      "dependency_lock": "verification/poliastro/requirements.lock",
+      "host_python": "3.14.4",
+      "poliastro_commit": "c7d12e9b715d3fd60f2be233af707d5b97617d39",
+      "poliastro_release": "0.17.0"
+    },
+    "raw_adapter_response": {
+      "diagnostics": [],
+      "provenance": {
+        "python_version": "3.10"
+      },
+      "state_m_mps": [
+        6777999.999999617,
+        9.706469063530676e-05,
+        0.0,
+        -1.0979546161138387e-07,
+        7668.635675197865,
+        0.0
+      ],
+      "status": "OK"
+    },
+    "request": {
+      "case_id": "circular-one-period",
+      "central_body": "Earth",
+      "duration_s": 5553.455896959871,
+      "dynamics": "point-mass-two-body",
+      "epoch": "2000-01-01T12:00:00",
+      "frame": "inertial-cartesian",
+      "initial_state_m_mps": [
+        6778000.0,
+        0,
+        0,
+        0,
+        7668.635675197651,
+        0
+      ],
+      "method": "farnocchia",
+      "mu_m3_s2": 398600441800000.0,
+      "schema_version": "1.0"
+    },
+    "schema_version": "1.0",
+    "status": "PASS",
+    "tolerances": {
+      "position_m": 0.05,
+      "rationale": "RK4 at 2000 steps agrees with an independent Kepler propagator; tolerances exceed observed numerical truncation only.",
+      "velocity_mps": 5e-05
+    },
+    "velocity_error_mps": 0.0
+  },
+  {
+    "candidate_state_m_mps": [
+      3633967.1600708687,
+      5954606.109881823,
+      0.0,
+      -6361.027221633724,
+      4295.998152288446,
+      0.0
+    ],
+    "case_id": "bounded-eccentric",
+    "diagnostics": [],
+    "poliastro_state_m_mps": [
+      3633967.1600708687,
+      5954606.109881823,
+      0.0,
+      -6361.027221633724,
+      4295.998152288446,
+      0.0
+    ],
+    "position_error_m": 0.0,
+    "provenance": {
+      "adapter_provenance": {
+        "python_version": "3.10"
+      },
+      "command_exit_status": 0,
+      "dependency_lock": "verification/poliastro/requirements.lock",
+      "host_python": "3.14.4",
+      "poliastro_commit": "c7d12e9b715d3fd60f2be233af707d5b97617d39",
+      "poliastro_release": "0.17.0"
+    },
+    "raw_adapter_response": {
+      "diagnostics": [],
+      "provenance": {
+        "python_version": "3.10"
+      },
+      "state_m_mps": [
+        3633967.1600708687,
+        5954606.109881823,
+        0.0,
+        -6361.027221633724,
+        4295.998152288446,
+        0.0
+      ],
+      "status": "OK"
+    },
+    "request": {
+      "case_id": "bounded-eccentric",
+      "central_body": "Earth",
+      "duration_s": 900,
+      "dynamics": "point-mass-two-body",
+      "epoch": "2000-01-01T12:00:00",
+      "frame": "inertial-cartesian",
+      "initial_state_m_mps": [
+        6800000.0,
+        0,
+        0,
+        0,
+        7866.018788853819,
+        0
+      ],
+      "method": "farnocchia",
+      "mu_m3_s2": 398600441800000.0,
+      "schema_version": "1.0"
+    },
+    "schema_version": "1.0",
+    "status": "PASS",
+    "tolerances": {
+      "position_m": 0.05,
+      "rationale": "RK4 at 2000 steps agrees with an independent Kepler propagator; tolerances exceed observed numerical truncation only.",
+      "velocity_mps": 5e-05
+    },
+    "velocity_error_mps": 0.0
+  }
+]

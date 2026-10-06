@@ -1,7 +1,7 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
   updated: '2026-10-06',
-  commitSubject: 'TJC-1.5: harden deterministic two-body fallback',
+  commitSubject: 'TJC-1.7: verify two-body propagation against pinned Poliastro',
   groups: [
     {
       label: 'Completed',
@@ -31,6 +31,12 @@ window.TCProjectProgress = {
           links: [['Architecture', 'data/docs/poliastro-verification-architecture.md'], ['Verification lesson', '#/verification'], ['Roadmap', '#/project-map']]
         },
         {
+          id: 'TJC-1.7', date: '2026-10-06', title: 'Verify two-body propagation against pinned Poliastro',
+          commit: 'TJC-1.7: verify two-body propagation against pinned Poliastro', hash: 'pending commit',
+          outcome: 'Added a versioned JSON subprocess boundary, isolated Python 3.10 provenance, PASS/FAIL/UNAVAILABLE/UNSUPPORTED handling, and retained SI Cartesian contract evidence for circular and bounded eccentric coast cases. Live external execution remains optional because the core environment deliberately excludes archived Poliastro.',
+          links: [['Architecture', 'data/docs/poliastro-verification-architecture.md'], ['Host adapter', 'data/src/poliastro_verify.py'], ['Tests', 'data/tests/test_poliastro_verify.py'], ['Evidence', '../evidence/poliastro/contract-test-evidence.json']]
+        },
+        {
           id: 'TJC-1.5', date: '2026-10-06', title: 'Harden deterministic two-body fallback',
           commit: 'TJC-1.5: harden deterministic two-body fallback', hash: 'this commit',
           outcome: 'Defined a bounded SI Cartesian point-mass coast contract, added analytical, invariant, CW-invalid, unsupported-request, and input-rejection tests, and reserved stable metadata for the later isolated Poliastro adapter.',
@@ -45,7 +51,6 @@ window.TCProjectProgress = {
         {id: 'TJC-1.2', title: 'Align controlled reference and skills', outcome: 'Ready; current reference gaps remain.'},
         {id: 'TJC-1.3 / 1.4', title: 'Audit CW STM and two-burn targeting', outcome: 'Ready; site derivations are not audit findings.'},
         {id: 'TJC-1.6', title: 'Verify frame transformations', outcome: 'Ready; full LVLH/inertial transformation audit remains separate work.'},
-        {id: 'TJC-1.7', title: 'Verify two-body propagation against pinned Poliastro', outcome: 'Planned after TJC-1.5; stable SI Cartesian metadata is ready, but adapter and isolated verification environment are not implemented yet.'}
       ]
     },
     {
