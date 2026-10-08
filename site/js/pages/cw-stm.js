@@ -2,168 +2,55 @@
 
 window.TCPages['cw-stm'] = async function (root) {
   const cwSrc = await TC.fetchText('data/src/cw.py');
+  const testSrc = await TC.fetchText('data/tests/test_cw.py');
   const cwStmSym = TC.extractPySymbol(cwSrc, 'cw_stm');
-  const propSym = TC.extractPySymbol(cwSrc, 'propagate_relative_state');
-
-  const blocks = {
-    rr: {
-      label: 'Φrr',
-      title: 'Position → Position',
-      desc: 'Maps the initial relative position r(0) to its contribution to the final relative position r(t), with no velocity involved. Dimensions: 3×3, dimensionless (position in, position out).',
-      code: `phi_rr = np.array([\n    [4 - 3 * c, 0.0, 0.0],\n    [6 * (s - nt), 1.0, 0.0],\n    [0.0, 0.0, c],\n])`,
-      meaning: `The (1,1) term (4−3c) shows how an initial radial offset free-drifts in radius over time — note it is 1
-      (no drift) at t=0 and oscillates since the radial motion is bounded. The (2,1) term 6(s−nt) is the famous
-      secular along-track drift driven by a radial offset: for small nt, 6(s−nt) ≈ −nt·(nt)² grows like t³ at
-      very short times but in general grows without bound in t for a fixed radial offset — this is why *any*
-      sustained radial offset causes unbounded along-track drift unless corrected. The (3,3) term is simple
-      harmonic z-motion, decoupled from in-plane motion.`,
-      test: 'Exercised (not isolated) inside tests/test_cw.py::test_cw_rendezvous_benchmark via two_burn_targeting(), which calls cw_stm() internally.',
-    },
-    rv: {
-      label: 'Φrv',
-      title: 'Velocity → Position',
-      desc: 'Maps the initial relative velocity v(0) to its contribution to the final relative position r(t). Dimensions: 3×3, units of time (s) (velocity in [m/s], position out [m]).',
-      code: `phi_rv = np.array([\n    [s / n, 2 * (1 - c) / n, 0.0],\n    [2 * (c - 1) / n, (4 * s - 3 * nt) / n, 0.0],\n    [0.0, 0.0, s / n],\n])`,
-      meaning: `This is the single most important block in the entire codebase. two_burn_targeting() must invert
-      Φrv to solve for the initial impulsive Δv0 needed to hit a target position. When sin(n·t) → 0 — which
-      happens at every integer multiple of half the orbital period (n·t = kπ) — the (1,1) and (3,3) entries of
-      Φrv vanish, and the whole matrix becomes singular or nearly so. This is exactly the mechanism explored in
-      "Why the Singularity Matters."`,
-      test: 'tests/test_cw.py::test_cw_rendezvous_benchmark (well-conditioned case, quarter orbit) and test_cw_exact_one_orbit_targeting_is_rejected (singular case, full orbit) both exercise Φrv directly through check_phi_rv_conditioning().',
-    },
-    vr: {
-      label: 'Φvr',
-      title: 'Position → Velocity',
-      desc: 'Maps the initial relative position r(0) to its contribution to the final relative velocity v(t). Dimensions: 3×3, units of 1/time (s⁻¹) (position in [m], velocity out [m/s]).',
-      code: `phi_vr = np.array([\n    [3 * n * s, 0.0, 0.0],\n    [6 * n * (c - 1), 0.0, 0.0],\n    [0.0, 0.0, -n * s],\n])`,
-      meaning: `Used in two_burn_targeting() to compute the velocity the deputy will have just before the second
-      (terminal) burn: vf_minus = Φvr·r0 + Φvv·(v0+Δv0). Physically this answers "given where I started, how
-      much velocity does that initial position alone contribute to my final velocity?" — the (2,1) term
-      6n(c−1) is the velocity analogue of the secular drift seen in Φrr.`,
-      test: 'Exercised inside two_burn_targeting(), tested via tests/test_cw.py::test_cw_rendezvous_benchmark final_state assertions.',
-    },
-    vv: {
-      label: 'Φvv',
-      title: 'Velocity → Velocity',
-      desc: 'Maps the initial relative velocity v(0) to its contribution to the final relative velocity v(t). Dimensions: 3×3, dimensionless.',
-      code: `phi_vv = np.array([\n    [c, 2 * s, 0.0],\n    [-2 * s, 4 * c - 3, 0.0],\n    [0.0, 0.0, c],\n])`,
-      meaning: `This is the velocity-only "rotation + stretch" of the system: note the (1,1)/(2,2) sub-block looks
-      like a rotation-ish mixing of x,y velocity (with Coriolis-driven asymmetry: 2s and −2s off-diagonal, 4c−3
-      vs c on the diagonal), while z-velocity (3,3)=c just oscillates independently.`,
-      test: 'Exercised inside two_burn_targeting() in both tests/test_cw.py tests (both the quarter-orbit success case and the one-orbit rejection case).',
-    },
-  };
 
   root.innerHTML = `
-    ${TC.pageHeader('CW State-Transition Matrix (STM)', 'The CW equations are linear and time-invariant, so their exact solution can be written as a single 6×6 matrix Φ(t) applied to the initial state.')}
+    ${TC.pageHeader('CW State-Transition Matrix (STM)', 'A step-by-step derivation and code map for the circular-chief Clohessy–Wiltshire state-transition matrix.')}
     ${TC.teachingContract({
-      assumptions: 'The CW circular-chief, local-motion, LVLH assumptions stated on the preceding lesson apply.',
-      symbols: '<code>Φrr, Φrv, Φvr, Φvv</code> map initial position/velocity to final position/velocity; <code>n</code> is mean motion and <code>t</code> elapsed time.',
-      mapping: '<code>reference/SOURCE.md §B</code> → <code>src/cw.py::cw_stm</code> and <code>propagate_relative_state</code>.',
-      evidence: '<code>tests/test_cw.py</code> benchmark and singular-transfer tests exercise these blocks.',
-      limitations: 'TJC-1.3 owns independent sign, convention, and derivation audit. Browser values are pedagogical mirrors only.'
+      assumptions: 'Unperturbed two-body gravity; circular chief; small local relative motion and velocity; right-handed LVLH/RIC frame. This is not an eccentric-chief, global-phasing, perturbation, thrust-coast, or guaranteed long-duration model.',
+      symbols: '<code>X=[x,y,z,ẋ,ẏ,ż]ᵀ</code>; x is radial outward, y is along-track/in-track in the chief direction of motion, z is orbit-normal; <code>n</code> is positive mean motion [rad/s], <code>θ=nt</code>, <code>s=sin θ</code>, and <code>c=cos θ</code>.',
+      mapping: '<code>reference/SOURCE.md §A–B</code> → <code>docs/cw-stm-audit.md</code> → <code>src/cw.py::cw_stm</code>. The Python source is authoritative; this browser lesson is pedagogical.',
+      evidence: '<code>tests/test_cw.py::test_cw_stm_identity_at_zero_time</code> and <code>test_cw_stm_blocks_match_cited_quarter_orbit_terms_and_units</code>.',
+      limitations: 'The audit found no STM defect. Two-burn targeting singularity handling is separate TJC-1.4 scope; do not infer an arbitrary target-time solution from this lesson.'
     })}
 
-    <div class="formula" style="display:block;max-width:360px;">
-      [ r(t) ]&nbsp;&nbsp; [ Φrr&nbsp;&nbsp;Φrv ]&nbsp; [ r(0) ]<br/>
-      [ v(t) ] = [ Φvr&nbsp;&nbsp;Φvv ]&nbsp; [ v(0) ]
-    </div>
+    <h2>1. Start from the CW equations</h2>
+    <p>For the stated axes, the circular-chief linearization is:</p>
+    <div class="formula">ẍ − 2nẏ − 3n²x = 0<br>ÿ + 2nẋ = 0<br>z̈ + n²z = 0</div>
+    <p>The x–y equations are coupled by the rotating-frame Coriolis terms. The z equation is an independent harmonic oscillator. The controlled reference is <code>reference/SOURCE.md §B</code>; the independent audit cites Clohessy &amp; Wiltshire (1960), Eqs. 1–3, and Schaub &amp; Junkins (2018), §14.6, Eqs. 14.48–14.51.</p>
 
-    <p>Each block is 3×3. Click a block below to see its exact code, physical meaning, and the test(s) that
-    exercise it.</p>
+    <h2>2. Assemble the state solution</h2>
+    <p>Integrating those equations for initial state <code>X(0)</code> gives <code>X(t)=Φ(t)X(0)</code>, partitioned into position and velocity blocks:</p>
+    <div class="formula" style="display:block;max-width:420px;">[ r(t) ]&nbsp;&nbsp; [ Φrr&nbsp;&nbsp;Φrv ]&nbsp; [ r(0) ]<br>[ v(t) ] = [ Φvr&nbsp;&nbsp;Φvv ]&nbsp; [ v(0) ]</div>
+    <p>Each block is 3×3. Because position is metres and velocity is m/s, Φrr and Φvv are dimensionless, Φrv has seconds, and Φvr has s⁻¹.</p>
 
-    <div class="stm-grid" id="stm-grid">
-      <div class="stm-block" data-block="rr"><div class="block-label">Φrr</div><div class="block-matrix">position → position</div></div>
-      <div class="stm-block" data-block="rv"><div class="block-label">Φrv</div><div class="block-matrix">velocity → position</div></div>
-      <div class="stm-block" data-block="vr"><div class="block-label">Φvr</div><div class="block-matrix">position → velocity</div></div>
-      <div class="stm-block" data-block="vv"><div class="block-label">Φvv</div><div class="block-matrix">velocity → velocity</div></div>
-    </div>
-    <div id="block-detail"></div>
+    <h2>3. Derive each block term</h2>
+    <h3>Position from initial position: Φrr</h3>
+    <div class="formula">Φrr = [[4−3c, 0, 0], [6(s−θ), 1, 0], [0, 0, c]]</div>
+    <p>The radial solution supplies <code>4−3c</code>; integration of the in-plane coupling supplies the secular along-track term <code>6(s−θ)</code>; the y initial displacement persists as 1; and the uncoupled z oscillator supplies <code>c</code>. These are <code>phi_rr</code> in <code>cw_stm</code>.</p>
+    <h3>Position from initial velocity: Φrv</h3>
+    <div class="formula">Φrv = [[s/n, 2(1−c)/n, 0], [2(c−1)/n, (4s−3θ)/n, 0], [0, 0, s/n]]</div>
+    <p>One integration of the velocity contribution gives the 1/n factors and therefore seconds. This is <code>phi_rv</code>. Its use in targeting is outside this task’s scope, but its terms and signs are directly regression-tested.</p>
+    <h3>Velocity from initial position: Φvr</h3>
+    <div class="formula">Φvr = [[3ns, 0, 0], [6n(c−1), 0, 0], [0, 0, −ns]]</div>
+    <p>Differentiating the position solution gives the n factors (s⁻¹) and the z sign <code>−ns</code>. This is <code>phi_vr</code>.</p>
+    <h3>Velocity from initial velocity: Φvv</h3>
+    <div class="formula">Φvv = [[c, 2s, 0], [−2s, 4c−3, 0], [0, 0, c]]</div>
+    <p>Differentiation yields the Coriolis-coupled off-diagonals <code>+2s</code> and <code>−2s</code>, plus the z oscillator <code>c</code>. This is <code>phi_vv</code>.</p>
 
+    <h2>4. Time-zero and dimensions check</h2>
+    <p>At <code>t=0</code>, θ=0, s=0, and c=1. Every off-diagonal block term vanishes, Φrr and Φvv become identity, so Φ(0)=I₆. The regression uses exact zero with absolute tolerance <code>1e-15</code>. The quarter-orbit regression separately checks every nonzero block term at θ=π/2 and makes sign/order mistakes visible.</p>
+
+    <h2>5. Authoritative code and test mirrors</h2>
     ${TC.codeRef('src/cw.py', 'cw_stm')}
-    ${TC.authorityBanner('Exact, unmodified text of <code>cw_stm()</code> from <code>src/cw.py</code>.')}
+    ${TC.authorityBanner('Exact, synchronized source mirror; Python remains authoritative.')}
     ${cwStmSym ? TC.codeBlock(cwStmSym.code, cwStmSym.startLine) : ''}
+    ${TC.codeRef('tests/test_cw.py', 'STM regression tests')}
+    ${TC.authorityBanner('Exact, synchronized test mirror; the browser does not execute this test.')}
+    ${TC.codeBlock(testSrc, 1)}
 
-    <h2>Interactive: propagate a state</h2>
-    <p>Enter an initial relative state and a transfer time to see how it evolves under the CW equations.</p>
-    ${TC.codeRef('src/cw.py', 'propagate_relative_state')}
-    ${TC.authorityBanner('Exact, unmodified text of <code>propagate_relative_state()</code> from <code>src/cw.py</code> — this is the authoritative implementation. The slider panel below uses a hand-ported JS copy of this function purely for interactivity.')}
-    ${propSym ? TC.codeBlock(propSym.code, propSym.startLine) : ''}
-
-    ${TC.mirrorBanner('cw.py :: propagate_relative_state (via cw_stm)')}
-    <div class="panel">
-      <div class="control-row"><label>μ (m³/s²)</label><input type="number" id="stm-mu" value="398600441800000" /></div>
-      <div class="control-row"><label>Reference altitude (km)</label><input type="number" id="stm-alt" value="350" /></div>
-      <div class="control-row"><label>x₀, y₀, z₀ (m)</label>
-        <input type="number" id="stm-x0" value="15" style="width:70px"/>
-        <input type="number" id="stm-y0" value="-200" style="width:70px"/>
-        <input type="number" id="stm-z0" value="0" style="width:70px"/>
-      </div>
-      <div class="control-row"><label>ẋ₀, ẏ₀, ż₀ (m/s)</label>
-        <input type="number" id="stm-vx0" value="-0.14" step="0.01" style="width:70px"/>
-        <input type="number" id="stm-vy0" value="0" step="0.01" style="width:70px"/>
-        <input type="number" id="stm-vz0" value="0" step="0.01" style="width:70px"/>
-      </div>
-      <div class="control-row">
-        <label>Transfer time t</label>
-        <input type="range" id="stm-t-frac" min="0.01" max="2" step="0.01" value="0.25" />
-        <span class="value-tag" id="stm-t-label">0.25 T</span>
-      </div>
-      <div class="result-grid" id="stm-results"></div>
-    </div>
+    <h2>Audit conclusion and limits</h2>
+    <p><code>docs/cw-stm-audit.md</code> found no sign, term, state-ordering, dimension, or time-zero defect in <code>cw_stm</code>. The conclusion is limited to the cited circular-chief CW STM. Validate a real case’s circularity, locality, duration, frame, maneuvers, and perturbation requirements independently; the site is not a physics oracle.</p>
   `;
-
-  const gridEl = root.querySelector('#stm-grid');
-  const detailEl = root.querySelector('#block-detail');
-
-  function showBlock(key) {
-    gridEl.querySelectorAll('.stm-block').forEach((e) => e.classList.toggle('selected', e.dataset.block === key));
-    const b = blocks[key];
-    detailEl.innerHTML = `
-      <div class="detail-box">
-        <h3 style="margin-top:0">${b.label} — ${TC.esc(b.title)}</h3>
-        <p>${TC.esc(b.desc)}</p>
-        <pre class="code">${TC.esc(b.code)}</pre>
-        <h4>Physical meaning</h4>
-        <p>${b.meaning}</p>
-        <h4>Test coverage</h4>
-        <p>${TC.esc(b.test)}</p>
-      </div>
-    `;
-  }
-
-  gridEl.querySelectorAll('.stm-block').forEach((e) => {
-    e.addEventListener('click', () => showBlock(e.dataset.block));
-  });
-  showBlock('rr');
-
-  // Interactive propagation
-  const muI = root.querySelector('#stm-mu');
-  const altI = root.querySelector('#stm-alt');
-  const x0I = root.querySelector('#stm-x0'), y0I = root.querySelector('#stm-y0'), z0I = root.querySelector('#stm-z0');
-  const vx0I = root.querySelector('#stm-vx0'), vy0I = root.querySelector('#stm-vy0'), vz0I = root.querySelector('#stm-vz0');
-  const tFracI = root.querySelector('#stm-t-frac');
-  const tLabel = root.querySelector('#stm-t-label');
-  const resultsEl = root.querySelector('#stm-results');
-
-  function recompute() {
-    const mu = parseFloat(muI.value);
-    const r0 = 6378e3 + parseFloat(altI.value) * 1000;
-    const n = TCPhysics.meanMotion(mu, r0);
-    const T = 2 * Math.PI / n;
-    const frac = parseFloat(tFracI.value);
-    tLabel.textContent = frac.toFixed(2) + ' T  (' + TC.fmt(frac * T, 1) + ' s)';
-    const state0 = [parseFloat(x0I.value), parseFloat(y0I.value), parseFloat(z0I.value),
-                     parseFloat(vx0I.value), parseFloat(vy0I.value), parseFloat(vz0I.value)];
-    const t = frac * T;
-    const stateT = TCPhysics.propagateRelativeState(state0, n, t);
-    resultsEl.innerHTML = `
-      <div class="result-cell"><div class="label">n</div><div class="value">${TC.fmt(n,6)} rad/s</div></div>
-      <div class="result-cell"><div class="label">T</div><div class="value">${TC.fmt(T,1)} s</div></div>
-      <div class="result-cell"><div class="label">r(t)</div><div class="value">${TC.vecStr(stateT.slice(0,3),4)} m</div></div>
-      <div class="result-cell"><div class="label">v(t)</div><div class="value">${TC.vecStr(stateT.slice(3,6),4)} m/s</div></div>
-    `;
-  }
-  [muI, altI, x0I, y0I, z0I, vx0I, vy0I, vz0I, tFracI].forEach((i) => i.addEventListener('input', recompute));
-  recompute();
 };

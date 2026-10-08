@@ -94,6 +94,17 @@ where each block is 3x3.
 
 The STM is used for targeting by solving the appropriate block equation for the initial or terminal impulsive velocity change.
 
+### Implementation audit and convention
+The repository implementation uses exactly the state ordering
+\( [x,y,z,\dot{x},\dot{y},\dot{z}]^T \) and the x-radial-outward,
+y-along-track, z-orbit-normal right-handed LVLH/RIC convention stated above.
+`src/cw.py::cw_stm` implements the circular-chief block solution audited in
+`docs/cw-stm-audit.md`; that note maps every term to Clohessy & Wiltshire
+(1960) and Schaub & Junkins (2018). The block units are \(\Phi_{rr}\) and
+\(\Phi_{vv}\) dimensionless, \(\Phi_{rv}\) in seconds, and \(\Phi_{vr}\) in
+s⁻¹. The implementation and regression test require \(\Phi(0)=I_6\) within
+an absolute tolerance of \(10^{-15}\) for exact floating-point zero time.
+
 ### Known singularities
 The CW targeting problem can become singular or ill-conditioned when the velocity-to-position mapping loses rank for particular transfer times, especially at times near integer multiples of the orbital period where certain in-plane terms vanish or nearly vanish.
 

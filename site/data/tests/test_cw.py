@@ -5,10 +5,32 @@ import pytest
 
 from src.cw import (
     CWSingularTransferError,
+    cw_stm,
     mean_motion,
     two_burn_targeting,
     validate_cw_use,
 )
+
+
+def test_cw_stm_identity_at_zero_time():
+    """The cited CW solution is identity at t=0 within double precision."""
+    n = 0.00113
+    np.testing.assert_allclose(cw_stm(n, 0.0), np.eye(6), rtol=0.0, atol=1e-15)
+
+
+def test_cw_stm_blocks_match_cited_quarter_orbit_terms_and_units():
+    """Regression mapping for all four blocks; see docs/cw-stm-audit.md."""
+    n = 0.002
+    t = math.pi / (2 * n)
+    phi = cw_stm(n, t)
+    expected_rr = np.array([[4.0, 0.0, 0.0], [6.0 * (1 - math.pi / 2), 1.0, 0.0], [0.0, 0.0, 0.0]])
+    expected_rv = np.array([[1 / n, 2 / n, 0.0], [-2 / n, (4 - 3 * math.pi / 2) / n, 0.0], [0.0, 0.0, 1 / n]])
+    expected_vr = np.array([[3 * n, 0.0, 0.0], [-6 * n, 0.0, 0.0], [0.0, 0.0, -n]])
+    expected_vv = np.array([[0.0, 2.0, 0.0], [-2.0, -3.0, 0.0], [0.0, 0.0, 0.0]])
+    np.testing.assert_allclose(phi[:3, :3], expected_rr, rtol=0.0, atol=1e-14)
+    np.testing.assert_allclose(phi[:3, 3:], expected_rv, rtol=0.0, atol=1e-12)
+    np.testing.assert_allclose(phi[3:, :3], expected_vr, rtol=0.0, atol=1e-14)
+    np.testing.assert_allclose(phi[3:, 3:], expected_vv, rtol=0.0, atol=1e-14)
 
 
 def test_cw_rendezvous_benchmark():

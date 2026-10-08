@@ -1,7 +1,7 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
-  updated: '2026-10-06',
-  commitSubject: 'TJC-1.7: verify two-body propagation against pinned Poliastro',
+  updated: '2026-10-08',
+  commitSubject: 'TJC-1.3: audit CW state-transition implementation',
   groups: [
     {
       label: 'Completed',
@@ -23,6 +23,12 @@ window.TCProjectProgress = {
           commit: 'TJC-1.25: align site with scoped roadmap and living progress', hash: 'fbe0801',
           outcome: 'Aligned scope and navigation, established this progress surface and teaching contract, and added strict mirror synchronization.',
           links: [['Overview', '#/overview'], ['Roadmap', '#/project-map'], ['Research', '#/research'], ['Maintenance', 'README.md']]
+        },
+        {
+          id: 'TJC-1.3', date: '2026-10-08', title: 'Audit CW state-transition implementation',
+          commit: 'TJC-1.3: audit CW state-transition implementation', hash: 'pending final commit',
+          outcome: 'Independently mapped every circular-chief CW STM block and term to cited equations; no implementation defect was found. Added zero-time identity and quarter-orbit block/sign/unit regressions, an audit note, code-facing conventions, and a detailed STM derivation lesson.',
+          links: [['Audit note', '../docs/cw-stm-audit.md'], ['Authoritative STM', 'data/src/cw.py'], ['Regression tests', 'data/tests/test_cw.py'], ['CW STM lesson', '#/cw-stm']]
         },
         {
           id: 'TJC-1.27', date: '2026-10-06', title: 'Define pinned Poliastro verification architecture',
@@ -49,7 +55,7 @@ window.TCProjectProgress = {
       items: [
         {id: 'TJC-1.20', title: 'Build early CW-to-GMAT vertical slice with screenshot capture', outcome: 'Ready after this task; not implemented.'},
         {id: 'TJC-1.2', title: 'Align controlled reference and skills', outcome: 'Ready; current reference gaps remain.'},
-        {id: 'TJC-1.3 / 1.4', title: 'Audit CW STM and two-burn targeting', outcome: 'Ready; site derivations are not audit findings.'},
+        {id: 'TJC-1.4', title: 'Audit CW two-burn targeting and singularity handling', outcome: 'Ready after TJC-1.3 STM audit; not implemented.'},
         {id: 'TJC-1.6', title: 'Verify frame transformations', outcome: 'Ready; full LVLH/inertial transformation audit remains separate work.'},
       ]
     },

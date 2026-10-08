@@ -1,5 +1,12 @@
 """Clohessy-Wiltshire relative motion utilities.
 
+The state convention is ``[x, y, z, x_dot, y_dot, z_dot]`` in the chief's
+right-handed LVLH/RIC frame: x radial outward, y along-track/in-track in the
+chief's direction of motion, and z orbit-normal. ``cw_stm`` implements the
+circular-chief CW solution cited term-by-term in ``docs/cw-stm-audit.md``.
+It is not valid for eccentric chiefs, large/global relative geometry,
+perturbations, or unqualified long-duration linearization.
+
 All quantities use SI units:
 - distance: m
 - time: s
@@ -51,7 +58,14 @@ def mean_motion(mu: float, reference_radius_m: float) -> float:
 
 
 def cw_stm(n: float, t: float) -> np.ndarray:
-    """Return the 6x6 Clohessy-Wiltshire state-transition matrix."""
+    """Return the circular-chief CW STM for ``[x, y, z, x_dot, y_dot, z_dot]``.
+
+    ``n`` is positive mean motion in rad/s and ``t`` is elapsed seconds. The
+    returned blocks map position/velocity to position/velocity and therefore
+    have units ``[1]``, ``[s]``, ``[1/s]``, and ``[1]`` respectively. See
+    ``docs/cw-stm-audit.md`` for the authoritative equation mapping and
+    assumptions.
+    """
     nt = n * t
     s = math.sin(nt)
     c = math.cos(nt)

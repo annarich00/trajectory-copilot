@@ -36,6 +36,10 @@ APPROVED_TASK_OWNED_DIFFERENCES = {
     'site/data/tests/test_twobody.py',
     'src/twobody.py',
     'tests/test_twobody.py',
+    'site/data/src/cw.py',
+    'site/data/tests/test_cw.py',
+    'src/cw.py',
+    'tests/test_cw.py',
 }
 
 def manifest(root: Path) -> dict[str, str]:
