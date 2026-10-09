@@ -18,8 +18,6 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Tuple
-
 import numpy as np
 
 
@@ -30,26 +28,48 @@ class CWValidity:
 
 
 class CWSingularTransferError(RuntimeError):
-    """Raised when CW two-impulse targeting is singular or ill-conditioned.
+    """Retained for callers that explicitly require a unique CW solution.
 
-    This happens when Phi_rv -- the block of the CW state-transition matrix
-    that maps an initial relative-velocity impulse to the resulting change
-    in relative position -- loses rank or becomes numerically unreliable to
-    invert. Per reference/SOURCE.md ("Known singularities"), this occurs at
-    transfer times near integer multiples of half the orbital period
-    (n*t = k*pi), where in-plane terms of Phi_rv vanish or nearly vanish.
-
-    At these transfer times the two-impulse targeting problem does not have
-    a physically meaningful, well-determined solution, and the computed
-    delta-v must not be silently approximated (e.g. via least squares).
+    ``two_burn_targeting`` now returns a structured infeasible result for a
+    singular unreachable boundary condition. This exception remains the guard
+    used by ``check_phi_rv_conditioning`` for callers that request a unique,
+    well-conditioned inverse solve.
     """
 
 
-# Condition numbers of Phi_rv above this value indicate the position-
-# velocity mapping is too close to singular for the targeting solve to be
-# numerically trustworthy. See the numeric characterization in this
-# module's test suite for how condition number grows near n*t = k*pi.
+# A condition number above this value routes targeting through the SVD path.
+# It remains explicit metadata: a near-singular matrix is never represented as
+# a unique inverse result.
 CW_CONDITION_NUMBER_LIMIT = 1.0e6
+# Singular values at or below this relative-to-largest threshold are treated as
+# zero. Residual reachability is accepted only up to this scale times max(1,|b|).
+CW_SVD_RANK_TOLERANCE = 1.0e-12
+CW_SVD_RESIDUAL_TOLERANCE = 1.0e-9
+
+
+@dataclass(frozen=True)
+class CWTargetingResult:
+    """Structured fixed-duration two-burn targeting outcome.
+
+    ``status`` is ``"unique"``, ``"singular-reachable"``, or
+    ``"singular-infeasible"``. Singular reachable solutions use the SVD
+    pseudoinverse and are explicitly non-unique. Infeasible outcomes contain
+    no fabricated burns or final state.
+    """
+
+    status: str
+    feasible: bool
+    singular: bool
+    non_unique: bool
+    reason: str
+    condition_number: float
+    rank: int
+    reachability_residual_m: float
+    svd_rank_tolerance: float
+    svd_residual_tolerance: float
+    dv0: np.ndarray | None
+    dv1: np.ndarray | None
+    final_state: np.ndarray | None
 
 
 def mean_motion(mu: float, reference_radius_m: float) -> float:
@@ -166,15 +186,36 @@ def check_phi_rv_conditioning(
     return cond
 
 
-def _solve_dv_for_target(phi_rv: np.ndarray, rhs: np.ndarray) -> np.ndarray:
-    """Solve Phi_rv @ dv0 = rhs after confirming Phi_rv is well-conditioned.
+def _svd_targeting_diagnostics(
+    phi_rv: np.ndarray,
+    b: np.ndarray,
+    *,
+    rank_tolerance: float,
+    residual_tolerance: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, int, float, float, np.ndarray]:
+    """Return SVD diagnostics and the minimum-norm solution for ``Phi_rv x=b``.
 
-    Raises CWSingularTransferError instead of silently falling back to a
-    least-squares pseudo-solution when Phi_rv is singular or ill-conditioned
-    (see check_phi_rv_conditioning).
+    A singular value is retained when it exceeds ``rank_tolerance * s_max``.
+    The reachability residual is the norm of the component of ``b`` outside
+    the retained left-singular-vector column space. It must be no greater than
+    ``residual_tolerance * max(1, ||b||)`` for the boundary condition to be
+    reachable.
     """
-    check_phi_rv_conditioning(phi_rv)
-    return np.linalg.solve(phi_rv, rhs)
+    u, singular_values, vh = np.linalg.svd(phi_rv, full_matrices=False)
+    scale = singular_values[0] if singular_values.size else 0.0
+    cutoff = rank_tolerance * scale
+    rank = int(np.count_nonzero(singular_values > cutoff))
+    if rank:
+        projected_b = u[:, :rank] @ (u[:, :rank].T @ b)
+        minimum_norm_solution = (
+            vh[:rank, :].T @ ((u[:, :rank].T @ b) / singular_values[:rank])
+        )
+    else:
+        projected_b = np.zeros_like(b)
+        minimum_norm_solution = np.zeros(phi_rv.shape[1])
+    residual = float(np.linalg.norm(b - projected_b))
+    allowed_residual = residual_tolerance * max(1.0, float(np.linalg.norm(b)))
+    return singular_values, u, vh, rank, residual, allowed_residual, minimum_norm_solution
 
 
 def two_burn_targeting(
@@ -182,7 +223,11 @@ def two_burn_targeting(
     n: float,
     t_final: float,
     target_final_state: np.ndarray | None = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    *,
+    condition_limit: float = CW_CONDITION_NUMBER_LIMIT,
+    svd_rank_tolerance: float = CW_SVD_RANK_TOLERANCE,
+    svd_residual_tolerance: float = CW_SVD_RESIDUAL_TOLERANCE,
+) -> CWTargetingResult:
     """Compute two-impulse CW targeting using STM partitioning.
 
     The method solves for the initial velocity impulse using the STM block
@@ -202,15 +247,11 @@ def two_burn_targeting(
 
     Returns
     -------
-    dv0, dv1, final_state
-
-    Raises
-    ------
-    CWSingularTransferError
-        If Phi_rv is singular or ill-conditioned at ``t_final`` (e.g.
-        ``t_final`` at or near an integer multiple of half the orbital
-        period). The caller must choose a different transfer time; this
-        function does not silently fall back to a least-squares solution.
+    CWTargetingResult
+        A unique result for a well-conditioned inverse solve, a singular but
+        reachable non-unique result using the SVD-pseudoinverse minimum-norm
+        solution, or a singular-and-infeasible result with no burns. The
+        requested ``t_final`` is never changed.
     """
     state0 = np.asarray(state0, dtype=float).reshape(6)
     if target_final_state is None:
@@ -226,8 +267,77 @@ def two_burn_targeting(
     r0, v0 = state0[:3], state0[3:]
     rf_des, vf_des = target_final_state[:3], target_final_state[3:]
 
-    dv0 = _solve_dv_for_target(phi_rv, rf_des - phi_rr @ r0 - phi_rv @ v0)
+    b = rf_des - phi_rr @ r0
+    rhs = b - phi_rv @ v0
+    if not np.isfinite(phi_rv).all() or not np.isfinite(rhs).all():
+        raise CWSingularTransferError("Phi_rv or targeting boundary condition is non-finite.")
+
+    condition_number = float(np.linalg.cond(phi_rv))
+    singular_values, _, _, rank, residual, allowed_residual, minimum_norm_velocity = (
+        _svd_targeting_diagnostics(
+            phi_rv,
+            b,
+            rank_tolerance=svd_rank_tolerance,
+            residual_tolerance=svd_residual_tolerance,
+        )
+    )
+    singular_or_ill_conditioned = (
+        rank < phi_rv.shape[1]
+        or not np.isfinite(condition_number)
+        or condition_number > condition_limit
+    )
+
+    if singular_or_ill_conditioned:
+        if residual > allowed_residual:
+            return CWTargetingResult(
+                status="singular-infeasible",
+                feasible=False,
+                singular=True,
+                non_unique=rank < phi_rv.shape[1],
+                reason=(
+                    "Requested terminal position is outside the Phi_rv column space "
+                    f"(SVD residual={residual:.3e} m > tolerance={allowed_residual:.3e} m)."
+                ),
+                condition_number=condition_number,
+                rank=rank,
+                reachability_residual_m=residual,
+                svd_rank_tolerance=svd_rank_tolerance,
+                svd_residual_tolerance=svd_residual_tolerance,
+                dv0=None,
+                dv1=None,
+                final_state=None,
+            )
+        post_burn_velocity = minimum_norm_velocity
+        dv0 = post_burn_velocity - v0
+        status = "singular-reachable"
+        singular = True
+        non_unique = rank < phi_rv.shape[1]
+        reason = (
+            "Phi_rv is singular or ill-conditioned; terminal position is reachable. "
+            "Returned initial velocity is the SVD-pseudoinverse minimum-norm solution."
+        )
+    else:
+        dv0 = np.linalg.solve(phi_rv, rhs)
+        status = "unique"
+        singular = False
+        non_unique = False
+        reason = "Phi_rv is well-conditioned; returned the unique inverse solution."
+
     vf_minus = phi_vr @ r0 + phi_vv @ (v0 + dv0)
     dv1 = vf_des - vf_minus
     final_state = np.hstack([phi_rr @ r0 + phi_rv @ (v0 + dv0), vf_minus + dv1])
-    return dv0, dv1, final_state
+    return CWTargetingResult(
+        status=status,
+        feasible=True,
+        singular=singular,
+        non_unique=non_unique,
+        reason=reason,
+        condition_number=condition_number,
+        rank=rank,
+        reachability_residual_m=residual,
+        svd_rank_tolerance=svd_rank_tolerance,
+        svd_residual_tolerance=svd_residual_tolerance,
+        dv0=dv0,
+        dv1=dv1,
+        final_state=final_state,
+    )

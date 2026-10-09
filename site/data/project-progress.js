@@ -1,7 +1,7 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
-  updated: '2026-10-08',
-  commitSubject: 'TJC-1.3: audit CW state-transition implementation',
+  updated: '2026-10-09',
+  commitSubject: 'TJC-1.4: audit CW two-burn targeting and singularity handling',
   groups: [
     {
       label: 'Completed',
@@ -23,6 +23,12 @@ window.TCProjectProgress = {
           commit: 'TJC-1.25: align site with scoped roadmap and living progress', hash: 'fbe0801',
           outcome: 'Aligned scope and navigation, established this progress surface and teaching contract, and added strict mirror synchronization.',
           links: [['Overview', '#/overview'], ['Roadmap', '#/project-map'], ['Research', '#/research'], ['Maintenance', 'README.md']]
+        },
+        {
+          id: 'TJC-1.4', date: '2026-10-09', title: 'Audit CW two-burn targeting and singularity handling',
+          commit: 'TJC-1.4: audit CW two-burn targeting and singularity handling', hash: 'pending final commit',
+          outcome: 'Replaced blanket singular rejection with documented SVD column-space reachability, explicit unique/reachable/infeasible metadata, and minimum-norm singular solutions; GEO P=1/2/3 regressions verify terminal position and decreasing total delta-v.',
+          links: [['Targeting source', 'data/src/cw.py'], ['Tests', 'data/tests/test_cw.py'], ['Singularity lesson', '#/singularity'], ['Reference policy', 'data/reference/SOURCE.md']]
         },
         {
           id: 'TJC-1.3', date: '2026-10-08', title: 'Audit CW state-transition implementation',
@@ -55,7 +61,6 @@ window.TCProjectProgress = {
       items: [
         {id: 'TJC-1.20', title: 'Build early CW-to-GMAT vertical slice with screenshot capture', outcome: 'Ready after this task; not implemented.'},
         {id: 'TJC-1.2', title: 'Align controlled reference and skills', outcome: 'Ready; current reference gaps remain.'},
-        {id: 'TJC-1.4', title: 'Audit CW two-burn targeting and singularity handling', outcome: 'Ready after TJC-1.3 STM audit; not implemented.'},
         {id: 'TJC-1.6', title: 'Verify frame transformations', outcome: 'Ready; full LVLH/inertial transformation audit remains separate work.'},
       ]
     },

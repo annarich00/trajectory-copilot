@@ -25,6 +25,7 @@ APPROVED_LOCAL_SITE_ALIGNMENT = {
     'site/js/pages/verification.js',
     'site/js/pages/source-explorer.js',
     'site/js/pages/tests.js',
+    'site/js/pages/singularity.js',
     'site/js/physics.js',
 }
 # Post-import authoritative and verbatim-mirror changes completed by scoped

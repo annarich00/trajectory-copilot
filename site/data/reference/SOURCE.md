@@ -105,8 +105,37 @@ y-along-track, z-orbit-normal right-handed LVLH/RIC convention stated above.
 s⁻¹. The implementation and regression test require \(\Phi(0)=I_6\) within
 an absolute tolerance of \(10^{-15}\) for exact floating-point zero time.
 
-### Known singularities
-The CW targeting problem can become singular or ill-conditioned when the velocity-to-position mapping loses rank for particular transfer times, especially at times near integer multiples of the orbital period where certain in-plane terms vanish or nearly vanish.
+### Fixed-duration two-burn targeting and singularities
+For a specified duration, let the initial targeting burn change the initial
+relative velocity from \(v_0\) to \(v_0^+=v_0+\Delta v_0\). Partitioning the
+STM position equation gives
+\[
+r_f=\Phi_{rr}r_0+\Phi_{rv}v_0^+.
+\]
+Thus the terminal-position boundary condition is
+\[
+\Phi_{rv}v_0^+=b,\qquad b=r_f-\Phi_{rr}r_0.
+\]
+For a well-conditioned full-rank \(\Phi_{rv}\), `src/cw.py::two_burn_targeting`
+uses the unique inverse solve and then computes the terminal burn
+\(\Delta v_1=v_f-v_f^-\). At integer orbital periods, \(\Phi_{rv}\) is
+singular; singularity alone does **not** mean rendezvous is impossible. The
+boundary is feasible precisely when \(b\) lies in the column space of
+\(\Phi_{rv}\). A feasible rank-deficient system has infinitely many initial
+velocity solutions, and the implementation returns the SVD-pseudoinverse
+minimum-norm \(v_0^+\), explicitly marked `singular-reachable` and
+non-unique.
+
+The implementation uses an SVD relative rank threshold of \(10^{-12}\) times
+the largest singular value. It projects \(b\) onto the retained left-singular
+vectors and accepts it as reachable only when the projection residual is at
+most \(10^{-9}\max(1,\|b\|)\) metres. A singular or ill-conditioned case with
+a larger residual returns machine-readable `singular-infeasible` metadata,
+a human-readable reason, and no fabricated burns. It does not change the
+requested transfer time. These rules apply only to fixed-duration linear CW
+targeting; they do not make long-duration, multi-revolution, or nonlocal CW
+geometry physically valid, nor do they perform general trajectory
+optimization.
 
 ### Validity limits
 CW is best for local proximity operations, short-to-moderate transfer times, and small relative separations. It degrades when:

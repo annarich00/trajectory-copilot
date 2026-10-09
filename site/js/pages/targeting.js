@@ -7,11 +7,11 @@ window.TCPages['targeting'] = async function (root) {
   root.innerHTML = `
     ${TC.pageHeader('Two-Burn Targeting, Step by Step', 'A full walkthrough of two_burn_targeting() in src/cw.py — the function that actually solves a rendezvous problem.')}
     ${TC.teachingContract({
-      assumptions: 'Impulsive two-burn CW transfer with a well-conditioned <code>Φrv</code> and specified transfer time.',
+      assumptions: 'Impulsive fixed-duration two-burn CW transfer; singular cases are tested for column-space reachability, not silently retimed.',
       symbols: '<code>r0,v0</code>: initial state; <code>rf,vf</code>: requested terminal state; <code>Δv0,Δv1</code>: impulsive burns.',
       mapping: '<code>reference/SOURCE.md §C</code> → <code>src/cw.py::two_burn_targeting</code> and <code>check_phi_rv_conditioning</code>.',
-      evidence: '<code>tests/test_cw.py::test_cw_rendezvous_benchmark</code> and exact-one-orbit rejection.',
-      limitations: 'TJC-1.4 owns the targeting/singularity audit. This task preserves current equations and makes no unverified correction.'
+      evidence: '<code>tests/test_cw.py::test_cw_rendezvous_benchmark</code>, GEO P=1/2/3, and integer-period infeasibility tests.',
+      limitations: 'The SVD policy is fixed-duration linear CW targeting only; it does not validate long/multi-revolution geometry or optimize transfer time.'
     })}
 
     <p>Goal: given an initial relative state, find the first burn Δv0 that puts the deputy on a trajectory
@@ -45,11 +45,13 @@ window.TCPages['targeting'] = async function (root) {
 
     <div class="panel">
       <h3 style="margin-top:0">Step 3 — Solve for Δv0 using Φrv</h3>
-      <div class="formula">rhs = rf_des − Φrr·r0 − Φrv·v0<br/>Δv0 = Φrv⁻¹ · rhs</div>
-      <p><strong>What the computer does:</strong> rearranges <code>r(t) = Φrr·r0 + Φrv·(v0+Δv0) = rf_des</code>
-      to solve for Δv0. Before inverting, it calls <code>check_phi_rv_conditioning(phi_rv)</code> — if Φrv is
-      singular or ill-conditioned, this raises <code>CWSingularTransferError</code> instead of returning a bad
-      number (see <a href="#/singularity">Why the Singularity Matters</a>).</p>
+      <div class="formula">b = rf_des − Φrr·r0<br/>Φrv·v0⁺ = b; Δv0 = v0⁺ − v0</div>
+      <p><strong>What the computer does:</strong> rearranges <code>r(t) = Φrr·r0 + Φrv·v0⁺ = rf_des</code>.
+      A well-conditioned full-rank Φrv uses the unique inverse solve. A singular or ill-conditioned Φrv is
+      evaluated with SVD: the code tests whether <code>b</code> lies in the Φrv column space using its documented
+      rank/residual tolerances. A reachable rank-deficient case returns the pseudoinverse minimum-norm
+      <code>v0⁺</code>, explicitly non-unique; an unreachable case returns metadata and no maneuver. It never
+      changes the requested transfer time (see <a href="#/singularity">Why the Singularity Matters</a>).</p>
       <p><strong>What it means physically:</strong> "Given where I'll end up if I coast with my current
       velocity, what one-time velocity change right now would instead put me exactly where I want to be at
       t_final?" This is a two-point boundary value problem solved in closed form thanks to CW linearity.</p>
