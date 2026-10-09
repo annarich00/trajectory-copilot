@@ -31,6 +31,12 @@ window.TCProjectProgress = {
           links: [['Controlled reference', 'data/reference/SOURCE.md'], ['Skill mirrors', '#/source-explorer'], ['CW implementation', 'data/src/cw.py'], ['Two-body implementation', 'data/src/twobody.py'], ['Tests', '#/tests']]
         },
         {
+          id: 'TJC-1.6', date: '2026-10-09', title: 'Verify LVLH/inertial state transformations',
+          commit: 'TJC-1.6: verify LVLH inertial state transformations', hash: '2c23f0b',
+          outcome: 'Hardened LVLH/inertial conversions with explicit degenerate-state errors and verified right-handed basis, transport terms, and position/velocity round trips.',
+          links: [['LVLH lesson', '#/cw-lvlh'], ['Authoritative transforms', 'data/src/verify.py'], ['Transform tests', 'data/tests/test_validation.py']]
+        },
+        {
           id: 'TJC-1.4', date: '2026-10-09', title: 'Handle singular CW two-burn targeting',
           commit: 'TJC-1.4: audit CW two-burn targeting and singularity handling', hash: 'a39017d',
           outcome: 'Replaced blanket singular-transfer rejection with explicit SVD column-space reachability. Singular reachable boundaries receive a minimum-norm non-unique solution; unreachable boundaries return explicit infeasible metadata without fabricated burns or transfer-time changes.',

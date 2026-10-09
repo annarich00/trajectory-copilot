@@ -9,8 +9,8 @@ window.TCPages['cw-lvlh'] = async function (root) {
       assumptions: 'Circular chief orbit, small relative separation, impulsive maneuvers, and the repository’s stated radial/along-track/cross-track LVLH convention.',
       symbols: '<code>x,y,z</code>: relative LVLH position; overdots: time derivatives; <code>n</code>: chief mean motion.',
       mapping: '<code>reference/SOURCE.md §B</code> → <code>src/cw.py::cw_stm</code> and <code>src/verify.py</code> frame helpers.',
-      evidence: '<code>tests/test_cw.py</code> exercises the resulting STM; this prose is not independent audit evidence.',
-      limitations: 'TJC-1.2 and TJC-1.3 own reference alignment and the independent CW audit. No scientific correction is claimed here.'
+      evidence: '<code>tests/test_validation.py</code> verifies basis handedness, transport, and both transform round trips at ≤2e−9 m / ≤2e−12 m/s; this browser lesson is pedagogical, not authoritative.',
+      limitations: 'The transformation helpers require finite, nonzero chief position and non-collinear chief position/velocity. They use supplied circular-chief angular rate <code>n</code>; they do not validate circularity, perturbations, or CW applicability.'
     })}
 
     <h2>The two spacecraft</h2>
@@ -43,6 +43,29 @@ window.TCPages['cw-lvlh'] = async function (root) {
       The <code>orbital-problem-formalizer</code> skill is specifically instructed: <em>"Do not silently choose a
       coordinate convention."</em> A frame mix-up (e.g. assuming "behind" means −y when the source meant +x) is
       a real failure mode — see <a href="#/failure-museum">Failure Museum, Failure 4</a>.</p>`)}
+
+    <h2>Inertial ↔ LVLH state transformation</h2>
+    <p><code>src/verify.py</code> constructs the inertial-column rotation <code>R = [r̂ t̂ ĥ]</code> as
+    <code>r̂ = r<sub>c</sub>/|r<sub>c</sub>|</code>, <code>ĥ = (r<sub>c</sub> × v<sub>c</sub>)/|r<sub>c</sub> × v<sub>c</sub>|</code>,
+    and <code>t̂ = ĥ × r̂</code>. Thus <code>r̂ × t̂ = ĥ</code>: it is orthonormal and right-handed.
+    All positions are metres, velocities are m/s, and <code>n</code> is rad/s.</p>
+    <div class="panel">
+      <div class="formula">r<sub>d</sub> = r<sub>c</sub> + Rρ<br>v<sub>d</sub> = v<sub>c</sub> + Rρ̇ + ω × (Rρ), &nbsp; ω = n ĥ</div>
+      <p><strong>LVLH → inertial.</strong> The relative state is deputy minus chief. The final cross-product is the
+      rotating-frame transport term; a local derivative <code>ρ̇</code> is not by itself the inertial relative velocity.</p>
+    </div>
+    <div class="panel">
+      <div class="formula">ρ = Rᵀ(r<sub>d</sub> − r<sub>c</sub>)<br>ρ̇ = Rᵀ[(v<sub>d</sub> − v<sub>c</sub>) − ω × (r<sub>d</sub> − r<sub>c</sub>)]</div>
+      <p><strong>Inertial → LVLH.</strong> The inverse subtracts the same transport term before rotating. This is the
+      sign-sensitive counterpart of the forward equation.</p>
+    </div>
+    <p>TJC-1.6 added focused numerical evidence in <code>tests/test_validation.py</code>: a representative basis
+    has <code>RᵀR = I</code> and determinant +1; LVLH→inertial→LVLH recovers a state within 2e−12 in the tested
+    units; inertial→LVLH→inertial recovers deputy position within 2e−9 m and velocity within 2e−12 m/s. A nonzero
+    case confirms <code>ω × ρ</code> changes the inertial along-track velocity by +0.1 m/s. Zero-position and
+    radial/zero-angular-momentum chiefs raise explicit errors rather than producing NaNs.</p>
+    <p>See the authoritative source mirror <code>data/src/verify.py</code> and test mirror
+    <code>data/tests/test_validation.py</code>; those mirrors are browser copies, not the source of truth.</p>
 
     <h2>The three Hill/CW equations of motion</h2>
     <p>With the LVLH convention above, linearizing Newtonian gravity about the circular chief orbit yields three

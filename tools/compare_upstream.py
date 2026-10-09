@@ -26,6 +26,7 @@ APPROVED_LOCAL_SITE_ALIGNMENT = {
     'site/js/pages/source-explorer.js',
     'site/js/pages/tests.js',
     'site/js/pages/singularity.js',
+    'site/js/pages/model-validity.js',
     'site/js/physics.js',
 }
 # Post-import authoritative and verbatim-mirror changes completed by scoped
@@ -41,6 +42,16 @@ APPROVED_TASK_OWNED_DIFFERENCES = {
     'site/data/tests/test_cw.py',
     'src/cw.py',
     'tests/test_cw.py',
+    'site/data/src/verify.py',
+    'site/data/tests/test_validation.py',
+    'src/verify.py',
+    'tests/test_validation.py',
+    '.pi/skills/orbital-model-selector/SKILL.md',
+    '.pi/skills/orbital-problem-formalizer/SKILL.md',
+    '.pi/skills/orbital-targeting-planner/SKILL.md',
+    'site/data/skills/formalizer.SKILL.md',
+    'site/data/skills/model-selector.SKILL.md',
+    'site/data/skills/targeting-planner.SKILL.md',
 }
 
 def manifest(root: Path) -> dict[str, str]:
