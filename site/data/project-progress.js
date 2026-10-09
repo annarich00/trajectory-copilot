@@ -1,7 +1,7 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
   updated: '2026-10-09',
-  commitSubject: 'TJC-1.4: audit CW two-burn targeting and singularity handling',
+  commitSubject: 'TJC-1.2: align controlled reference and scoped skills',
   groups: [
     {
       label: 'Completed',
@@ -25,10 +25,16 @@ window.TCProjectProgress = {
           links: [['Overview', '#/overview'], ['Roadmap', '#/project-map'], ['Research', '#/research'], ['Maintenance', 'README.md']]
         },
         {
-          id: 'TJC-1.4', date: '2026-10-09', title: 'Audit CW two-burn targeting and singularity handling',
-          commit: 'TJC-1.4: audit CW two-burn targeting and singularity handling', hash: 'pending final commit',
-          outcome: 'Replaced blanket singular rejection with documented SVD column-space reachability, explicit unique/reachable/infeasible metadata, and minimum-norm singular solutions; GEO P=1/2/3 regressions verify terminal position and decreasing total delta-v.',
-          links: [['Targeting source', 'data/src/cw.py'], ['Tests', 'data/tests/test_cw.py'], ['Singularity lesson', '#/singularity'], ['Reference policy', 'data/reference/SOURCE.md']]
+          id: 'TJC-1.2', date: '2026-10-09', title: 'Align controlled reference and scoped skills',
+          commit: 'TJC-1.2: align controlled reference and scoped skills', hash: 'pending final commit',
+          outcome: 'Rewrote the controlled reference around exact CW/LVLH/SI and bounded two-body coast contracts; replaced optimization guidance with five scoped skills for formulation, selection, CW, two-body, and GMAT verification. GMAT numerical comparison plus an accessible trajectory screenshot are mandatory PASS evidence, while GMAT execution remains unintegrated.',
+          links: [['Controlled reference', 'data/reference/SOURCE.md'], ['Skill mirrors', '#/source-explorer'], ['CW implementation', 'data/src/cw.py'], ['Two-body implementation', 'data/src/twobody.py'], ['Tests', '#/tests']]
+        },
+        {
+          id: 'TJC-1.4', date: '2026-10-09', title: 'Handle singular CW two-burn targeting',
+          commit: 'TJC-1.4: audit CW two-burn targeting and singularity handling', hash: 'a39017d',
+          outcome: 'Replaced blanket singular-transfer rejection with explicit SVD column-space reachability. Singular reachable boundaries receive a minimum-norm non-unique solution; unreachable boundaries return explicit infeasible metadata without fabricated burns or transfer-time changes.',
+          links: [['Targeting lesson', '#/targeting'], ['Singularity lesson', '#/singularity'], ['Authoritative CW source', 'data/src/cw.py'], ['Regression tests', 'data/tests/test_cw.py'], ['Reference', 'data/reference/SOURCE.md']]
         },
         {
           id: 'TJC-1.3', date: '2026-10-08', title: 'Audit CW state-transition implementation',
@@ -60,7 +66,6 @@ window.TCProjectProgress = {
       label: 'Active / ready',
       items: [
         {id: 'TJC-1.20', title: 'Build early CW-to-GMAT vertical slice with screenshot capture', outcome: 'Ready after this task; not implemented.'},
-        {id: 'TJC-1.2', title: 'Align controlled reference and skills', outcome: 'Ready; current reference gaps remain.'},
         {id: 'TJC-1.6', title: 'Verify frame transformations', outcome: 'Ready; full LVLH/inertial transformation audit remains separate work.'},
       ]
     },

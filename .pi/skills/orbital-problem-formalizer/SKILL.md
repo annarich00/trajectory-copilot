@@ -19,13 +19,12 @@ The goal is to determine:
 
 ## Scope
 
-Initially focus on:
-- Two-body orbital mechanics
-- Clohessy-Wiltshire (CW) relative motion
-- Proximity operations
-- Orbital rendezvous
+The scoped workflow is limited to problem formulation for:
+- fixed-duration CW local rendezvous,
+- bounded inertial two-body coast fallback, and
+- assumption-based model selection and GMAT verification handoff.
 
-Do not assume CW is appropriate merely because the problem involves rendezvous.
+Do not assume CW is appropriate merely because the problem involves rendezvous. Do not formulate generalized optimization, Pareto fronts, thrust, perturbations, CR3BP/cislunar, or broad mission-planning work as supported semester capability.
 
 ## Required extraction
 
@@ -52,16 +51,16 @@ Do not invent values or silently assume conventions.
 
 If CW is requested or considered, check:
 
-- Circular reference orbit
+- Circular or near-circular reference orbit
 - Known reference radius or mean motion
-- Small relative separation
-- Defined LVLH/Hill coordinate convention
-- Initial relative state
+- Local relative separation compared with reference radius
+- Defined LVLH/RIC convention: x radial outward, y along-track, z cross-track
+- Initial relative state ordered [x, y, z, xdot, ydot, zdot] in SI units
 - Terminal conditions
-- Transfer time
-- Maneuver constraints
+- Fixed transfer time and its duration/regime (including multi-revolution concerns)
+- Central-body dominance, negligible perturbations, small relative velocity, and impulsive-burn suitability
 
-Flag CW as a model-validity concern if the geometry or assumptions are inconsistent with linearized relative motion.
+Flag CW as a model-validity concern if the geometry or assumptions are inconsistent with linearized relative motion. These are recorded physical assumptions, not a universal learned threshold.
 
 ## Output format
 
@@ -123,4 +122,5 @@ Use `None` if there are no identified concerns.
 - Do not silently choose a coordinate convention.
 - Do not assume circular orbit unless established or explicitly requested.
 - Distinguish missing information from model-validity concerns.
+- Route fully specified cases only to `orbital-model-selector`; do not solve them here.
 - Keep the response concise.

@@ -21,7 +21,7 @@ window.TCPages['verification'] = async function (root) {
     ${TC.teachingContract({
       assumptions: 'SI inertial Cartesian position/velocity; fixed central point mass; coast arc; fixed-step classical RK4.',
       symbols: '<code>r</code>: position [m]; <code>v</code>: velocity [m/s]; <code>μ</code>: gravitational parameter [m³/s²]; <code>h</code>: RK4 step [s].',
-      mapping: '<code>reference/SOURCE.md §C</code> → <code>src/twobody.py</code> → exact mirrored tests in <code>tests/test_twobody.py</code>.',
+      mapping: '<code>reference/SOURCE.md §§C and E</code> → <code>src/twobody.py</code> → exact mirrored tests in <code>tests/test_twobody.py</code>; GMAT evidence contract → <code>.pi/skills/gmat-rendezvous-verification/SKILL.md</code>.',
       evidence: 'Circular one-period analytical return: 2 cm position and 2e-5 m/s velocity tolerance; energy and angular momentum invariant test over three periods.',
       limitations: 'No burns, rendezvous targeting, optimization, LVLH-relative input, J2, drag, third bodies, SRP, or thrust. The pinned Poliastro 0.17.0 adapter is an optional like-for-like point-mass cross-check, not a universal oracle. GMAT remains required end-to-end numerical and visual verification.'
     })}
@@ -63,6 +63,9 @@ window.TCPages['verification'] = async function (root) {
     ${analyticalTest ? TC.codeBlock(analyticalTest.code, analyticalTest.startLine) : ''}
     ${invariantTest ? TC.codeBlock(invariantTest.code, invariantTest.startLine) : ''}
     ${invalidTest ? TC.codeBlock(invalidTest.code, invalidTest.startLine) : ''}
+
+    <h2>Required GMAT evidence (not yet integrated)</h2>
+    <p><strong>Controlled contract:</strong> every candidate requires (1) GMAT numerical comparison of the same declared case in matched frame, epoch, state ordering, units, dynamics, and documented position/velocity tolerances, and (2) a non-empty accessible GMAT trajectory screenshot. Missing or inaccessible evidence, unavailable GMAT, or a tolerance exceedance is <em>not</em> PASS. This repository has no GMAT execution integration yet; the contract is defined in <code>reference/SOURCE.md §E</code> and the controlled verification skill.</p>
 
     <h2>External Poliastro cross-check</h2>
     <p><strong>TJC-1.7:</strong> <code>src/poliastro_verify.py</code> invokes a separately provisioned Python 3.10 subprocess using versioned JSON stdin/stdout. It compares the same SI inertial Cartesian point-mass coast state against pinned Poliastro 0.17.0 commit <code>c7d12e9b715d3fd60f2be233af707d5b97617d39</code>. Missing/broken environments return <code>UNAVAILABLE</code>; unsupported frames/models return <code>UNSUPPORTED</code>; disagreement remains <code>FAIL</code>. None can become PASS.</p>

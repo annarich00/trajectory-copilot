@@ -6,12 +6,17 @@ window.TCPages['source-explorer'] = async function (root) {
   const verifySrc = await TC.fetchText('data/src/verify.py');
   const optSrc = await TC.fetchText('data/src/optimization.py');
   const sourceMd = await TC.fetchText('data/reference/SOURCE.md');
+  const formalizerSkill = await TC.fetchText('data/skills/formalizer.SKILL.md');
+  const selectorSkill = await TC.fetchText('data/skills/model-selector.SKILL.md');
+  const cwSkill = await TC.fetchText('data/skills/targeting-planner.SKILL.md');
+  const twoBodySkill = await TC.fetchText('data/skills/two-body-rendezvous.SKILL.md');
+  const gmatSkill = await TC.fetchText('data/skills/gmat-verification.SKILL.md');
 
   root.innerHTML = `
     ${TC.pageHeader('Source Code Explorer', 'Guided tour of every important source file in this repository, with annotations — not a rewrite.')}
     <div class="toc-inline">Jump to: <a href="#se-cw">src/cw.py</a> · <a href="#se-tb">src/twobody.py</a> ·
     <a href="#se-verify">src/verify.py</a> · <a href="#se-opt">src/optimization.py</a> ·
-    <a href="#se-source">reference/SOURCE.md</a></div>
+    <a href="#se-source">reference/SOURCE.md</a> · <a href="#se-skills">active skills</a></div>
 
     <h2 id="se-cw">src/cw.py</h2>
     <table>
@@ -112,25 +117,27 @@ window.TCPages['source-explorer'] = async function (root) {
       ${TC.codeBlock(optSrc, 1)}
     </details>
 
+    <h2 id="se-skills">Active scoped skills</h2>
+    <p>The active architecture is deliberately limited to formulation, assumption-based selection, fixed-duration CW rendezvous, bounded two-body coast fallback, and GMAT verification. The browser copies below are verbatim non-authoritative mirrors; the files under <code>.pi/skills/</code> are controlled text.</p>
+    ${TC.authorityBanner('Exact, unmodified controlled-skill mirrors; implementation remains authoritative in src/.')}
+    <details><summary>Problem formulation</summary><pre class="code">${TC.esc(formalizerSkill)}</pre></details>
+    <details><summary>Model selection</summary><pre class="code">${TC.esc(selectorSkill)}</pre></details>
+    <details><summary>CW rendezvous</summary><pre class="code">${TC.esc(cwSkill)}</pre></details>
+    <details><summary>Bounded two-body fallback</summary><pre class="code">${TC.esc(twoBodySkill)}</pre></details>
+    <details><summary>GMAT verification</summary><pre class="code">${TC.esc(gmatSkill)}</pre></details>
+
     <h2 id="se-source">reference/SOURCE.md</h2>
     <table>
       <tr><th>Problem solved</th><td>Not code — this is the physics reference document the orbital-mechanics
         skills are instructed to consult "instead of relying on pretrained memory" (per its own opening
         line).</td></tr>
-      <tr><th>Sections</th><td>A. Coordinate Frames (LVLH/RTN/RIC/ECI) · B. Clohessy-Wiltshire Dynamics
-        (assumptions, mean motion, equations of motion, STM, known singularities, validity limits, failure
-        cases) · C. Two-Body Orbital Dynamics (assumptions, mean motion, period, vis-viva, limitations) · D.
-        Model Selection Guidance (when CW is valid/invalid, GEO/large-phasing/multi-rev examples).</td></tr>
-      <tr><th>Consumed by</th><td>The three skills in <code>.pi/skills/</code> are written to be consistent
-        with this document's conventions and thresholds (e.g. the LVLH axis convention, the CW rejection
-        criteria).</td></tr>
+      <tr><th>Sections</th><td>A. Frames, state ordering, and units · B. CW local rendezvous · C. bounded two-body coast fallback · D. assumption-based model selection · E. required GMAT verification evidence · F. future-work and unsupported boundary.</td></tr>
+      <tr><th>Consumed by</th><td>The five controlled skills in <code>.pi/skills/</code> use its LVLH/state/unit contracts, assumption checklist, bounded fallback boundary, and GMAT numerical-plus-screenshot requirement.</td></tr>
       <tr><th>Tested?</th><td>Not applicable \u2014 this is prose documentation, not executable code. The
         singularity and validity claims it makes ARE indirectly exercised by
         <code>tests/test_cw.py::test_cw_exact_one_orbit_targeting_is_rejected</code> and
         <code>test_cw_validation_basic</code>.</td></tr>
-      <tr><th>Known limitations</th><td>Several of its stated model-selection rules (GEO-scale rejection,
-        non-circular chief orbit rejection, multi-rev phasing rejection) are not mirrored by any deterministic
-        check in <code>src/cw.py</code> \u2014 only by LLM-skill guidance text.</td></tr>
+      <tr><th>Known limitations</th><td><code>validate_cw_use()</code> has only limited deterministic heuristics; full circularity/locality/duration/frame assessment is controlled-skill guidance. GMAT execution is required by the workflow but not integrated in this recovered repository.</td></tr>
     </table>
     <details><summary style="cursor:pointer;color:var(--accent)">Full document</summary>
       ${TC.authorityBanner('Exact, unmodified contents of reference/SOURCE.md.')}

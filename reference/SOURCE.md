@@ -1,249 +1,228 @@
-# Trajectory CoPilot Orbital Mechanics Reference
+# Trajectory CoPilot Controlled Reference
 
-This document is the physics reference for rendezvous and proximity-operations problems. The intent is that the agent consults this source instead of relying on pretrained memory.
+## Status, authority, and semester boundary
 
-## A. Coordinate Frames
+This is the controlled physics reference for the scoped semester rendezvous
+workflow. It is authoritative for the conventions and contracts stated here;
+`src/` is authoritative for deterministic behavior and `tests/` are the
+executable evidence. The active workflow is limited to:
 
-### LVLH
-Local Vertical Local Horizontal. A rotating frame centered on the reference spacecraft.
+1. problem formulation;
+2. fixed-duration CW rendezvous;
+3. bounded inertial two-body coast fallback;
+4. assumption-based model selection; and
+5. GMAT numerical-plus-screenshot verification.
 
-A common convention is:
-- \(\hat{x}\): radial direction, outward from the central body through the reference spacecraft
-- \(\hat{y}\): along-track direction, in the direction of motion
-- \(\hat{z}\): cross-track direction, completing a right-handed triad
+It does **not** support generalized trajectory optimization, transfer-time or
+delta-v trade studies, Pareto fronts, continuous thrust, perturbation models,
+CR3BP/cislunar/n-body dynamics, broad mission planning, or universal/learned
+CW-validity thresholds. Those are future-work or excluded topics, not claims
+made by this repository.
 
-### RTN
-Radial-Transverse-Normal.
-- Radial points from the central body to the spacecraft.
-- Transverse lies in the orbital plane, approximately along velocity for near-circular orbits.
-- Normal is parallel to orbital angular momentum.
+## A. Frames, state ordering, and units
 
-### RIC
-Radial-Intrack-Crosstrack.
-- Radial is outward from the primary.
-- Intrack is along velocity or along-track direction in the orbital plane.
-- Crosstrack is orbit normal.
+### A.1 LVLH/RIC convention used by the CW code
 
-### ECI
-Earth-Centered Inertial.
-A non-rotating inertial frame used for Cartesian propagation under two-body dynamics.
+The recovered CW implementation uses the right-handed LVLH/RIC convention:
 
-## Conventions
+- `x`: radial outward from the central body through the chief/reference;
+- `y`: along-track (in-track), in the chief's direction of motion; and
+- `z`: cross-track/orbit-normal, completing the right-handed triad.
 
-- Coordinate definitions must be stated explicitly because LVLH/RTN/RIC naming varies across sources.
-- CW equations assume a reference orbit with radius \(r_0\) and mean motion \(n\).
-- For this repository, the default relative-motion convention is LVLH/RIC with:
-  - \(x\) radial,
-  - \(y\) along-track/intrack,
-  - \(z\) cross-track.
+The relative state is ordered exactly as
 
-## B. Clohessy-Wiltshire Dynamics
-
-### Assumptions
-CW, also called Hill’s equations, is a linearized relative-motion model about a circular reference orbit.
-
-The standard assumptions are:
-- chief/reference orbit is circular or nearly circular,
-- relative separation is small compared with orbital radius,
-- relative velocities are small,
-- central-body gravity dominates,
-- linearization about the reference orbit is acceptable over the transfer time,
-- perturbations are neglected.
-
-### Mean motion definition
-For a circular orbit,
 \[
- n = \sqrt{\mu / r_0^3}
-\]
-where:
-- \(n\) is mean motion [rad/s],
-- \(\mu\) is the gravitational parameter [m^3/s^2],
-- \(r_0\) is the reference orbit radius [m].
-
-### Equations of motion
-Using the LVLH convention \((x,y,z)\):
-\[
-\ddot{x} - 2n\dot{y} - 3n^2 x = 0
-\]
-\[
-\ddot{y} + 2n\dot{x} = 0
-\]
-\[
-\ddot{z} + n^2 z = 0
+\mathbf{x}=[x,y,z,\dot{x},\dot{y},\dot{z}]^T.
 \]
 
-These equations are linear time-invariant in the rotating frame.
+`src/cw.py::cw_stm`, `propagate_relative_state`, and
+`two_burn_targeting` use that ordering. `src/verify.py` uses the same axis
+meaning when it converts a circular chief/deputy case between LVLH and inertial
+Cartesian coordinates. LVLH, RTN, and RIC names vary across sources; a caller
+must state this convention rather than infer a different one.
 
-### State-transition matrix formulation
-The CW state vector is commonly written as
-\[
-\mathbf{x} = [x, y, z, \dot{x}, \dot{y}, \dot{z}]^T.
-\]
-The propagated state is
-\[
-\mathbf{x}(t) = \Phi(t)\,\mathbf{x}(0)
-\]
-with a 6x6 STM partitioned as:
-\[
-\Phi = \begin{bmatrix}
-\Phi_{rr} & \Phi_{rv} \\
-\Phi_{vr} & \Phi_{vv}
-\end{bmatrix}
-\]
-where each block is 3x3.
+### A.2 Inertial Cartesian convention used by the two-body fallback
 
-The STM is used for targeting by solving the appropriate block equation for the initial or terminal impulsive velocity change.
+The bounded fallback accepts and returns the state
 
-### Implementation audit and convention
-The repository implementation uses exactly the state ordering
-\( [x,y,z,\dot{x},\dot{y},\dot{z}]^T \) and the x-radial-outward,
-y-along-track, z-orbit-normal right-handed LVLH/RIC convention stated above.
-`src/cw.py::cw_stm` implements the circular-chief block solution audited in
-`docs/cw-stm-audit.md`; that note maps every term to Clohessy & Wiltshire
-(1960) and Schaub & Junkins (2018). The block units are \(\Phi_{rr}\) and
-\(\Phi_{vv}\) dimensionless, \(\Phi_{rv}\) in seconds, and \(\Phi_{vr}\) in
-s⁻¹. The implementation and regression test require \(\Phi(0)=I_6\) within
-an absolute tolerance of \(10^{-15}\) for exact floating-point zero time.
-
-### Fixed-duration two-burn targeting and singularities
-For a specified duration, let the initial targeting burn change the initial
-relative velocity from \(v_0\) to \(v_0^+=v_0+\Delta v_0\). Partitioning the
-STM position equation gives
 \[
-r_f=\Phi_{rr}r_0+\Phi_{rv}v_0^+.
+[x,y,z,v_x,v_y,v_z]^T
 \]
-Thus the terminal-position boundary condition is
+
+in a declared inertial Cartesian frame. It does not accept LVLH-relative input
+without an explicitly implemented transformation. Its stable metadata is
+`frame="inertial-cartesian"`, `central_body="Earth"`,
+`dynamics="point-mass-two-body"`, and `integrator="fixed-step-rk4"`.
+
+### A.3 Units
+
+All deterministic inputs and outputs use SI units:
+
+- position and distance: m;
+- velocity: m/s;
+- time/duration: s;
+- gravitational parameter \(\mu\): m³/s²; and
+- mean motion \(n\): rad/s.
+
+## B. Clohessy-Wiltshire local rendezvous
+
+### B.1 Physical assumptions
+
+CW (Hill) dynamics are a linearized relative-motion model about a circular or
+near-circular chief/reference orbit. The intended regime requires documented
+support for all of the following:
+
+- circularity (or explicitly justified near-circular approximation);
+- local separation relative to reference-orbit radius, not global phasing;
+- small relative velocity and a transfer duration/regime for which
+  linearization remains acceptable;
+- the LVLH/RIC frame and state ordering in §A.1;
+- central-body gravity dominance with perturbations neglected; and
+- impulsive-burn suitability for the fixed-duration two-impulse targeting
+  path.
+
+These are an assumption-based selection checklist, not a universal learned
+threshold. `src/cw.py::validate_cw_use` emits only limited deterministic
+warnings (currently a separation ratio heuristic and an approximately
+two-orbit duration heuristic); it neither establishes the full physical case
+nor replaces this assessment.
+
+### B.2 Mean motion and equations of motion
+
+For circular reference radius \(r_0\),
+
+\[
+n=\sqrt{\mu/r_0^3}.
+\]
+
+With the §A.1 LVLH axes, the implemented equations are
+
+\[
+\ddot{x}-2n\dot{y}-3n^2x=0,
+\]
+\[
+\ddot{y}+2n\dot{x}=0,
+\]
+\[
+\ddot{z}+n^2z=0.
+\]
+
+`src/cw.py::cw_stm` implements the circular-chief closed-form STM for
+\(\mathbf{x}(t)=\Phi(t)\mathbf{x}(0)\). The block units are
+\(\Phi_{rr}\) and \(\Phi_{vv}\) dimensionless, \(\Phi_{rv}\) seconds,
+and \(\Phi_{vr}\) s⁻¹. `docs/cw-stm-audit.md` maps the implemented terms to
+its cited CW sources; `tests/test_cw.py` exercises zero-time identity and
+quarter-orbit signs/units.
+
+### B.3 Fixed-duration two-impulse targeting and singularities
+
+`src/cw.py::two_burn_targeting` is a deterministic fixed-duration,
+two-impulse CW calculation, not transfer-time optimization. With the STM
+position partition, it solves
+
 \[
 \Phi_{rv}v_0^+=b,\qquad b=r_f-\Phi_{rr}r_0.
 \]
-For a well-conditioned full-rank \(\Phi_{rv}\), `src/cw.py::two_burn_targeting`
-uses the unique inverse solve and then computes the terminal burn
-\(\Delta v_1=v_f-v_f^-\). At integer orbital periods, \(\Phi_{rv}\) is
-singular; singularity alone does **not** mean rendezvous is impossible. The
-boundary is feasible precisely when \(b\) lies in the column space of
-\(\Phi_{rv}\). A feasible rank-deficient system has infinitely many initial
-velocity solutions, and the implementation returns the SVD-pseudoinverse
-minimum-norm \(v_0^+\), explicitly marked `singular-reachable` and
-non-unique.
 
-The implementation uses an SVD relative rank threshold of \(10^{-12}\) times
-the largest singular value. It projects \(b\) onto the retained left-singular
-vectors and accepts it as reachable only when the projection residual is at
-most \(10^{-9}\max(1,\|b\|)\) metres. A singular or ill-conditioned case with
-a larger residual returns machine-readable `singular-infeasible` metadata,
-a human-readable reason, and no fabricated burns. It does not change the
-requested transfer time. These rules apply only to fixed-duration linear CW
-targeting; they do not make long-duration, multi-revolution, or nonlocal CW
-geometry physically valid, nor do they perform general trajectory
-optimization.
+A well-conditioned full-rank \(\Phi_{rv}\) has a unique direct solution.
+At singular or near-singular transfer times, singularity alone does **not**
+make rendezvous impossible: the boundary is feasible exactly when \(b\) lies
+in the column space of \(\Phi_{rv}\). The implementation uses an SVD
+relative rank threshold of \(10^{-12}\) times the largest singular value and
+accepts reachability only when the projection residual is at most
+\(10^{-9}\max(1,\|b\|)\) m. A reachable rank-deficient system returns the
+SVD-pseudoinverse minimum-norm \(v_0^+\), marked `singular-reachable` and
+non-unique; an unreachable boundary returns `singular-infeasible` metadata,
+a human-readable reason, and no fabricated burns. The requested transfer time
+is never changed. These algebraic outcomes do not make long-duration,
+multi-revolution, or nonlocal CW geometry physically valid.
 
-### Validity limits
-CW is best for local proximity operations, short-to-moderate transfer times, and small relative separations. It degrades when:
-- separation is large compared with the orbit radius,
-- the transfer is long enough for linearization error to accumulate,
-- the reference orbit is not circular,
-- the geometry is global-scale rather than local-relative.
+### B.4 Applicability and rejection guidance
 
-### Failure cases
-Common CW failure cases include:
-- GEO-scale phasing between spacecraft separated by large true-anomaly arcs,
-- large along-track separations that are a significant fraction of the orbit,
-- noncircular reference orbits,
-- long multi-revolution transfers where linear error compounds,
-- missions requiring perturbation modeling.
+CW should be rejected or held for more information when circularity, locality,
+duration/regime, frame definition, or the other §B.1 assumptions are unknown
+or unsupported. Large separations relative to orbital radius, global or
+GEO-scale phasing, non-circular chiefs, long/multi-revolution regimes, and
+required perturbation modeling are documented reasons not to claim a local CW
+result. They do not imply that this repository provides a general replacement
+solver.
 
-## C. Two-Body Orbital Dynamics
+## C. Bounded two-body coast fallback
 
-### Assumptions
-- central point-mass gravity,
-- no thrust during coast arcs,
-- no perturbations unless explicitly added.
+### C.1 Assumptions and contract
 
-### Mean motion
-For a Keplerian orbit with semi-major axis \(a\):
+`src/twobody.py` implements deterministic point-mass two-body **coast
+propagation**, not generalized rendezvous targeting. It requires an initial
+six-element inertial Cartesian SI state, positive \(\mu\), finite duration,
+and a positive fixed RK4 step count. It returns the final state in the same
+frame and units.
+
+The model assumes central point-mass gravity, no thrust during the coast arc,
+and no perturbations. Its state derivative is
+
 \[
- n = \sqrt{\mu / a^3}
-\]
-For a circular orbit, \(a = r_0\).
-
-### Orbital period
-\[
- T = 2\pi \sqrt{a^3/\mu}
+\dot{\mathbf r}=\mathbf v,\qquad
+\dot{\mathbf v}=-\mu\frac{\mathbf r}{\|\mathbf r\|^3}.
 \]
 
-### Vis-viva equation
-\[
- v^2 = \mu\left(\frac{2}{r} - \frac{1}{a}\right)
-\]
-where \(r\) is the instantaneous radius.
+The zero-radius singularity, non-finite inputs, non-positive \(\mu\), and
+non-positive step count are explicitly rejected. `kepler_propagate_state`
+uses fixed-step classical RK4; `propagate_cartesian_state` is its six-element
+wrapper.
 
-### Bounded deterministic fallback contract
-The implemented fallback is a **coast propagator**, not a generalized rendezvous solver. It accepts an initial inertial Cartesian state
-\[
-\mathbf{x}_0=[x,y,z,v_x,v_y,v_z]^T
-\]
-in SI units: position in metres, velocity in metres per second, positive \(\mu\) in m³/s², a finite duration in seconds, and a positive fixed RK4 step count. Its output is the final state in the same SI inertial Cartesian frame. The stable like-for-like metadata is `frame="inertial-cartesian"`, `central_body="Earth"`, `dynamics="point-mass-two-body"`, and `integrator="fixed-step-rk4"`; an optional epoch may accompany a case for an external verifier.
+### C.2 What the fallback does not claim
 
-`src/twobody.py::TwoBodyCase` carries those inputs and metadata for the later pinned Poliastro adapter. The core propagator imports neither Poliastro nor Astropy.
+The fallback has no burn execution, rendezvous targeting, optimization,
+LVLH-relative input, J2, drag, third bodies, solar radiation pressure, or
+thrust. `unsupported_request()` returns `UNSUPPORTED` for targeting,
+maneuver, optimization, thrust, and perturbation requests rather than
+improvising a result. A propagated coast state is not evidence that a
+rendezvous has been solved.
 
-### Point-mass equation and state derivative
-For \(\mathbf{x}=[\mathbf{r},\mathbf{v}]^T\), the point-mass coast dynamics are:
-\[
-\dot{\mathbf{r}}=\mathbf{v},\qquad
-\dot{\mathbf{v}}=-\mu\frac{\mathbf{r}}{\|\mathbf{r}\|^3}.
-\]
-The central-body singularity \(\|\mathbf{r}\|=0\), non-finite values, non-positive \(\mu\), and a non-positive step count are rejected explicitly.
+`tests/test_twobody.py` checks a circular LEO one-period return, energy and
+angular-momentum behavior, invalid input rejection, and deterministic behavior
+for a deliberately CW-invalid geometry. Those tests evidence the bounded
+contract only, not omitted physics.
 
-### Fixed-step classical RK4 stages
-For derivative \(f(\mathbf{x})\) and step \(h=\Delta t/N\), the implementation evaluates:
-\[
-k_1=f(\mathbf{x}_i),\quad k_2=f(\mathbf{x}_i+h k_1/2),\quad
-k_3=f(\mathbf{x}_i+h k_2/2),\quad k_4=f(\mathbf{x}_i+h k_3),
-\]
-then advances
-\[
-\mathbf{x}_{i+1}=\mathbf{x}_i+\frac{h}{6}(k_1+2k_2+2k_3+k_4).
-\]
-In code this is split into position and velocity stages in `src/twobody.py::kepler_propagate_state`; `propagate_cartesian_state` is the six-element wrapper.
+## D. Assumption-based model selection
 
-### Invariants and verification evidence
-For an unperturbed coast arc, the specific energy
-\[
-\epsilon=\frac{1}{2}\|\mathbf{v}\|^2-\frac{\mu}{\|\mathbf{r}\|}
-\]
-and specific angular momentum
-\[
-\mathbf{h}=\mathbf{r}\times\mathbf{v}
-\]
-should remain constant to numerical integration error. `tests/test_twobody.py` checks a circular LEO state against its analytical one-period return (2 cm position and 2e-5 m/s velocity tolerances) and checks these invariants over three periods. It also shows that a deliberately CW-invalid, 1,000 km radial-separation absolute state propagates deterministically under the same bounded coast contract.
+The active selector must choose only one of these outcomes:
 
-### Unsupported requests and limitations
-`unsupported_request()` returns `UNSUPPORTED` for targeting, maneuver design, trajectory optimization, thrust, and perturbation requests rather than improvising a result. The fallback supports no LVLH-relative input or unspecified frame, no burn execution, and no J2, drag, third bodies, solar radiation pressure, or thrust. It is suitable as a deterministic point-mass propagation result for later GMAT comparison, not a claim that a rendezvous has been solved. GMAT remains the required end-to-end numerical and visual verifier; the pinned Poliastro adapter is intentionally deferred to TJC-1.7.
+- **CW rendezvous:** only after §B.1 assumptions and targeting conditioning
+  are documented for a fixed-duration local case;
+- **bounded two-body fallback:** only for the §C.1 inertial Cartesian
+  point-mass coast contract; or
+- **needs more information / unsupported:** for ambiguous frames, missing
+  essential inputs, perturbed or thrust cases, optimization, variable-duration
+  trade studies, or any case outside both contracts.
 
-## D. Model Selection Guidance
+The selector must report circularity, locality/separation relative to radius,
+duration/regime, frame/state definition, other physical assumptions, and
+unknown or violated assumptions. It must not infer a universal learned
+threshold from `validate_cw_use()` or from an isolated example.
 
-### When CW is valid
-CW is appropriate when:
-- the reference orbit is circular or close to circular,
-- the relative distance is small compared with orbital radius,
-- the mission is a local rendezvous or proximity-operations problem,
-- the time horizon is short enough that linearization remains accurate,
-- the problem is expressed in a clear LVLH/RTN/RIC frame.
+## E. Required GMAT verification evidence
 
-### When CW is invalid
-Reject CW when:
-- the target/chaser separation is large,
-- the scenario is really a phasing problem around the full orbit,
-- the orbit is GEO-scale with large angular separation,
-- the transfer spans multiple revolutions with meaningful nonlinear drift,
-- the chief orbit is not near circular,
-- the frame convention is ambiguous.
+The scoped end-to-end verification requirement is both:
 
-### GEO separation examples
-If one spacecraft is roughly one-third of the GEO belt away from another, the geometry is not local proximity motion. CW should be rejected because the relative separation is too large and the nonlinear orbital geometry dominates the motion.
+1. GMAT numerical output for the same declared case, compared against the
+   candidate in matched frame, epoch, state order, units, dynamics, and
+   documented position/velocity tolerances; and
+2. a non-empty accessible GMAT orbit/trajectory screenshot with a stable path
+   or link.
 
-### Large-phasing examples
-Large phasing arcs are better treated with two-body or higher-fidelity propagation. If the objective is to move along the orbit by a large fraction of the orbital circumference, the problem is not a small relative-motion problem.
+A tolerance exceedance, unavailable/failed GMAT execution, mismatched
+comparison data, or missing/inaccessible screenshot is not `PASS`; it must
+remain distinguishable as `FAIL`, `UNAVAILABLE`, or `INCOMPLETE`. The
+recovered repository does not yet integrate GMAT. Internal two-body comparison
+and the isolated pinned Poliastro adapter are bounded code-level checks and do
+not replace the required GMAT numerical-plus-screenshot evidence.
 
-### Multi-revolution limitations
-CW can be used for some multi-revolution rendezvous problems, but the error grows with duration and the transfer can become ill-conditioned near singular times. For long or multi-rev problems, verify with two-body propagation at minimum and use higher-fidelity methods if accuracy matters.
+## F. Future-work and unsupported capability boundary
+
+Potential higher-fidelity propagation, optimization, Pareto analysis,
+perturbation modeling, CR3BP/cislunar work, broad benchmarks, and generalized
+mission design are intentionally outside this controlled reference's supported
+semester workflow. They may be discussed as future work only when explicitly
+labeled unsupported and must not be selected, promised, or reported as an
+implemented capability.

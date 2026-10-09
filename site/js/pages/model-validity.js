@@ -78,12 +78,12 @@ window.TCPages['model-validity'] = async function (root) {
     </table>
 
     <h2>Current validity-checking in code vs. in skills</h2>
-    <p>${TC.badge('partial', 'PARTIAL')} <code>validate_cw_use()</code> in <code>src/cw.py</code> only checks
-    two numeric heuristics: separation/radius ratio &gt; 1% and transfer time &gt; ~2 orbital periods. It does
-    <strong>not</strong> check for GEO-scale geometry, non-circular reference orbits, or multi-revolution
-    phasing explicitly — those richer checks exist only as guidance text in
-    <code>.pi/skills/orbital-model-selector/SKILL.md</code>, to be applied by an LLM reasoning over the
-    formalized problem, not enforced deterministically in code today.</p>
+    <p>${TC.badge('partial', 'PARTIAL')} <code>validate_cw_use()</code> in <code>src/cw.py</code> has limited
+    deterministic warnings (currently separation/radius &gt; 1% and duration &gt; ~2 periods). Per the controlled
+    reference <code>reference/SOURCE.md §D</code>, they are not a universal validity threshold. Circularity,
+    locality/global-phasing context, duration regime, explicit frame/state definition, perturbation, and
+    impulsive-burn assumptions are documented by <code>.pi/skills/orbital-model-selector/SKILL.md</code> and
+    remain an assumption-based assessment rather than a deterministic guarantee.</p>
 
     <p><a href="#/failure-museum">Continue: Failure Museum →</a></p>
   `;

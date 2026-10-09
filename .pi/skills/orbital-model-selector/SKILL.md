@@ -1,60 +1,82 @@
 ---
 name: orbital-model-selector
-description: Select an appropriate orbital dynamics model for rendezvous and proximity operations, choosing between Clohessy-Wiltshire, two-body propagation, or higher-fidelity propagation.
+description: Select only between the scoped CW local-rendezvous path and bounded inertial two-body coast fallback using recorded physical assumptions.
 ---
 
 # Orbital Model Selector
 
 ## Purpose
 
-Select the most appropriate dynamics model for a rendezvous or relative-motion problem.
+Select a scoped model after `orbital-problem-formalizer` has extracted the
+case. This is assumption-based reasoning, not a learned or universal numeric
+threshold.
 
-The LLM should not solve orbital mechanics from memory. It should:
-- inspect the formalized problem,
-- identify violated assumptions,
-- select the dynamics model,
-- explain why the model is selected,
-- recommend verification methods.
+The only semester choices are:
 
-## Model choices
+- `CW rendezvous`: deterministic, fixed-duration local two-impulse CW
+  targeting in `src/cw.py`; or
+- `bounded two-body fallback`: deterministic inertial Cartesian point-mass
+  **coast propagation** in `src/twobody.py`, not a general rendezvous solver.
 
-### Clohessy-Wiltshire (CW)
-Use only when the problem satisfies the linearized proximity-operations assumptions.
+If neither contract fits, label the request `UNSUPPORTED` or `NEEDS MORE
+INFORMATION`; do not recommend an unimplemented higher-fidelity solver.
 
-### Two-body propagation
-Use when the geometry is too large, too nonlinear, or too long-duration for CW, but the motion is still reasonably described by point-mass gravity.
+## Required assessment
 
-### Higher-fidelity propagation
-Use when perturbations, non-Keplerian effects, or mission accuracy requirements make the two-body model insufficient.
+For a CW candidate, explicitly record each item below from the supplied case:
 
-## CW rejection checks
+1. **Circularity:** Is the chief/reference orbit circular or near-circular?
+2. **Locality:** Is relative separation small relative to reference-orbit
+   radius, rather than a global phasing arc?
+3. **Duration/regime:** Is the fixed transfer duration compatible with local
+   linearization, without long or multi-revolution accumulated error?
+4. **Frame:** Is the relative state in the explicit right-handed LVLH/RIC
+   convention `x` radial outward, `y` along-track, `z` cross-track, with
+   `[x,y,z,x_dot,y_dot,z_dot]` ordering and SI units?
+5. **Other physics:** Are central-body dominance, negligible perturbations,
+   small relative velocity, and impulsive-burn assumptions appropriate?
+6. **Targeting conditioning:** Is the requested CW transfer time outside the
+   singular/ill-conditioned `Phi_rv` regime reported by `src/cw.py`?
 
-Reject CW or flag it as invalid if any of the following are true:
-- reference orbit is not near-circular,
-- reference orbit radius or mean motion is unknown,
-- relative separation is not small compared with orbital radius,
-- transfer duration is long enough that linearization error can accumulate materially,
-- the scenario is clearly beyond local proximity operations,
-- multi-revolution phasing makes the linearization unreliable,
-- the configuration is GEO-scale or other large-arc geometry,
-- the target/chaser separation suggests a global-orbit phasing problem rather than relative motion.
+Do not declare CW valid from a single fixed percentage, orbit count, or
+learned threshold. `validate_cw_use()` provides limited deterministic warnings;
+it does not replace this documented assessment.
 
-## Required output fields
+## Selection results
 
-Return a concise model-selection note with:
-- Selected model
-- Assumption checks
-- Violated assumptions
-- Why this model
-- Recommended verification method(s)
+### CW rendezvous
 
-## Verification guidance
+Select only when all required CW assumptions are supported. Refer to
+`reference/SOURCE.md` §§A, B, and D and route fixed-duration targeting to the
+`cw-rendezvous` skill.
 
-- CW candidates should be checked against two-body propagation when possible.
-- Large separations, GEO-scale phasing, or long transfer times should be verified with a non-linear model.
-- If the result is sensitive to model choice, recommend higher-fidelity propagation.
+### Bounded two-body fallback
 
-## Style
+Select only for a declared point-mass coast case with an initial six-element
+inertial Cartesian SI state `[x,y,z,vx,vy,vz]`, positive `mu`, finite duration,
+and positive fixed RK4 step count. State explicitly that it provides a final
+coast state only; it does not target, execute burns, optimize, or accept
+unspecified/LVLH-relative frames.
 
-Be explicit about why CW is valid or invalid.
-Do not overstate confidence when the geometry is outside CW assumptions.
+### Unsupported / needs information
+
+Use this result for ambiguous frames, missing essential data, perturbations,
+thrust, optimization, variable-duration trade studies, or cases outside both
+contracts. State why, without inventing a new model.
+
+## Required output
+
+Return a concise note containing:
+
+- selection (`CW rendezvous`, `bounded two-body fallback`, `UNSUPPORTED`, or
+  `NEEDS MORE INFORMATION`);
+- evidence for every required assessment item;
+- violated or unknown assumptions;
+- deterministic implementation handoff; and
+- verification handoff.
+
+## Verification handoff
+
+All numerical candidates go to `gmat-rendezvous-verification`. GMAT numerical
+comparison and an accessible trajectory screenshot are required before a
+result can be called PASS.
