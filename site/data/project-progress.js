@@ -31,6 +31,12 @@ window.TCProjectProgress = {
           links: [['Controlled reference', 'data/reference/SOURCE.md'], ['Skill mirrors', '#/source-explorer'], ['CW implementation', 'data/src/cw.py'], ['Two-body implementation', 'data/src/twobody.py'], ['Tests', '#/tests']]
         },
         {
+          id: 'TJC-1.20', date: '2026-10-09', title: 'Build early CW-to-GMAT vertical slice',
+          commit: 'TJC-1.20: build CW-to-GMAT vertical slice', hash: 'ba5d0ae',
+          outcome: 'Added a reproducible CW-to-GMAT vertical slice with generated GMAT input, captured execution evidence, numerical comparison fields, and returned trajectory artifact. Without GMAT it reports NOT VERIFIED rather than claiming a pass.',
+          links: [['Slice runner', 'data/scripts/run_cw_gmat_slice.py'], ['Case input', 'data/examples/cw_gmat_vertical_slice.yaml'], ['Demo page', '#/cw-gmat-slice'], ['Tests', '#/tests']]
+        },
+        {
           id: 'TJC-1.12', date: '2026-10-09', title: 'Narrow and harden rendezvous problem formalizer',
           commit: 'TJC-1.12: narrow and harden rendezvous problem formalizer', hash: '81bf188',
           outcome: 'Restricted formalization to the supported rendezvous class, added field-level provenance and clarification blockers, and covered complete, incomplete, contradictory, and unit-inconsistent requests.',
