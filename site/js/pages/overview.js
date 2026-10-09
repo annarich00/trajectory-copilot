@@ -3,7 +3,7 @@
 window.TCPages.overview = async function (root) {
   const stages = [
     ['Natural-language rendezvous request', 'Operator states a supported target/chaser problem. Ambiguity must be surfaced, not silently filled.'],
-    ['Structured problem', 'Formalizer records orbit, frame, relative state, timing, maneuver assumptions, requested outputs, missing information, and provenance. Planned hardening: TJC-1.12.'],
+    ['Structured problem', 'Formalizer now accepts only the scoped two-spacecraft circular-LEO impulsive LVLH class; it records provenance, blocking issues, and focused clarification questions without filling material inputs.'],
     ['Assumption-based CW applicability', 'Check circularity, locality, duration/regime, frame, and maneuver assumptions. This is not a learned universal threshold. Planned: TJC-1.14.'],
     ['Deterministic CW or bounded two-body fallback', 'Current Python contains CW and two-body primitives, but the scoped selection/orchestration path is not complete. Audits/hardening: TJC-1.3–1.6.'],
     ['GMAT numerical comparison + screenshot', 'Required independent evidence. Not implemented today; early vertical slice is TJC-1.20 and hardening is TJC-1.21. A missing screenshot cannot be called PASS.'],

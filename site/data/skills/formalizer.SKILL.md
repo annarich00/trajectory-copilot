@@ -1,126 +1,93 @@
 ---
 name: orbital-problem-formalizer
-description: Convert natural-language astrodynamics problems into concise structured specifications before solving. Use for orbital mechanics, spacecraft rendezvous, relative motion, trajectory design, and especially Clohessy-Wiltshire problems.
+description: Formalize only a two-spacecraft, primarily circular-LEO, impulsive LVLH rendezvous request into a provenance-labeled specification before any solver is used.
 ---
 
-# Orbital Problem Formalizer
+# Scoped Rendezvous Problem Formalizer
 
-## Purpose
+## Purpose and supported class
 
-Convert an astrodynamics question into a structured problem specification before attempting a solution.
+Convert a natural-language request into a structured specification **without solving it**. This formalizer supports only:
 
-Do NOT solve the problem.
+- exactly two spacecraft: a target/chief and chaser/deputy;
+- primarily circular low-Earth reference orbits;
+- impulsive maneuvers;
+- a relative state expressed in a defined LVLH/Hill frame; and
+- a specified time of flight or an explicitly stated period count.
 
-The goal is to determine:
-1. what is known,
-2. what is missing,
-3. what dynamical model is appropriate,
-4. whether the problem is ready to solve.
+It is not a general astrodynamics, GEO/phasing, multi-spacecraft, finite-burn, or terminal-guidance formalizer. If the request is outside this class, label it `out of scope` and ask the operator to restate it within the supported class; do not choose another model or manufacture a usable specification.
 
-## Scope
+## Provenance rules
 
-The scoped workflow is limited to problem formulation for:
-- fixed-duration CW local rendezvous,
-- bounded inertial two-body coast fallback, and
-- assumption-based model selection and GMAT verification handoff.
+Every field, including unknown fields, must use exactly one provenance label:
 
-Do not assume CW is appropriate merely because the problem involves rendezvous. Do not formulate generalized optimization, Pareto fronts, thrust, perturbations, CR3BP/cislunar, or broad mission-planning work as supported semester capability.
+- `specified` — stated unambiguously by the operator.
+- `derived` — mechanically computable from specified values; show the source values and formula, but do not calculate a numerical result.
+- `assumed` — an explicit, non-material working assumption. Assumptions never satisfy required inputs and never make a problem ready to solve.
+- `missing` — required information was not supplied.
+- `ambiguous` — supplied wording has more than one material interpretation.
+- `contradictory` — supplied statements cannot both be true.
+- `unit-inconsistent` — values or units cannot be reconciled without an operator correction.
+- `out of scope` — outside the supported rendezvous class.
 
-## Required extraction
+Do not relabel inferred terminal conditions as specified. Do not invent altitude, gravitational parameter, circularity, LVLH convention, coordinate signs, units, terminal state, maneuver details, or a physical constant. A conventional Earth parameter, a conventional LVLH axis direction, and “rendezvous means zero terminal velocity” remain unsupplied unless the operator explicitly provides them.
 
-Extract:
+## Required output schema
 
-- Mission objective
-- Reference orbit
-- Coordinate frame
-- Initial relative position
-- Initial relative velocity
-- Terminal position
-- Terminal velocity
-- Transfer time
-- Maneuver/burn constraints
-- Gravitational parameter
-- Units
-- Requested dynamics model
+Return **only** this Markdown structure. Preserve all field names. Each field must be `<value or unknown> — <provenance label>`; units must be included with every numeric physical value.
 
-Use `unknown` when information is absent.
+### Scope
+- Classification: <supported | out of scope> — <provenance label>
+- Reason: <concise reason> — <provenance label>
 
-Do not invent values or silently assume conventions.
-
-## CW validity checks
-
-If CW is requested or considered, check:
-
-- Circular or near-circular reference orbit
-- Known reference radius or mean motion
-- Local relative separation compared with reference radius
-- Defined LVLH/RIC convention: x radial outward, y along-track, z cross-track
-- Initial relative state ordered [x, y, z, xdot, ydot, zdot] in SI units
-- Terminal conditions
-- Fixed transfer time and its duration/regime (including multi-revolution concerns)
-- Central-body dominance, negligible perturbations, small relative velocity, and impulsive-burn suitability
-
-Flag CW as a model-validity concern if the geometry or assumptions are inconsistent with linearized relative motion. These are recorded physical assumptions, not a universal learned threshold.
-
-## Output format
-
-Return ONLY the following structure:
-
-### Problem Type
-<type>
-
-### Objective
-<one sentence>
+### Participants
+- Central body: <name or unknown> — <provenance label>
+- Target/chief: <identifier or unknown> — <provenance label>
+- Chaser/deputy: <identifier or unknown> — <provenance label>
 
 ### Reference Orbit
-- Orbit: <value or unknown>
-- Radius/altitude: <value or unknown>
-- Mean motion/period: <value or unknown>
-- Gravitational parameter: <value or unknown>
+- Circularity: <circular | non-circular | unknown> — <provenance label>
+- Altitude: <value or unknown> — <provenance label>
+- Radius or orbital elements: <value or unknown> — <provenance label>
+- Gravitational parameter: <value or unknown> — <provenance label>
+- Mean motion or period: <value or unknown> — <provenance label>
 
-### Coordinate Frame
-<frame and axis convention, or unknown>
-
-### Initial Relative State
-- Position: [x, y, z]
-- Velocity: [xdot, ydot, zdot]
+### Relative Frame and State
+- Frame: <LVLH/Hill or unknown> — <provenance label>
+- LVLH convention: <x/y/z directions and signs or unknown> — <provenance label>
+- Initial relative position: <[x, y, z] with units or unknown> — <provenance label>
+- Initial relative velocity: <[xdot, ydot, zdot] with units or unknown> — <provenance label>
 
 ### Terminal Conditions
-- Position: [x, y, z] or unknown
-- Velocity: [xdot, ydot, zdot] or unknown
-- Interpretation: state any terminal conditions inferred from the objective separately from explicitly provided conditions.
+- Relative position: <[x, y, z] with units or unknown> — <provenance label>
+- Relative velocity: <[xdot, ydot, zdot] with units or unknown> — <provenance label>
+- Requested outputs: <e.g., burn vectors, final state, or unknown> — <provenance label>
 
-### Timing
-<transfer duration or unknown>
+### Timing and Maneuvers
+- Time of flight: <value or unknown> — <provenance label>
+- Period count: <value or unknown> — <provenance label>
+- Maneuver assumptions: <impulsive burn count, timing, and constraints or unknown> — <provenance label>
 
-### Maneuver Constraints
-<burn number/type/timing or unknown>
+### Blocking Issues
+- <one issue per missing, ambiguous, contradictory, unit-inconsistent, or out-of-scope required field; `None` only when there are none>
 
-### Dynamics Model
-<requested or proposed model>
-
-### Missing Information
-- <item>
-- <item>
-
-### Model Validity Concerns
-- <concern>
-- <concern>
-Use `None` if there are no identified concerns.
+### Clarification Questions
+- <one focused question per blocking issue; `None` only when there are none>
 
 ### Readiness
-<READY TO SOLVE | NEEDS MORE INFORMATION | MODEL VALIDITY CONCERN | NEEDS MORE INFORMATION + MODEL VALIDITY CONCERN>
+<READY TO SOLVE | NEEDS CLARIFICATION | OUT OF SCOPE>
 
 ### Formalization Summary
-<maximum 2 sentences>
+<at most two sentences; do not solve or calculate values>
 
-## Rules
+## Evaluation and readiness rules
 
-- Do not solve the problem.
-- Do not derive numerical values.
-- Do not invent missing information.
-- Do not silently choose a coordinate convention.
-- Do not assume circular orbit unless established or explicitly requested.
-- Distinguish missing information from model-validity concerns.
-- Route fully specified cases only to `orbital-model-selector`; do not solve them here.
-- Keep the response concise.
+A request is `READY TO SOLVE` only when it is in scope and has all of the following unambiguous, unit-consistent, and explicitly supplied: central body; circular reference orbit through altitude, radius, or complete elements plus gravitational parameter; LVLH convention; complete initial relative position and velocity; one or more complete terminal conditions; a time of flight or period count; impulsive maneuver assumptions; and requested outputs.
+
+- If altitude plus central-body radius is supplied, orbital radius may be `derived`; if radius plus gravitational parameter is supplied, mean motion/period may be `derived`.
+- A period count is usable only when the reference orbit provides enough specified information to derive its period. Do not silently turn “one orbit” into a duration.
+- If both time of flight and period count are supplied, preserve both. Mark them `contradictory` when the stated duration does not match the specified/derived period count.
+- Mark physical values `unit-inconsistent` when units are absent, dimensions disagree, vector components use unresolved mixed units, or values claim incompatible units. Ask for corrected values; do not convert by guessing.
+- “Behind,” “ahead,” “near,” or “rendezvous” does not establish an LVLH axis/sign, a complete state, or terminal position/velocity. Preserve it as `ambiguous` or `missing` and ask a focused question.
+- A requested model is not a substitute for the required physical inputs. Do not evaluate CW applicability beyond recording whether the scoped preconditions are supplied; model selection remains separate work.
+- Never solve, derive a numerical value, select a model, or prescribe burns.

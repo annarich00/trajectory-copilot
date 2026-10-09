@@ -24,6 +24,7 @@ MAPPINGS = {
     "tests/test_cw.py": "site/data/tests/test_cw.py",
     "tests/test_twobody.py": "site/data/tests/test_twobody.py",
     "tests/test_validation.py": "site/data/tests/test_validation.py",
+    "tests/test_formalizer_schema.py": "site/data/tests/test_formalizer_schema.py",
     "tests/test_poliastro_verify.py": "site/data/tests/test_poliastro_verify.py",
     ".pi/skills/orbital-problem-formalizer/SKILL.md": "site/data/skills/formalizer.SKILL.md",
     ".pi/skills/orbital-model-selector/SKILL.md": "site/data/skills/model-selector.SKILL.md",
@@ -36,6 +37,8 @@ MAPPINGS = {
     "evaluations/formalizer/test_01_underspecified.txt": "site/data/evaluations/test_01_underspecified.txt",
     "evaluations/formalizer/test_02_cw_complete.txt": "site/data/evaluations/test_02_cw_complete.txt",
     "evaluations/formalizer/test_03_cw_validity.txt": "site/data/evaluations/test_03_cw_validity.txt",
+    "evaluations/formalizer/test_04_contradictory.txt": "site/data/evaluations/test_04_contradictory.txt",
+    "evaluations/formalizer/test_05_unit_inconsistent.txt": "site/data/evaluations/test_05_unit_inconsistent.txt",
 }
 
 

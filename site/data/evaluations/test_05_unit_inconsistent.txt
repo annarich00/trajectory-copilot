@@ -1,0 +1,25 @@
+TEST NAME:
+Unit-Inconsistent Relative State in an Otherwise Scoped Request
+
+INPUT:
+Earth is the central body. The target is in a circular 400 km altitude orbit with Earth radius
+6378 km and gravitational parameter 398600 km^3/s^2. Use the LVLH convention x radial outward,
+y along-track in the target velocity direction, z cross-track right-handed.
+
+The chaser initial relative position is [10 m, -0.2 km, 0 s] and velocity is
+[0 m/s, 0 m/s, 0 m/s]. Use two impulsive burns over 900 s to reach relative position
+[0 m, 0 m, 0 m] and relative velocity [0 m/s, 0 m/s, 0 m/s]. Return both burn vectors.
+
+EXPECTED EVALUATION:
+- Mark the initial relative position as unit-inconsistent because its z component has time units rather than
+  length units.
+- The m and km position components may be explicitly convertible, but the malformed z component blocks a
+  complete state until corrected.
+- Ask for a corrected three-component position vector with length units.
+- Do not convert or infer a correction for the z component and do not solve.
+
+EXPECTED BLOCKING ISSUES:
+- Initial relative position has unit-inconsistent components.
+
+EXPECTED READINESS:
+NEEDS CLARIFICATION

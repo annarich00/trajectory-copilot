@@ -1,0 +1,26 @@
+TEST NAME:
+Contradictory Timing in an Otherwise Scoped Request
+
+INPUT:
+Earth is the central body. The target is in a circular 400 km altitude orbit with Earth radius
+6378 km and gravitational parameter 398600 km^3/s^2. Use the LVLH convention x radial outward,
+y along-track in the target velocity direction, z cross-track right-handed.
+
+The chaser initial relative position is [0 m, -100 m, 0 m] and velocity is [0 m/s, 0 m/s, 0 m/s].
+Use two impulsive burns to reach relative position [0 m, 0 m, 0 m] and velocity
+[0 m/s, 0 m/s, 0 m/s]. Return both burn vectors.
+
+The transfer time is 600 s and exactly one orbital period.
+
+EXPECTED EVALUATION:
+- Mark the time-of-flight/period-count pair contradictory because the specified 600 s does not equal one
+  period of the supplied circular reference orbit.
+- Preserve both supplied timing statements and their provenance; do not choose one or calculate a replacement.
+- Ask the operator to supply either the intended duration or the intended period count.
+- Do not reconcile the statements, solve, or invent a timing interpretation.
+
+EXPECTED BLOCKING ISSUES:
+- Time of flight and period count are contradictory.
+
+EXPECTED READINESS:
+NEEDS CLARIFICATION

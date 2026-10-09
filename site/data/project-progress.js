@@ -31,6 +31,12 @@ window.TCProjectProgress = {
           links: [['Controlled reference', 'data/reference/SOURCE.md'], ['Skill mirrors', '#/source-explorer'], ['CW implementation', 'data/src/cw.py'], ['Two-body implementation', 'data/src/twobody.py'], ['Tests', '#/tests']]
         },
         {
+          id: 'TJC-1.12', date: '2026-10-09', title: 'Narrow and harden rendezvous problem formalizer',
+          commit: 'TJC-1.12: narrow and harden rendezvous problem formalizer', hash: '81bf188',
+          outcome: 'Restricted formalization to the supported rendezvous class, added field-level provenance and clarification blockers, and covered complete, incomplete, contradictory, and unit-inconsistent requests.',
+          links: [['Formalizer skill', 'data/skills/formalizer.SKILL.md'], ['Schema tests', 'data/tests/test_formalizer_schema.py'], ['Overview', '#/overview']]
+        },
+        {
           id: 'TJC-1.6', date: '2026-10-09', title: 'Verify LVLH/inertial state transformations',
           commit: 'TJC-1.6: verify LVLH inertial state transformations', hash: '2c23f0b',
           outcome: 'Hardened LVLH/inertial conversions with explicit degenerate-state errors and verified right-handed basis, transport terms, and position/velocity round trips.',

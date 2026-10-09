@@ -1,140 +1,35 @@
 TEST NAME:
-Fully Specified CW Rendezvous
+Complete Scoped Circular-LEO Impulsive Rendezvous
 
 INPUT:
-A target spacecraft is in a circular orbit at 350 km altitude around Earth.
+Earth is the central body. The target spacecraft is in a circular 350 km altitude orbit.
 Earth radius is 6378 km and gravitational parameter is 398600 km^3/s^2.
 
-The LVLH frame has:
-x = radial outward
-y = along-track
-z = cross-track
+The LVLH frame has x radial outward, y along-track in the target velocity direction,
+and z cross-track completing a right-handed frame.
 
-At t = 0:
-Position = [15 m, -200 m, 0]
-Velocity = [-0.14 m/s, 0, 0]
+At t = 0, the chaser relative state is:
+Position = [15 m, -200 m, 0 m]
+Velocity = [-0.14 m/s, 0 m/s, 0 m/s]
 
-Objective:
-Two-burn rendezvous after one orbital period
-with zero relative position and velocity.
+Use two impulsive burns, one at departure and one at arrival. After one orbital period,
+reach relative position [0 m, 0 m, 0 m] and relative velocity [0 m/s, 0 m/s, 0 m/s].
+Return the two burn vectors and terminal relative state.
 
-EXPECTED BEHAVIOR:
-The agent should identify:
-- Circular orbit
-- LVLH frame
-- Complete relative state
-- Terminal constraints
-- One-orbit timing requirement
-- CW/Hill dynamics as the likely model
+EXPECTED EVALUATION:
+- Classify as supported: two spacecraft, circular Earth LEO, impulsive maneuvers, complete LVLH-relative
+  state, and specified period count.
+- Label all directly stated values as specified.
+- Label orbital radius from Earth radius plus altitude and the period/mean motion from radius plus
+  gravitational parameter as derived; do not calculate their numerical values.
+- Preserve both terminal position and terminal velocity as specified, not inferred.
+- Identify no blocking issues and ask no clarification questions.
 
-The agent should recognize that:
-- Orbital period can be computed
-- Mean motion can be computed
-- Burn timing is typically part of the solution
-- This is a valid proximity-operations problem
+EXPECTED BLOCKING ISSUES:
+None
+
+EXPECTED CLARIFICATION QUESTIONS:
+None
 
 EXPECTED READINESS:
 READY TO SOLVE
-
-EXPECTED MODEL VALIDITY:
-NO VALIDITY CONCERNS
-
-ACTUAL RESULT (Skill Version 1):
-
-Readiness:
-READY TO SOLVE
-
-Observation:
-PASS
-
-The skill correctly extracted all major orbital information.
-
-Actual result:
-
- A target spacecraft is in a circular orbit at 350 km altitude around Earth.
- Earth radius is 6378 km and gravitational parameter is 398600 km^3/s^2. The LVLH frame has x radial outward,
- y along-track in the velocity direction, and z cross-track. At t=0, the chaser is 15 m radially outward and
- 200 m behind the target along-track. Its relative velocity is 0.14 m/s radially inward, with zero along-track
- and cross-track velocity. The objective is a two-burn rendezvous after one orbital period, ending with zero
- relative position and velocity.
-
-
- Now I'm setting up the full relative motion problem with r=6728 km, μ=398600: initial position is 15 m
- radially outward, 200 m behind along-track, with an inward radial velocity of -0.14 m/s, targeting a full
- rendezvous to zero position and velocity over one orbital period using a two-burn maneuver.
-
- Since the orbit is circular with small separation, Clohessy-Wiltshire dynamics apply directly, so I'm ready
- to solve.
-
- ### Problem Type
-
- Clohessy-Wiltshire (CW) two-burn rendezvous, one-orbit transfer
-
- ### Objective
-
- Compute the two impulsive burns that transfer the chaser from its initial relative state to the target's
- location (zero relative position and velocity) after exactly one orbital period.
-
- ### Reference Orbit
-
- - Orbit: Circular
- - Radius/altitude: Altitude = 350 km; orbital radius r = Earth radius + altitude = 6378 + 350 = 6728 km
- - Mean motion/period: n = sqrt(μ/r³); T = 2π/n (numeric value not yet derived, but fully computable from
-   given r and μ)
- - Gravitational parameter: μ = 398600 km³/s²
-
- ### Coordinate Frame
-
- LVLH (Hill) frame: x = radial outward, y = along-track (velocity direction), z = cross-track — explicitly
- defined
-
- ### Initial Relative State
-
- - Position: [15, -200, 0] m
-   (x = +15 m radially outward; y = -200 m, since "behind" along-track is opposite the velocity/+y direction;
-   z = 0, no cross-track offset given)
- - Velocity: [-0.14, 0, 0] m/s
-   (x = -0.14 m/s, since "radially inward" is negative x; y = 0; z = 0)
-
- ### Terminal Conditions
-
- - Position: [0, 0, 0] (explicitly stated)
- - Velocity: [0, 0, 0] (explicitly stated)
- - Interpretation: Full rendezvous — chaser must exactly match target position and velocity at the end of the
-   transfer; consistent with the "zero relative position and velocity" objective statement.
-
- ### Timing
-
- Transfer time = one orbital period, T = 2π√(r³/μ), with r = 6728 km, μ = 398600 km³/s² (explicit numeric
- value not yet computed here, but fully determined)
-
- ### Maneuver Constraints
-
- Two-burn rendezvous: one impulsive burn at t=0 (to establish the transfer trajectory) and one impulsive burn
- at t=T (to null out relative velocity at arrival) — explicitly stated as "two-burn"
-
- ### Dynamics Model
-
- Clohessy-Wiltshire (CW) linearized relative motion — appropriate given circular reference orbit and small
- relative separation (≤200 m vs. r = 6728 km)
-
- ### Missing Information
-
- None. All quantities required for a CW two-burn rendezvous solution (reference orbit, μ, frame convention,
- initial relative state, terminal state, transfer time, burn structure) have been provided.
-
- ### Model Validity Concerns
-
- - None. Reference orbit is circular, separation (≤200 m) is small relative to orbital radius (6728 km), and
-   the LVLH frame convention is explicitly defined — all consistent with linearized CW assumptions.
-
- ### Readiness
-
- READY TO SOLVE
-
- ### Formalization Summary
-
- This is a fully specified CW two-burn rendezvous problem: a chaser at relative position [15, -200, 0] m and
- velocity [-0.14, 0, 0] m/s must reach [0,0,0] position and velocity after one orbital period of a 6728 km
- circular reference orbit, using two impulsive burns. All information needed to solve via the CW
- state-transition matrix is present.
