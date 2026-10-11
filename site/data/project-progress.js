@@ -1,11 +1,17 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
   updated: '2026-10-09',
-  commitSubject: 'TJC-1.2: align controlled reference and scoped skills',
+  commitSubject: 'TJC-1.15: harden deterministic CW rendezvous solution path',
   groups: [
     {
       label: 'Completed',
       items: [
+        {
+          id: 'TJC-1.15', date: '2026-10-09', title: 'Harden deterministic CW rendezvous solution path',
+          commit: 'TJC-1.15: harden deterministic CW rendezvous solution path', hash: 'pending final commit',
+          outcome: 'Added solve_cw_rendezvous(), a single deterministic orchestration function composing mean_motion -> two_burn_targeting -> propagate_relative_state, returning burn components, total delta-v, a sampled relative trajectory, final relative state, and time of flight together with declared units, frame, state ordering, assumptions, and solver status. Singular-infeasible/singular-reachable transfer times surface two_burn_targeting\u2019s structured status unchanged (no least-squares fallback, no silent transfer-time change). Added unsupported_cw_rendezvous_request() as an explicit rejection path for optimization/trade-study/non-CW-dynamics requests. Reproduces the audited quarter-orbit 350 km LEO benchmark exactly.',
+          links: [['Authoritative CW source', 'data/src/cw.py'], ['Regression tests', 'data/tests/test_cw.py'], ['Targeting lesson', '#/targeting'], ['Reference', 'data/reference/SOURCE.md']]
+        },
         {
           id: 'TJC-1.26', date: '2026-10-01', title: 'Establish initial checkpoint and atomic commits',
           commit: 'TJC-1.26: establish initial checkpoint and atomic commits', hash: '0f7e1ec',

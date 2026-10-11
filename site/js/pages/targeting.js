@@ -127,5 +127,59 @@ window.TCPages['targeting'] = async function (root) {
       <strong>pedagogical browser mirror</strong> (hand-ported JS, not the Python) using the same inputs, shown
       only to illustrate the algorithm's steps interactively; they are not a substitute for running
       <code>pytest</code> and should not be read as independently verifying it.</p>`)}
+
+    <h2>One deterministic orchestration call: solve_cw_rendezvous()</h2>
+    <p><code>src/cw.py::solve_cw_rendezvous</code> (TJC-1.15) composes
+    <code>mean_motion</code> → <code>two_burn_targeting</code> → <code>propagate_relative_state</code> into a
+    single structured entry point for a complete fixed-duration CW rendezvous problem. It does not add new CW
+    physics — it is the orchestration above, called once, with burn components, total delta-v, the sampled
+    relative trajectory, final relative state, and time of flight all returned together, alongside declared
+    units, frame convention, assumptions, and solver status.</p>
+    ${TC.codeRef('src/cw.py', 'solve_cw_rendezvous')}
+    ${TC.authorityBanner('Exact, unmodified text of <code>solve_cw_rendezvous()</code> from <code>src/cw.py</code>.')}
+    ${(() => { const sym2 = TC.extractPySymbol(cwSrc, 'solve_cw_rendezvous'); return sym2 ? TC.codeBlock(sym2.code, sym2.startLine) : ''; })()}
+    <div class="panel" id="orchestration-panel"></div>
+
+    <h2>Explicit failure, not a fallback, for a singular/unreachable transfer time</h2>
+    <p>AC3: a transfer time whose boundary condition lies outside the Φrv column space returns
+    <code>status="singular-infeasible"</code> with <code>feasible=False</code>, no burns, no trajectory, and
+    no fabricated final state — the requested <code>t_final</code> is never changed, and no least-squares
+    substitute is returned. See <code>tests/test_cw.py::test_solve_cw_rendezvous_singular_infeasible_boundary_fails_explicitly</code>
+    and <code>test_solve_cw_rendezvous_singular_reachable_boundary_uses_svd_minimum_norm</code> for both singular
+    outcomes, and <a href="#/singularity">Why the Singularity Matters</a> for the underlying Φrv conditioning.</p>
+
+    <h2>Rejecting optimization and unsupported-dynamics requests</h2>
+    <p><code>src/cw.py::unsupported_cw_rendezvous_request</code> gives a concrete rejection path for requests
+    that would widen this scope — transfer-time optimization, delta-v/time trade studies, Pareto fronts,
+    continuous thrust, perturbations, or non-CW dynamics (eccentric chief, CR3BP, n-body) — returning an
+    explicit <code>UNSUPPORTED</code> result rather than improvising an answer. See
+    <code>tests/test_cw.py::test_unsupported_cw_rendezvous_request_rejects_optimization_and_other_dynamics</code>.</p>
+  `;
+
+  const orch = TCPhysics.solveCwRendezvous(mu, r0, state0, tFinal, null, 9);
+  root.querySelector('#orchestration-panel').innerHTML = `
+    <table>
+      <tr><th>Quantity</th><th>Value</th></tr>
+      <tr><td>status</td><td class="mono">${TC.esc(orch.status)}</td></tr>
+      <tr><td>mean_motion_radps</td><td class="mono">${TC.fmt(orch.meanMotionRadps,6)}</td></tr>
+      <tr><td>transfer_time_s</td><td class="mono">${TC.fmt(orch.transferTimeS,2)}</td></tr>
+      <tr><td>dv0_mps</td><td class="mono">${TC.vecStr(orch.dv0)}</td></tr>
+      <tr><td>dv1_mps</td><td class="mono">${TC.vecStr(orch.dv1)}</td></tr>
+      <tr><td>total_delta_v_mps</td><td class="mono">${TC.fmt(orch.totalDeltaV,5)}</td></tr>
+      <tr><td>final_state</td><td class="mono">${TC.vecStr(orch.finalState)}</td></tr>
+      <tr><td>frame</td><td class="mono">${TC.esc(orch.frame)}</td></tr>
+      <tr><td>assumptions</td><td class="mono">${orch.assumptions.length} declared assumption items</td></tr>
+    </table>
+    <p>Sampled relative trajectory (<code>trajectory_times_s</code>, <code>trajectory_states</code>), ${orch.trajectoryTimesS.length} points from t=0 to t_final:</p>
+    <table>
+      <tr><th>t (s)</th><th>x,y,z (m)</th></tr>
+      ${orch.trajectoryTimesS.map((t, i) => `<tr><td class="mono">${TC.fmt(t,1)}</td><td class="mono">${TC.vecStr(orch.trajectoryStates[i].slice(0,3))}</td></tr>`).join('')}
+    </table>
+    ${TC.callout('good', 'Same benchmark reproduced through tests/test_cw.py::test_solve_cw_rendezvous_reproduces_audited_leo_benchmark', `<p>This
+      is the identical 350 km, quarter-orbit case traced above, now solved by one call to
+      <code>solve_cw_rendezvous()</code> instead of composing the pieces by hand. The pytest test asserts the
+      returned burns, final state, trajectory shape, units, frame, assumptions, and status all match the
+      audited <code>two_burn_targeting()</code> benchmark exactly — this panel is, as above, a non-authoritative
+      pedagogical browser mirror of that same Python result.</p>`)}
   `;
 };

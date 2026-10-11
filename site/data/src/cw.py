@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Literal
 import numpy as np
 
 
@@ -340,4 +341,248 @@ def two_burn_targeting(
         dv0=dv0,
         dv1=dv1,
         final_state=final_state,
+    )
+
+# ---------------------------------------------------------------------------
+# TJC-1.15: deterministic rendezvous orchestration
+#
+# ``solve_cw_rendezvous`` composes ``mean_motion``, ``two_burn_targeting``,
+# and ``propagate_relative_state`` into one entry point for a complete,
+# structured fixed-duration CW rendezvous problem. It does not add new CW
+# physics: ``cw_stm``, ``two_burn_targeting``, and their singularity handling
+# (audited under TJC-1.3/TJC-1.4) are used unchanged.
+# ---------------------------------------------------------------------------
+
+CW_RENDEZVOUS_FRAME = "LVLH/RIC: x radial outward, y along-track, z cross-track (reference/SOURCE.md Sec A.1)"
+CW_RENDEZVOUS_STATE_ORDERING = ("x", "y", "z", "x_dot", "y_dot", "z_dot")
+CW_RENDEZVOUS_DYNAMICS = "clohessy-wiltshire-linearized-fixed-duration-two-impulse"
+CW_RENDEZVOUS_UNITS = (
+    ("position", "m"),
+    ("velocity", "m/s"),
+    ("time", "s"),
+    ("mean_motion", "rad/s"),
+    ("delta_v", "m/s"),
+    ("gravitational_parameter", "m^3/s^2"),
+)
+# Mirrors reference/SOURCE.md Sec B.1's assumption-based CW selection checklist.
+CW_RENDEZVOUS_ASSUMPTIONS = (
+    "circular, or explicitly justified near-circular, chief/reference orbit",
+    "local relative separation, small relative to the reference-orbit radius, not global phasing",
+    "small relative velocity and a fixed transfer duration/regime for which CW linearization remains acceptable",
+    "right-handed LVLH/RIC frame and [x, y, z, x_dot, y_dot, z_dot] state ordering (reference/SOURCE.md Sec A.1)",
+    "central-body gravity dominance with perturbations neglected",
+    "impulsive, instantaneous two-burn maneuvers at the start and end of the fixed transfer",
+)
+
+
+@dataclass(frozen=True)
+class CWRendezvousSolution:
+    """Complete deterministic outcome of one fixed-duration CW rendezvous problem.
+
+    ``status``, ``feasible``, ``singular``, ``non_unique``, and ``reason`` are
+    taken directly from ``two_burn_targeting``'s structured result: a singular
+    or ill-conditioned transfer time surfaces as ``"singular-reachable"`` or
+    ``"singular-infeasible"`` here, never as a least-squares substitute or a
+    silently changed ``transfer_time_s``. Burn, trajectory, and final-state
+    fields are ``None`` only when ``feasible`` is ``False``.
+    """
+
+    status: str
+    feasible: bool
+    singular: bool
+    non_unique: bool
+    reason: str
+    mean_motion_radps: float
+    transfer_time_s: float
+    dv0_mps: np.ndarray | None
+    dv1_mps: np.ndarray | None
+    total_delta_v_mps: float | None
+    trajectory_times_s: np.ndarray | None
+    trajectory_states: np.ndarray | None
+    final_state: np.ndarray | None
+    condition_number: float
+    rank: int
+    reachability_residual_m: float
+    units: tuple[tuple[str, str], ...]
+    frame: str
+    state_ordering: tuple[str, ...]
+    dynamics: str
+    assumptions: tuple[str, ...]
+
+
+def _validate_cw_rendezvous_inputs(
+    mu: float, reference_radius_m: float, t_final: float, trajectory_samples: int
+) -> None:
+    if not math.isfinite(mu) or mu <= 0:
+        raise ValueError("mu must be a positive finite gravitational parameter in m^3/s^2.")
+    if not math.isfinite(reference_radius_m) or reference_radius_m <= 0:
+        raise ValueError("reference_radius_m must be a positive finite reference orbit radius in m.")
+    if not math.isfinite(t_final) or t_final <= 0:
+        raise ValueError("t_final must be a positive finite transfer duration in s.")
+    if not isinstance(trajectory_samples, (int, np.integer)) or isinstance(trajectory_samples, bool) or trajectory_samples < 2:
+        raise ValueError("trajectory_samples must be an integer >= 2.")
+
+
+def solve_cw_rendezvous(
+    mu: float,
+    reference_radius_m: float,
+    state0: np.ndarray,
+    t_final: float,
+    target_final_state: np.ndarray | None = None,
+    *,
+    trajectory_samples: int = 50,
+    condition_limit: float = CW_CONDITION_NUMBER_LIMIT,
+    svd_rank_tolerance: float = CW_SVD_RANK_TOLERANCE,
+    svd_residual_tolerance: float = CW_SVD_RESIDUAL_TOLERANCE,
+) -> CWRendezvousSolution:
+    """Solve one complete, structured fixed-duration CW rendezvous problem.
+
+    This is the single deterministic orchestration entry point for the
+    supported CW rendezvous workflow: it computes mean motion, calls
+    ``two_burn_targeting`` for the two impulsive burns, and samples
+    ``propagate_relative_state`` over the post-burn-1 coast arc to return a
+    relative trajectory. Every outcome exposes ``units``, ``frame``,
+    ``state_ordering``, ``dynamics``, ``assumptions``, and solver ``status``
+    alongside the numerical result.
+
+    Parameters
+    ----------
+    mu:
+        Positive gravitational parameter [m^3/s^2].
+    reference_radius_m:
+        Positive circular reference-orbit radius [m].
+    state0:
+        Initial relative state ``[x, y, z, x_dot, y_dot, z_dot]`` in the
+        LVLH/RIC frame, SI units.
+    t_final:
+        Fixed, positive transfer duration [s]. This value is never changed:
+        a singular or ill-conditioned transfer time is reported through
+        ``status``/``reason``, not silently retimed.
+    target_final_state:
+        Desired final relative state; defaults to rendezvous at the origin
+        with zero relative velocity.
+    trajectory_samples:
+        Number of sample points (>= 2) used to report the relative
+        trajectory over ``[0, t_final]``.
+
+    Returns
+    -------
+    CWRendezvousSolution
+        A structured result exposing burn components, total delta-v, the
+        sampled relative trajectory, final relative state, time of flight,
+        units/frame/assumption metadata, and solver status. For a
+        ``"singular-infeasible"`` outcome, burn/trajectory/final-state fields
+        are ``None`` and no delta-v or trajectory is fabricated.
+
+    This function does not select a transfer time, trade delta-v against
+    time, or model dynamics other than circular-chief CW; those requests are
+    outside this contract (see ``unsupported_cw_rendezvous_request``).
+    """
+    _validate_cw_rendezvous_inputs(mu, reference_radius_m, t_final, trajectory_samples)
+    state0 = np.asarray(state0, dtype=float).reshape(6)
+
+    n = mean_motion(mu, reference_radius_m)
+    targeting = two_burn_targeting(
+        state0,
+        n,
+        t_final,
+        target_final_state,
+        condition_limit=condition_limit,
+        svd_rank_tolerance=svd_rank_tolerance,
+        svd_residual_tolerance=svd_residual_tolerance,
+    )
+
+    if not targeting.feasible:
+        return CWRendezvousSolution(
+            status=targeting.status,
+            feasible=False,
+            singular=targeting.singular,
+            non_unique=targeting.non_unique,
+            reason=targeting.reason,
+            mean_motion_radps=n,
+            transfer_time_s=t_final,
+            dv0_mps=None,
+            dv1_mps=None,
+            total_delta_v_mps=None,
+            trajectory_times_s=None,
+            trajectory_states=None,
+            final_state=None,
+            condition_number=targeting.condition_number,
+            rank=targeting.rank,
+            reachability_residual_m=targeting.reachability_residual_m,
+            units=CW_RENDEZVOUS_UNITS,
+            frame=CW_RENDEZVOUS_FRAME,
+            state_ordering=CW_RENDEZVOUS_STATE_ORDERING,
+            dynamics=CW_RENDEZVOUS_DYNAMICS,
+            assumptions=CW_RENDEZVOUS_ASSUMPTIONS,
+        )
+
+    post_burn1_state = np.hstack([state0[:3], state0[3:] + targeting.dv0])
+    trajectory_times = np.linspace(0.0, t_final, trajectory_samples)
+    trajectory_states = np.array(
+        [propagate_relative_state(post_burn1_state, n, float(t)) for t in trajectory_times]
+    )
+
+    return CWRendezvousSolution(
+        status=targeting.status,
+        feasible=True,
+        singular=targeting.singular,
+        non_unique=targeting.non_unique,
+        reason=targeting.reason,
+        mean_motion_radps=n,
+        transfer_time_s=t_final,
+        dv0_mps=targeting.dv0,
+        dv1_mps=targeting.dv1,
+        total_delta_v_mps=float(np.linalg.norm(targeting.dv0) + np.linalg.norm(targeting.dv1)),
+        trajectory_times_s=trajectory_times,
+        trajectory_states=trajectory_states,
+        final_state=targeting.final_state,
+        condition_number=targeting.condition_number,
+        rank=targeting.rank,
+        reachability_residual_m=targeting.reachability_residual_m,
+        units=CW_RENDEZVOUS_UNITS,
+        frame=CW_RENDEZVOUS_FRAME,
+        state_ordering=CW_RENDEZVOUS_STATE_ORDERING,
+        dynamics=CW_RENDEZVOUS_DYNAMICS,
+        assumptions=CW_RENDEZVOUS_ASSUMPTIONS,
+    )
+
+
+@dataclass(frozen=True)
+class UnsupportedCWRequest:
+    """Explicit response for a request outside ``solve_cw_rendezvous``'s contract."""
+
+    status: Literal["UNSUPPORTED"]
+    request: str
+    limitation: str
+    recommended_next_step: str
+
+
+def unsupported_cw_rendezvous_request(request: str) -> UnsupportedCWRequest:
+    """Return an explicit limitation instead of widening the CW rendezvous scope.
+
+    ``solve_cw_rendezvous`` solves only a fixed-duration, two-impulse CW
+    rendezvous under the circular-chief, local-separation assumptions in
+    ``reference/SOURCE.md`` Sec B.1. Transfer-time selection/optimization,
+    delta-v-versus-time trade studies, Pareto fronts, continuous thrust,
+    perturbation modeling, and non-CW dynamics (e.g. eccentric chief, CR3BP,
+    n-body) are unsupported semester capabilities; this records that
+    explicitly rather than improvising an answer.
+    """
+    return UnsupportedCWRequest(
+        status="UNSUPPORTED",
+        request=request,
+        limitation=(
+            "solve_cw_rendezvous supports only a fixed-duration, two-impulse "
+            "Clohessy-Wiltshire rendezvous under the circular-chief, local-separation "
+            "assumptions in reference/SOURCE.md Sec B.1. It does not choose or optimize "
+            "transfer time, trade delta-v against time, generate Pareto fronts, model "
+            "continuous thrust or perturbations, or solve non-CW dynamics (e.g. eccentric "
+            "chief, CR3BP, n-body)."
+        ),
+        recommended_next_step=(
+            "Use the orbital-problem-formalizer and orbital-model-selector skills to restate "
+            "the request as a fixed-duration local CW case or route it to the bounded two-body "
+            "coast fallback (src/twobody.py); otherwise return it for human review as unsupported."
+        ),
     )

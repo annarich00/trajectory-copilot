@@ -263,6 +263,56 @@ function twoBurnTargeting(state0, n, tFinal, targetFinalState = null) {
   };
 }
 
+// Mirrors: src/cw.py :: solve_cw_rendezvous(mu, reference_radius_m, state0, t_final, target_final_state, trajectory_samples)
+// Orchestrates meanMotion -> twoBurnTargeting -> propagateRelativeState into
+// one complete CW rendezvous result, matching the structured fields the
+// authoritative Python function returns (burns, total delta-v, trajectory,
+// final state, time of flight, units/frame/assumptions, status).
+const CW_RENDEZVOUS_FRAME_MIRROR = 'LVLH/RIC: x radial outward, y along-track, z cross-track (reference/SOURCE.md Sec A.1)';
+const CW_RENDEZVOUS_ASSUMPTIONS_MIRROR = [
+  'circular, or explicitly justified near-circular, chief/reference orbit',
+  'local relative separation, small relative to the reference-orbit radius, not global phasing',
+  'small relative velocity and a fixed transfer duration/regime for which CW linearization remains acceptable',
+  'right-handed LVLH/RIC frame and [x, y, z, x_dot, y_dot, z_dot] state ordering (reference/SOURCE.md Sec A.1)',
+  'central-body gravity dominance with perturbations neglected',
+  'impulsive, instantaneous two-burn maneuvers at the start and end of the fixed transfer',
+];
+
+function solveCwRendezvous(mu, referenceRadiusM, state0, tFinal, targetFinalState = null, trajectorySamples = 50) {
+  const n = meanMotion(mu, referenceRadiusM);
+  let targeting;
+  try {
+    targeting = twoBurnTargeting(state0, n, tFinal, targetFinalState);
+  } catch (e) {
+    // In this browser mirror, a thrown CWSingularTransferError-equivalent
+    // corresponds to the Python's "singular-infeasible" structured status,
+    // since checkPhiRvConditioning/solve3 do not reproduce the SVD
+    // reachability path implemented in src/cw.py::two_burn_targeting.
+    return {
+      status: 'singular-infeasible', feasible: false, meanMotionRadps: n, transferTimeS: tFinal,
+      dv0: null, dv1: null, totalDeltaV: null, trajectoryTimesS: null, trajectoryStates: null,
+      finalState: null, reason: e.message,
+      frame: CW_RENDEZVOUS_FRAME_MIRROR, assumptions: CW_RENDEZVOUS_ASSUMPTIONS_MIRROR,
+    };
+  }
+  const postBurn1State = state0.slice(0, 3).concat(vAdd(state0.slice(3, 6), targeting.dv0));
+  const trajectoryTimesS = [];
+  const trajectoryStates = [];
+  for (let i = 0; i < trajectorySamples; i++) {
+    const t = (tFinal * i) / (trajectorySamples - 1);
+    trajectoryTimesS.push(t);
+    trajectoryStates.push(propagateRelativeState(postBurn1State, n, t));
+  }
+  return {
+    status: 'unique', feasible: true, meanMotionRadps: n, transferTimeS: tFinal,
+    dv0: targeting.dv0, dv1: targeting.dv1,
+    totalDeltaV: vNorm(targeting.dv0) + vNorm(targeting.dv1),
+    trajectoryTimesS, trajectoryStates, finalState: targeting.finalState,
+    reason: 'Phi_rv is well-conditioned; returned the unique inverse solution.',
+    frame: CW_RENDEZVOUS_FRAME_MIRROR, assumptions: CW_RENDEZVOUS_ASSUMPTIONS_MIRROR,
+  };
+}
+
 /* ---------------------------------------------------------------------
  * Mirrors of src/twobody.py
  * ------------------------------------------------------------------- */
@@ -417,7 +467,7 @@ window.TCPhysics = {
   vSub, vAdd, vScale, vDot, vNorm, vCross, mat3VecMul, mat3TVecMul, det3, solve3, invert3, approxCond3,
   // cw.py mirror
   meanMotion, cwStm, propagateRelativeState, validateCwUse,
-  CW_CONDITION_NUMBER_LIMIT, CWSingularTransferError, checkPhiRvConditioning, twoBurnTargeting,
+  CW_CONDITION_NUMBER_LIMIT, CWSingularTransferError, checkPhiRvConditioning, twoBurnTargeting, solveCwRendezvous,
   // twobody.py mirror
   orbitalPeriod, visVivaSpeed, keplerPropagateState, propagateCartesianState,
   specificOrbitalEnergy, specificAngularMomentum,
