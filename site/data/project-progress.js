@@ -1,14 +1,20 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
-  updated: '2026-10-09',
-  commitSubject: 'TJC-1.15: harden deterministic CW rendezvous solution path',
+  updated: '2026-10-11',
+  commitSubject: 'TJC-1.14: implement assumption-based CW or two-body model selection',
   groups: [
     {
       label: 'Completed',
       items: [
         {
+          id: 'TJC-1.14', date: '2026-10-11', title: 'Implement assumption-based CW or two-body model selection',
+          commit: 'TJC-1.14: implement assumption-based CW or two-body model selection', hash: 'pending final commit',
+          outcome: 'Added src/model_selector.py, a deterministic multi-factor combinator over circularity, locality, duration/regime, frame, other-physics, and maneuver assumptions plus an optional CW targeting-conditioning signal from src/cw.py::two_burn_targeting. Clearly-supported cases select CW; clearly-violated cases route to the bounded two-body coast contract or UNSUPPORTED; boundary cases return a qualified CW decision with surfaced concerns and a verification-sensitivity note; any unknown required item returns NEEDS MORE INFORMATION rather than a model choice. No single numeric threshold is used alone.',
+          links: [['Model selector page', '#/model-selector'], ['Authoritative source', 'data/src/model_selector.py'], ['Tests', 'data/tests/test_model_selector.py'], ['Selector skill', 'data/skills/model-selector.SKILL.md'], ['Reference §D', 'data/reference/SOURCE.md']]
+        },
+        {
           id: 'TJC-1.15', date: '2026-10-09', title: 'Harden deterministic CW rendezvous solution path',
-          commit: 'TJC-1.15: harden deterministic CW rendezvous solution path', hash: 'pending final commit',
+          commit: 'TJC-1.15: harden deterministic CW rendezvous solution path', hash: '417908b',
           outcome: 'Added solve_cw_rendezvous(), a single deterministic orchestration function composing mean_motion -> two_burn_targeting -> propagate_relative_state, returning burn components, total delta-v, a sampled relative trajectory, final relative state, and time of flight together with declared units, frame, state ordering, assumptions, and solver status. Singular-infeasible/singular-reachable transfer times surface two_burn_targeting\u2019s structured status unchanged (no least-squares fallback, no silent transfer-time change). Added unsupported_cw_rendezvous_request() as an explicit rejection path for optimization/trade-study/non-CW-dynamics requests. Reproduces the audited quarter-orbit 350 km LEO benchmark exactly.',
           links: [['Authoritative CW source', 'data/src/cw.py'], ['Regression tests', 'data/tests/test_cw.py'], ['Targeting lesson', '#/targeting'], ['Reference', 'data/reference/SOURCE.md']]
         },
@@ -96,7 +102,6 @@ window.TCProjectProgress = {
     {
       label: 'Blocked / planned',
       items: [
-        {id: 'TJC-1.12 / 1.14', title: 'Formalizer and model selection', outcome: 'Planned behind reference/alignment work.'},
         {id: 'TJC-1.21 / 1.19', title: 'Harden GMAT and unified report', outcome: 'Planned after the vertical slice; GMAT is not currently integrated.'},
         {id: 'TJC-1.16 / 1.9 / 1.22 / 1.23', title: 'Reconnect, benchmark, compare, report', outcome: 'Planned behind component hardening.'}
       ]
