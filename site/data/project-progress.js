@@ -1,11 +1,17 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
   updated: '2026-10-11',
-  commitSubject: 'TJC-1.14: implement assumption-based CW or two-body model selection',
+  commitSubject: 'TJC-1.21: harden GMAT execution, comparison, and screenshot capture',
   groups: [
     {
       label: 'Completed',
       items: [
+        {
+          id: 'TJC-1.21', date: '2026-10-11', title: 'Harden GMAT execution, comparison, and screenshot capture',
+          commit: 'TJC-1.21: harden GMAT execution, comparison, and screenshot capture', hash: 'cc9502c',
+          outcome: 'Added src/gmat_verify.py (script generation, GMAT availability/execution, ReportFile parsing, final-state comparison, screenshot validation) and rewrote scripts/run_cw_gmat_slice.py around it. The runner solves the CW rendezvous case, generates/executes a traceable GMAT script with absolute-path ReportFile output, parses GMAT final-state and trajectory reports back into SI units, compares against the CW analytical final state at configured tolerances, and validates a non-empty SVG trajectory artifact. Real end-to-end execution against GmatConsole-R2026a for the quarter-period 350 km LEO benchmark reaches a real PASS (position error ~0.0079 m, velocity error ~1.17e-5 m/s, both well inside the 1 m / 0.001 m/s tolerances). Six mutually distinguishable failure modes (CW_TARGETING_INFEASIBLE, MISSING_GMAT, EXECUTION_ERROR, MALFORMED_OUTPUT, NUMERICAL_DISAGREEMENT, SCREENSHOT_FAILURE) are each covered by a dedicated test and never silently reported as verified.',
+          links: [['GMAT verification page', '#/cw-gmat-slice'], ['Authoritative verifier', 'data/src/gmat_verify.py'], ['Runner', 'data/scripts/run_cw_gmat_slice.py'], ['Tests', 'data/tests/test_cw_gmat_slice.py'], ['Case input', 'data/examples/cw_gmat_vertical_slice.yaml']]
+        },
         {
           id: 'TJC-1.14', date: '2026-10-11', title: 'Implement assumption-based CW or two-body model selection',
           commit: 'TJC-1.14: implement assumption-based CW or two-body model selection', hash: 'pending final commit',
