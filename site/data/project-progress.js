@@ -1,11 +1,17 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
   updated: '2026-10-13',
-  commitSubject: 'TJC-1.16: connect the formalizer, model selector, solvers, and GMAT verification into one workflow',
+  commitSubject: 'TJC-1.8: add focused tests closing coverage gaps in the connected workflow and LLM-facing skill layer',
   groups: [
     {
       label: 'Completed',
       items: [
+        {
+          id: "TJC-1.8", date: "2026-10-13", title: "Add focused tests for the scoped end-to-end workflow",
+          commit: "TJC-1.8: add focused tests closing coverage gaps in the connected workflow and LLM-facing skill layer", hash: "pending final commit",
+          outcome: "Surveyed the existing 116-test suite (tests/test_cw.py, test_twobody.py, test_validation.py, test_model_selector.py, test_cw_gmat_slice.py, test_workflow.py, test_poliastro_verify.py, test_verification_report.py) against TJC-1.8's six acceptance criteria and found most already satisfied: CW/two-body/LVLH property coverage (AC1) in test_cw.py/test_twobody.py/test_validation.py; ambiguous/CW-applicable/CW-invalid/singular-targeting/GMAT-disagreement/unavailable-GMAT routing (AC2) across test_model_selector.py and test_workflow.py; the never-false-PASS invariant (AC3) enforced at construction time by src/verification_report.py::assemble_verification_report and regression-tested in test_verification_report.py; the one documented clean-checkout pytest command (AC5) already in README.md; and the pinned-Poliastro adapter's UNAVAILABLE/UNSUPPORTED/FAIL-never-PASS contract (AC6) in test_poliastro_verify.py. Found and closed two real gaps: (1) tests/test_workflow.py had no case driving a model-selector-qualified singular/unreachable CW targeting result (src.cw.two_burn_targeting status \"singular-infeasible\") through the full connected src/workflow.py pipeline to its CW_TARGETING_INFEASIBLE outcome before any GMAT call -- added test_singular_infeasible_cw_targeting_is_distinct_outcome_before_any_gmat_call; and (2) AC4 (\"the LLM-facing layer never supplies authoritative orbital states or delta-v without deterministic tool output\") had no test of the actual LLM-facing layer itself -- the five .pi/skills/*/SKILL.md prompt-driven instruction files -- only of the Python code paths beneath them. Added tests/test_skill_authority_boundaries.py (9 tests) asserting every skill explicitly delegates numeric computation to a named src/ deterministic implementation, explicitly refuses to invent/improvise/solve a result itself, and requires both GMAT numerical comparison and an accessible screenshot before any PASS claim. All 126 tests pass (116 pre-existing + 1 new test_workflow.py case + 9 new test_skill_authority_boundaries.py tests).",
+          links: [["Workflow tests", "data/tests/test_workflow.py"], ["Skill authority-boundary tests", "data/tests/test_skill_authority_boundaries.py"], ["Workflow module", "data/src/workflow.py"], ["Verification report invariant", "data/src/verification_report.py"], ["Poliastro adapter tests", "data/tests/test_poliastro_verify.py"]]
+        },
         {
           id: 'TJC-1.16', date: '2026-10-13', title: 'Harden the complete workflow after the early vertical slice',
           commit: 'TJC-1.16: connect the formalizer, model selector, solvers, and GMAT verification into one workflow', hash: 'pending final commit',

@@ -123,6 +123,43 @@ def _unsupported_ready_case(case_id: str = "test_unsupported_case") -> Rendezvou
     return RendezvousCase(case_id=case_id, readiness="READY_TO_SOLVE", model_selection_case=model_case)
 
 
+def _singular_infeasible_ready_case(case_id: str = "test_singular_infeasible_case") -> RendezvousCase:
+    """A READY_TO_SOLVE, model-selector-qualified CW case whose fixed transfer
+    time (n*t = 2*pi) makes Phi_rv exactly singular and the requested terminal
+    position unreachable (``src.cw.two_burn_targeting`` status
+    "singular-infeasible"), matching ``test_cw.py::
+    test_solve_cw_rendezvous_singular_infeasible_boundary_fails_explicitly``'s
+    case but driven through the full connected workflow rather than
+    ``solve_cw_rendezvous`` directly."""
+    n = 0.001
+    reference_radius_m = (MU_EARTH / n**2) ** (1.0 / 3.0)
+    t_final = 2 * math.pi / n
+    initial_relative_state = [0.0] * 6
+    final_relative_state = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    model_case = ModelSelectionCase(
+        circularity="supported",
+        frame="supported",
+        other_physics="supported",
+        maneuver_assumptions="supported",
+        reference_radius_m=reference_radius_m,
+        relative_separation_m=1.0,
+        transfer_time_s=t_final,
+        mean_motion_rad_s=n,
+        initial_relative_state=initial_relative_state,
+        final_relative_state=final_relative_state,
+    )
+    return RendezvousCase(
+        case_id=case_id,
+        readiness="READY_TO_SOLVE",
+        model_selection_case=model_case,
+        mu_m3_s2=MU_EARTH,
+        reference_radius_m=reference_radius_m,
+        initial_relative_state=initial_relative_state,
+        final_relative_state=final_relative_state,
+        transfer_time_s=t_final,
+    )
+
+
 # ---------------------------------------------------------------------------
 # AC1: fully supported request traverses the entire pipeline and returns
 # VERIFIED or an explicit NOT VERIFIED reason -- never silently a pass.
@@ -333,6 +370,36 @@ def test_missing_gmat_is_distinct_outcome(tmp_path):
     result = run_rendezvous_workflow(_cw_ready_case(), output_dir=tmp_path, gmat_executable="definitely-not-gmat")
     assert result.outcome == "MISSING_GMAT"
     assert result.verified is False
+
+
+def test_singular_infeasible_cw_targeting_is_distinct_outcome_before_any_gmat_call(tmp_path, monkeypatch):
+    """A model-selector-qualified CW case (AC2's singular-targeting routing) whose
+    fixed transfer time makes the CW boundary condition itself unreachable fails
+    as CW_TARGETING_INFEASIBLE before any GMAT availability check, script, or
+    screenshot is produced -- distinct from MISSING_GMAT/NUMERICAL_DISAGREEMENT,
+    which both require a solver success first."""
+    def _fail(*args, **kwargs):
+        raise AssertionError("GMAT must not be invoked when CW targeting itself is infeasible")
+
+    monkeypatch.setattr(slice_runner, "check_gmat_available", _fail)
+    monkeypatch.setattr(slice_runner, "run_gmat_script", _fail)
+
+    case = _singular_infeasible_ready_case()
+    model_selection_preview = workflow.select_model(case.model_selection_case)
+    assert model_selection_preview.selection == "CW rendezvous"
+    assert model_selection_preview.qualified is True  # singular targeting qualifies the decision (AC2)
+
+    result = run_rendezvous_workflow(case, output_dir=tmp_path, gmat_executable="definitely-not-gmat")
+    assert result.outcome == "CW_TARGETING_INFEASIBLE"
+    assert result.verified is False
+    assert "CW targeting infeasible" in result.verification_status
+    data = result.to_dict()
+    report = data["unified_verification_report"]
+    assert report["solver"]["feasible"] is False
+    assert report["gmat"]["attempted"] is False
+    assert report["screenshot"]["ok"] is False
+    assert data["artifacts"]["trajectory_screenshot"] is None
+    assert not any(tmp_path.iterdir())  # no GMAT script or screenshot file was ever written
 
 
 def test_gmat_execution_error_is_distinct_outcome(tmp_path, monkeypatch):
