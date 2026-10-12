@@ -49,6 +49,17 @@ MAPPINGS = {
     "evaluations/formalizer/test_03_cw_validity.txt": "site/data/evaluations/test_03_cw_validity.txt",
     "evaluations/formalizer/test_04_contradictory.txt": "site/data/evaluations/test_04_contradictory.txt",
     "evaluations/formalizer/test_05_unit_inconsistent.txt": "site/data/evaluations/test_05_unit_inconsistent.txt",
+    "evaluations/benchmark/README.md": "site/data/evaluations/benchmark/README.md",
+    "evaluations/benchmark/case_a_straightforward_cw.json": "site/data/evaluations/benchmark/case_a_straightforward_cw.json",
+    "evaluations/benchmark/case_b_boundary_cw.json": "site/data/evaluations/benchmark/case_b_boundary_cw.json",
+    "evaluations/benchmark/case_c_two_body.json": "site/data/evaluations/benchmark/case_c_two_body.json",
+    "evaluations/benchmark/case_d_ambiguous.txt": "site/data/evaluations/benchmark/case_d_ambiguous.txt",
+    "examples/benchmark_case_b_boundary/verification_result.json": "site/data/examples/benchmark_case_b_boundary/verification_result.json",
+    "examples/benchmark_case_b_boundary/trajectory.svg": "site/data/examples/benchmark_case_b_boundary/trajectory.svg",
+    "examples/benchmark_case_c_two_body/verification_result.json": "site/data/examples/benchmark_case_c_two_body/verification_result.json",
+    "examples/benchmark_case_c_two_body/trajectory.svg": "site/data/examples/benchmark_case_c_two_body/trajectory.svg",
+    "tests/test_benchmark_fixtures.py": "site/data/tests/test_benchmark_fixtures.py",
+    "scripts/generate_benchmark_gmat_evidence.py": "site/data/scripts/generate_benchmark_gmat_evidence.py",
 }
 
 

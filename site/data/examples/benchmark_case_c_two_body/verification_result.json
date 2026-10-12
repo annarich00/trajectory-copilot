@@ -1,0 +1,59 @@
+{
+  "case_id": "benchmark_case_c_two_body",
+  "twobody": {
+    "frame": "inertial-cartesian",
+    "central_body": "Earth",
+    "dynamics": "point-mass-two-body",
+    "integrator": "fixed-step-rk4",
+    "mu_m3_s2": 398600441800000.0,
+    "duration_s": 900.0,
+    "steps": 2000,
+    "initial_state_m_mps": [
+      7778000.0,
+      0.0,
+      0.0,
+      0.0,
+      7158.7124559338245,
+      0.0
+    ],
+    "final_state_m_mps": [
+      5258694.860896885,
+      5730917.235484777,
+      0.0,
+      -5274.619259140002,
+      4839.995423329594,
+      0.0
+    ],
+    "reference_leo_radius_m": 6778000.0,
+    "reference_leo_circular_speed_mps": 7668.635675197651
+  },
+  "gmat": {
+    "attempted": true,
+    "exit_status": 0,
+    "reason": "GMAT exited successfully.",
+    "final_state_m_mps": [
+      5258694.862968419,
+      5730917.236157319,
+      -4.833584760832874e-12,
+      -5274.619254503345,
+      4839.995425801466,
+      -1.2770151057121579e-14
+    ]
+  },
+  "comparison": {
+    "status": "PASS",
+    "position_error_m": 0.002177972124993837,
+    "velocity_error_mps": 5.2544024700638365e-06,
+    "tolerances": {
+      "position_m": 1.0,
+      "velocity_mps": 0.001
+    },
+    "reason": "GMAT final state matches the CW analytical final state within tolerance."
+  },
+  "verified": true,
+  "failure_mode": null,
+  "verification_status": "VERIFIED",
+  "trajectory_artifact": "examples/benchmark_case_c_two_body/trajectory.svg",
+  "trajectory_artifact_nonempty": true,
+  "screenshot_source": "svg_fallback"
+}

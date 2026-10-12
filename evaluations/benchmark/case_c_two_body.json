@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.0",
+  "case_version": 1,
+  "case_id": "benchmark_case_c_two_body",
+  "category": "cw_invalid_two_body",
+  "provenance": {
+    "author": "TJC-1.9",
+    "derived_from": [
+      "tests/test_twobody.py::test_cw_invalid_large_separation_case_has_deterministic_two_body_result",
+      "scripts/generate_benchmark_gmat_evidence.py"
+    ],
+    "skills_contract": [
+      ".pi/skills/orbital-problem-formalizer/SKILL.md",
+      ".pi/skills/orbital-model-selector/SKILL.md",
+      ".pi/skills/orbital-two-body-rendezvous/SKILL.md"
+    ],
+    "note": "A case that clearly violates CW assumptions: a chaser offset radially by 1,000 km from a 6,778 km circular reference radius (~14.8% separation ratio -- well beyond local relative-motion proximity, not a few hundred meters). It is explicitly declared as a coast-only point-mass request (no targeting, no burns), so it fits the bounded two-body fallback contract (src/twobody.py) exactly, and src/model_selector.py routes it there rather than to CW."
+  },
+  "request": {
+    "natural_language": "A spacecraft is in Earth orbit with an initial inertial Cartesian state position [7778000, 0, 0] m, velocity [0, 7158.7124559338245, 0] m/s. Earth's gravitational parameter is 398600441800000.0 m^3/s^2. Propagate this state forward 900 seconds under point-mass gravity only (no thrust, no perturbations, no targeting). Report the final inertial Cartesian state.",
+    "structured_input": null
+  },
+  "expected_structured_problem": {
+    "_comment": "This request is declared coast-only, inertial-Cartesian, and explicitly outside the two-spacecraft LVLH-relative rendezvous class the orbital-problem-formalizer skill supports (it is a single-spacecraft propagation request). Per that skill, it is labeled 'out of scope' for the formalizer rather than coerced into the LVLH rendezvous schema; the case instead proceeds directly to the bounded two-body coast contract (.pi/skills/orbital-two-body-rendezvous/SKILL.md), which is the correct downstream handling per reference/SOURCE.md Sec C.",
+    "scope": {
+      "classification": "out of scope",
+      "classification_provenance": "specified",
+      "reason": "Single-spacecraft inertial-Cartesian coast propagation request, not a two-spacecraft LVLH-relative rendezvous; routed instead to the bounded two-body coast contract (src/twobody.py), per .pi/skills/orbital-two-body-rendezvous/SKILL.md."
+    },
+    "participants": {
+      "central_body": {"value": "Earth", "provenance": "specified"},
+      "target_chief": {"value": "not applicable (single-spacecraft coast)", "provenance": "out of scope"},
+      "chaser_deputy": {"value": "not applicable (single-spacecraft coast)", "provenance": "out of scope"}
+    },
+    "reference_orbit": {
+      "circularity": {"value": "not applicable (inertial Cartesian state given directly)", "provenance": "out of scope"}
+    },
+    "relative_frame_and_state": {
+      "frame": {"value": "inertial-cartesian (not LVLH)", "provenance": "specified"}
+    },
+    "terminal_conditions": {
+      "relative_position_m": {"value": "unknown", "provenance": "out of scope"},
+      "requested_outputs": {"value": "final inertial Cartesian state after coast", "provenance": "specified"}
+    },
+    "timing_and_maneuvers": {
+      "time_of_flight_s": {"value": 900.0, "provenance": "specified"},
+      "maneuver_assumptions": {"value": "coast only; no burns", "provenance": "specified"}
+    },
+    "blocking_issues": [
+      "Request is a single-spacecraft inertial coast propagation, outside the two-spacecraft LVLH-relative rendezvous class the formalizer schema supports."
+    ],
+    "clarification_questions": [],
+    "readiness": "OUT_OF_SCOPE"
+  },
+  "expected_model": {
+    "_comment": "Per src/model_selector.py: circularity/frame/other required items are supplied, but locality and other_physics are VIOLATED (the separation is not local relative motion, and a 1,000 km radial offset at this altitude is not negligible-perturbation small-relative-velocity CW geometry). The case independently satisfies the bounded two-body coast contract (finite 6-element inertial state, positive mu, finite duration, positive RK4 step count, coast-only), so it routes to the bounded two-body fallback rather than UNSUPPORTED.",
+    "selection": "bounded two-body fallback",
+    "qualified": false,
+    "deterministic_tool": "src.twobody.propagate_cartesian_state",
+    "assumptions_assessed": {
+      "circularity": "supported",
+      "locality": "violated",
+      "duration_regime": "supported",
+      "frame": "supported",
+      "other_physics": "violated",
+      "maneuver_assumptions": "supported"
+    },
+    "concerns": [],
+    "reasons": [
+      "Violated CW assumption(s): locality, other_physics."
+    ]
+  },
+  "reference_numerical_result": {
+    "source": "examples/benchmark_case_c_two_body/verification_result.json",
+    "summary": {
+      "frame": "inertial-cartesian",
+      "central_body": "Earth",
+      "dynamics": "point-mass-two-body",
+      "integrator": "fixed-step-rk4",
+      "mu_m3_s2": 398600441800000.0,
+      "duration_s": 900.0,
+      "steps": 2000,
+      "initial_state_m_mps": [7778000.0, 0.0, 0.0, 0.0, 7158.7124559338245, 0.0],
+      "final_state_m_mps": [5258694.860896885, 5730917.235484777, 0.0, -5274.619259140002, 4839.995423329594, 0.0],
+      "verification_status": "VERIFIED",
+      "gmat_comparison_status": "PASS",
+      "gmat_position_error_m": 0.002177972124993837,
+      "gmat_velocity_error_mps": 5.2544024700638365e-06
+    },
+    "expected_clarification_questions": []
+  },
+  "gmat_tolerance": {
+    "position_m": 1.0,
+    "velocity_mps": 0.001
+  },
+  "expected_explanation_behavior": {
+    "summary": "The human-readable output should state that this is NOT a CW case (locality and other-physics assumptions are violated), that it fits the bounded two-body coast contract exactly (not a general rendezvous solve), hand off to src.twobody.propagate_cartesian_state, report only a final coast state (no burns, no targeting claimed), and report GMAT cross-check status as VERIFIED (PASS) with explicit position/velocity error values.",
+    "must_state": [
+      "selection: bounded two-body fallback",
+      "violated assumptions: locality, other_physics",
+      "coast-only; no targeting, maneuvers, or optimization claimed",
+      "GMAT verification status: VERIFIED / PASS"
+    ],
+    "must_not_state": [
+      "CW rendezvous selected",
+      "a solved rendezvous or executed maneuver"
+    ]
+  },
+  "solvable": true,
+  "reproducible_evidence": {
+    "reproduce_command": ".venv/bin/python scripts/generate_benchmark_gmat_evidence.py --gmat GmatConsole-R2026a",
+    "gmat_script_reference": "examples/benchmark_case_c_two_body/ (regenerated by the command above; the generated .script file itself is not committed, matching examples/cw_gmat_slice_example/'s convention of committing only the result/screenshot)",
+    "verification_result_reference": "examples/benchmark_case_c_two_body/verification_result.json",
+    "trajectory_screenshot_reference": "examples/benchmark_case_c_two_body/trajectory.svg",
+    "screenshot_source": "svg_fallback"
+  }
+}

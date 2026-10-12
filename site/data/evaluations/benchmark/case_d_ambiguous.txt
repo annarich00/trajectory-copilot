@@ -1,0 +1,89 @@
+SCHEMA VERSION: 1.0
+CASE VERSION: 1
+CASE ID: benchmark_case_d_ambiguous
+CATEGORY: ambiguous_incomplete
+PROVENANCE: TJC-1.9; derived from evaluations/formalizer/test_01_underspecified.txt's style and
+  reuses that same underspecified natural-language request so this benchmark case never maintains
+  a second, drifting restatement of an already-audited formalizer fixture.
+
+TEST NAME:
+Ambiguous/Incomplete Natural-Language Rendezvous Request
+
+REQUEST (natural language):
+The chaser is 200 meters behind the target. Find a one-orbit rendezvous.
+
+EXPECTED STRUCTURED PROBLEM (per .pi/skills/orbital-problem-formalizer/SKILL.md):
+- Scope: classification = supported (candidate two-spacecraft rendezvous class), provenance = specified;
+  this is NOT an out-of-scope rejection -- it is a candidate request that is missing required fields.
+- Participants: central body, target/chief, chaser/deputy identifiers are present only as roles,
+  not supplied values; central body = missing.
+- Reference Orbit: circularity, altitude/radius, gravitational parameter = missing.
+- Relative Frame and State: frame/LVLH convention = missing; "behind" has no specified axis/sign,
+  so initial relative position/velocity = ambiguous/missing (do not infer an axis from "behind").
+- Terminal Conditions: relative position/velocity, requested outputs = missing (not inferred as
+  zero-velocity rendezvous).
+- Timing and Maneuvers: period count = specified ("one orbit"), but its duration cannot be derived
+  without the reference orbit and gravitational parameter; maneuver assumptions = missing.
+- Blocking Issues:
+  - "behind" has no specified LVLH axis or sign.
+  - A complete initial relative state is absent.
+  - Reference orbit and central-body parameters are absent.
+  - Terminal conditions, impulsive maneuver assumptions, and requested outputs are absent.
+- Clarification Questions:
+  - Which central body and gravitational parameter apply?
+  - What circular reference-orbit altitude, radius, or complete elements apply?
+  - Which LVLH axis/sign convention defines "behind"?
+  - What are the complete initial relative position and velocity vectors, including units?
+  - What terminal relative position and velocity, impulsive maneuver assumptions, and outputs are required?
+- Readiness: NEEDS CLARIFICATION
+
+EXPECTED MODEL (per .pi/skills/orbital-model-selector/SKILL.md and src/model_selector.py):
+- Selection: NEEDS MORE INFORMATION (not a model choice).
+- Rationale: the problem has not yet passed formalization (above), so the model selector cannot
+  assess circularity, locality, duration/regime, frame, other physics, or maneuver assumptions --
+  every one of src/model_selector.py's six required ModelSelectionCase items is "unknown" at this
+  stage, which src.model_selector.select_model deterministically returns as
+  selection="NEEDS MORE INFORMATION", qualified=False, deterministic_tool=None,
+  missing_items=("circularity", "locality", "duration_regime", "frame", "other_physics",
+  "maneuver_assumptions") -- see tests/test_model_selector.py's
+  test_missing_information_yields_clarification_not_a_model_choice for the exact same all-unknown
+  shape.
+- No deterministic tool handoff.
+
+REFERENCE NUMERICAL RESULT:
+None -- this case is not solvable until clarification is supplied, so no CW/two-body numerical
+result or GMAT run applies.
+
+EXPECTED CLARIFICATION QUESTIONS:
+- Which central body and gravitational parameter apply?
+- What circular reference-orbit altitude, radius, or complete elements apply?
+- Which LVLH axis/sign convention defines "behind"?
+- What are the complete initial relative position and velocity vectors, including units?
+- What terminal relative position and velocity, impulsive maneuver assumptions, and outputs are required?
+
+GMAT TOLERANCE:
+Not applicable -- no numerical candidate exists to verify until the problem is formalized as
+READY TO SOLVE.
+
+EXPECTED EXPLANATION BEHAVIOR:
+The human-readable output should state plainly that the request is understood as a candidate
+rendezvous but is NOT ready to solve, list every blocking issue above, ask the five focused
+clarification questions above (and no others), explicitly decline to infer an LVLH axis/sign from
+"behind," explicitly decline to infer Earth/circularity/zero-terminal-velocity/a maneuver count,
+and state that model selection (CW vs. two-body) is deferred until clarification is received --
+never silently assuming values to produce an answer, and never selecting a model from this
+request as given.
+
+MUST STATE:
+- "Readiness: NEEDS CLARIFICATION"
+- the five clarification questions listed above (and no more, no fewer)
+- "Selection: NEEDS MORE INFORMATION" (not a model choice)
+
+MUST NOT STATE:
+- a selected model (CW rendezvous or bounded two-body fallback)
+- an inferred axis/sign for "behind"
+- an inferred central body, circularity, terminal velocity, or maneuver count
+- any numerical burn, delta-v, or final-state value
+
+EXPECTED READINESS:
+NEEDS CLARIFICATION

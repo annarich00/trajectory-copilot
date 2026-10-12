@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0",
+  "case_version": 1,
+  "case_id": "benchmark_case_b_boundary_cw",
+  "category": "boundary",
+  "provenance": {
+    "author": "TJC-1.9",
+    "derived_from": [
+      "examples/cw_gmat_vertical_slice.yaml",
+      "scripts/generate_benchmark_gmat_evidence.py"
+    ],
+    "skills_contract": [
+      ".pi/skills/orbital-problem-formalizer/SKILL.md",
+      ".pi/skills/orbital-model-selector/SKILL.md"
+    ],
+    "note": "A case near the edge of CW validity assumptions: same circular-LEO, small-separation geometry as case (a), but requested over a HALF orbital period instead of a quarter. At n*t = pi exactly, Phi_rv's off-diagonal in-plane block becomes singular (src/cw.py Sec B.3); the boundary condition remains reachable (status singular-reachable), so src/model_selector.py returns a QUALIFIED CW decision, not a flat pass/fail. This exercises the model selector's documented targeting-conditioning signal (reference/SOURCE.md Sec B.3/D) without inventing a new universal numeric validity threshold: the separation ratio and duration itself are each comfortably inside validate_cw_use()'s existing heuristics (AC4) -- the borderline assumption here is specifically targeting conditioning at this exact transfer time, not locality or duration/regime."
+  },
+  "request": {
+    "natural_language": "Earth is the central body. The target spacecraft is in a circular 350 km altitude orbit. Earth radius is 6378 km and gravitational parameter is 398600 km^3/s^2. The LVLH frame has x radial outward, y along-track in the target velocity direction, and z cross-track completing a right-handed frame. At t = 0, the chaser relative state is position [15 m, -200 m, 0 m] and velocity [-0.14 m/s, 0 m/s, 0 m/s]. Use two impulsive burns. After exactly one HALF of the orbital period, reach relative position [0 m, 0 m, 0 m] and relative velocity [0 m/s, 0 m/s, 0 m/s]. Return the two burn vectors and terminal relative state.",
+    "structured_input": null
+  },
+  "expected_structured_problem": {
+    "scope": {"classification": "supported", "classification_provenance": "specified"},
+    "participants": {
+      "central_body": {"value": "Earth", "provenance": "specified"},
+      "target_chief": {"value": "target spacecraft", "provenance": "specified"},
+      "chaser_deputy": {"value": "chaser spacecraft", "provenance": "specified"}
+    },
+    "reference_orbit": {
+      "circularity": {"value": "circular", "provenance": "specified"},
+      "altitude_m": {"value": 350000.0, "provenance": "specified"},
+      "radius_m": {"value": 6728000.0, "provenance": "derived"},
+      "gravitational_parameter_m3_s2": {"value": 398600441800000.0, "provenance": "specified"},
+      "mean_motion_rad_s": {"value": 0.0011440365869807487, "provenance": "derived"}
+    },
+    "relative_frame_and_state": {
+      "frame": {"value": "LVLH/Hill", "provenance": "specified"},
+      "lvlh_convention": {"value": "x radial outward, y along-track, z cross-track, right-handed", "provenance": "specified"},
+      "initial_relative_position_m": {"value": [15.0, -200.0, 0.0], "provenance": "specified"},
+      "initial_relative_velocity_mps": {"value": [-0.14, 0.0, 0.0], "provenance": "specified"}
+    },
+    "terminal_conditions": {
+      "relative_position_m": {"value": [0.0, 0.0, 0.0], "provenance": "specified"},
+      "relative_velocity_mps": {"value": [0.0, 0.0, 0.0], "provenance": "specified"},
+      "requested_outputs": {"value": "burn vectors and terminal relative state", "provenance": "specified"}
+    },
+    "timing_and_maneuvers": {
+      "time_of_flight_s": {"value": 2746.0596010140175, "provenance": "derived"},
+      "period_count": {"value": 0.5, "provenance": "specified"},
+      "maneuver_assumptions": {"value": "two impulsive burns", "provenance": "specified"}
+    },
+    "blocking_issues": [],
+    "clarification_questions": [],
+    "readiness": "READY_TO_SOLVE"
+  },
+  "expected_model": {
+    "_comment": "Per src/model_selector.py's targeting-conditioning signal: all six required assumption items remain 'supported' (circularity, locality, duration_regime, frame, other_physics, maneuver_assumptions are each individually unremarkable at this separation/duration); the half-period transfer time's singular-but-reachable Phi_rv is the sole boundary signal that qualifies the decision.",
+    "selection": "CW rendezvous",
+    "qualified": true,
+    "deterministic_tool": "src.cw.two_burn_targeting",
+    "assumptions_assessed": {
+      "circularity": "supported",
+      "locality": "supported",
+      "duration_regime": "supported",
+      "frame": "supported",
+      "other_physics": "supported",
+      "maneuver_assumptions": "supported",
+      "targeting_conditioning": "boundary"
+    },
+    "concerns": [
+      "CW two-impulse targeting is singular but reachable at this transfer time; the returned velocity would be a non-unique SVD minimum-norm solution.",
+      "Qualified selection: verify this result against an independent numerical propagation (gmat-rendezvous-verification) before treating it as a clean pass."
+    ],
+    "documented_borderline_assumption": "targeting_conditioning",
+    "AC4_note": "This fixture deliberately does NOT assert a universal numeric validity threshold (e.g. 'X% separation is the cutoff'); it only documents which already-implemented, already-documented signal (src/cw.py's two_burn_targeting SVD rank/residual check, surfaced by src/model_selector.py as targeting_conditioning) is borderline here."
+  },
+  "reference_numerical_result": {
+    "source": "examples/benchmark_case_b_boundary/verification_result.json",
+    "summary": {
+      "mean_motion_rad_s": 0.0011440365869807487,
+      "transfer_time_s": 2746.0596010140175,
+      "targeting_status": "singular-reachable",
+      "condition_number": 8.895249266593008e+16,
+      "rank": 2,
+      "dv0_mps": [0.07268977301537823, -0.03003096040824467, 0.0],
+      "dv1_mps": [-0.06731022698462177, -0.004290137201177963, 0.0],
+      "total_delta_v_mps": 0.14609578582350083,
+      "verification_status": "VERIFIED",
+      "gmat_comparison_status": "PASS",
+      "gmat_position_error_m": 0.04648939513255535,
+      "gmat_velocity_error_mps": 3.06582772284912e-05
+    },
+    "expected_clarification_questions": []
+  },
+  "gmat_tolerance": {
+    "position_m": 1.0,
+    "velocity_mps": 0.001,
+    "delta_v_mps": 0.001
+  },
+  "expected_explanation_behavior": {
+    "summary": "The human-readable output should report CW rendezvous as selected but explicitly QUALIFIED, naming the singular-but-reachable Phi_rv targeting conditioning as the specific borderline assumption, stating that the returned burn solution is a non-unique SVD minimum-norm solution, and recommending GMAT verification before treating the result as a clean pass -- never silently reporting an unqualified pass for this case.",
+    "must_state": [
+      "selection: CW rendezvous, qualified=True",
+      "targeting_conditioning: boundary (singular-reachable Phi_rv)",
+      "verification-sensitivity recommendation (do not treat as a clean pass without GMAT verification)",
+      "GMAT verification status: VERIFIED / PASS (once produced)"
+    ],
+    "must_not_state": [
+      "a universal numeric validity threshold invented for this case",
+      "an unqualified clean pass with no boundary note"
+    ]
+  },
+  "solvable": true,
+  "reproducible_evidence": {
+    "reproduce_command": ".venv/bin/python scripts/generate_benchmark_gmat_evidence.py --gmat GmatConsole-R2026a",
+    "gmat_script_reference": "examples/benchmark_case_b_boundary/ (regenerated by the command above; the generated .script file itself is not committed, matching examples/cw_gmat_slice_example/'s convention of committing only the result/screenshot)",
+    "verification_result_reference": "examples/benchmark_case_b_boundary/verification_result.json",
+    "trajectory_screenshot_reference": "examples/benchmark_case_b_boundary/trajectory.svg",
+    "screenshot_source": "svg_fallback"
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.0",
+  "case_version": 1,
+  "case_id": "benchmark_case_a_straightforward_cw",
+  "category": "straightforward_cw",
+  "provenance": {
+    "author": "TJC-1.9",
+    "derived_from": [
+      "examples/cw_gmat_vertical_slice.yaml",
+      "evaluations/formalizer/test_02_cw_complete.txt"
+    ],
+    "skills_contract": [
+      ".pi/skills/orbital-problem-formalizer/SKILL.md",
+      ".pi/skills/orbital-model-selector/SKILL.md"
+    ],
+    "note": "A clearly-valid CW rendezvous case: circular LEO, small separation (200 m vs. a ~6,728 km reference radius, ~0.003%), short duration (quarter orbit, well inside the ~2-orbit duration heuristic), and a well-conditioned (non-singular) Phi_rv transfer time. This should cleanly select CW and solve successfully, with no boundary/qualified concerns. This fixture reuses, rather than duplicates, the already-audited and already-GMAT-verified committed example at examples/cw_gmat_vertical_slice.yaml and examples/cw_gmat_slice_example/ (TJC-1.20/TJC-1.21/TJC-2) so this benchmark never maintains a second, drifting copy of that evidence."
+  },
+  "request": {
+    "natural_language": "Earth is the central body. The target spacecraft is in a circular 350 km altitude orbit. Earth radius is 6378 km and gravitational parameter is 398600 km^3/s^2. The LVLH frame has x radial outward, y along-track in the target velocity direction, and z cross-track completing a right-handed frame. At t = 0, the chaser relative state is position [15 m, -200 m, 0 m] and velocity [-0.14 m/s, 0 m/s, 0 m/s]. Use two impulsive burns, one at departure and one at arrival. After one quarter of the orbital period, reach relative position [0 m, 0 m, 0 m] and relative velocity [0 m/s, 0 m/s, 0 m/s]. Return the two burn vectors and terminal relative state.",
+    "structured_input": "examples/cw_gmat_vertical_slice.yaml"
+  },
+  "expected_structured_problem": {
+    "_comment": "Field names mirror .pi/skills/orbital-problem-formalizer/SKILL.md's required output schema exactly; provenance labels use that skill's exact provenance vocabulary.",
+    "scope": {"classification": "supported", "classification_provenance": "specified"},
+    "participants": {
+      "central_body": {"value": "Earth", "provenance": "specified"},
+      "target_chief": {"value": "target spacecraft", "provenance": "specified"},
+      "chaser_deputy": {"value": "chaser spacecraft", "provenance": "specified"}
+    },
+    "reference_orbit": {
+      "circularity": {"value": "circular", "provenance": "specified"},
+      "altitude_m": {"value": 350000.0, "provenance": "specified"},
+      "radius_m": {"value": 6728000.0, "provenance": "derived"},
+      "gravitational_parameter_m3_s2": {"value": 398600441800000.0, "provenance": "specified"},
+      "mean_motion_rad_s": {"value": "derived from radius and mu", "provenance": "derived"}
+    },
+    "relative_frame_and_state": {
+      "frame": {"value": "LVLH/Hill", "provenance": "specified"},
+      "lvlh_convention": {"value": "x radial outward, y along-track, z cross-track, right-handed", "provenance": "specified"},
+      "initial_relative_position_m": {"value": [15.0, -200.0, 0.0], "provenance": "specified"},
+      "initial_relative_velocity_mps": {"value": [-0.14, 0.0, 0.0], "provenance": "specified"}
+    },
+    "terminal_conditions": {
+      "relative_position_m": {"value": [0.0, 0.0, 0.0], "provenance": "specified"},
+      "relative_velocity_mps": {"value": [0.0, 0.0, 0.0], "provenance": "specified"},
+      "requested_outputs": {"value": "burn vectors and terminal relative state", "provenance": "specified"}
+    },
+    "timing_and_maneuvers": {
+      "time_of_flight_s": {"value": 1373.0298005070088, "provenance": "derived"},
+      "period_count": {"value": 0.25, "provenance": "specified"},
+      "maneuver_assumptions": {"value": "two impulsive burns, one at departure and one at arrival", "provenance": "specified"}
+    },
+    "blocking_issues": [],
+    "clarification_questions": [],
+    "readiness": "READY_TO_SOLVE"
+  },
+  "expected_model": {
+    "_comment": "Per .pi/skills/orbital-model-selector/SKILL.md and src/model_selector.py.",
+    "selection": "CW rendezvous",
+    "qualified": false,
+    "deterministic_tool": "src.cw.two_burn_targeting",
+    "assumptions_assessed": {
+      "circularity": "supported",
+      "locality": "supported",
+      "duration_regime": "supported",
+      "frame": "supported",
+      "other_physics": "supported",
+      "maneuver_assumptions": "supported",
+      "targeting_conditioning": "supported"
+    },
+    "concerns": []
+  },
+  "reference_numerical_result": {
+    "_comment": "Reuses the already-committed, already-GMAT-verified result (AC3); not a new/independent CW solve, so this benchmark fixture never drifts from the authoritative evidence under examples/cw_gmat_slice_example/.",
+    "source": "examples/cw_gmat_slice_example/verification_result.json",
+    "summary": {
+      "mean_motion_rad_s": 0.0011440365869807487,
+      "transfer_time_s": 1373.0298005070088,
+      "targeting_status": "unique",
+      "dv0_mps": [-0.02007271750558942, 0.04571526114337226, 0.0],
+      "dv1_mps": [-0.1429121687008782, -0.08003635875279473, 0.0],
+      "total_delta_v_mps": 0.21372570050575607,
+      "verification_status": "VERIFIED",
+      "gmat_comparison_status": "PASS",
+      "gmat_position_error_m": 0.007941212332207074,
+      "gmat_velocity_error_mps": 1.1675120387351017e-05
+    },
+    "expected_clarification_questions": []
+  },
+  "gmat_tolerance": {
+    "position_m": 1.0,
+    "velocity_mps": 0.001,
+    "delta_v_mps": 0.001
+  },
+  "expected_explanation_behavior": {
+    "summary": "The human-readable output should report a clean, unqualified CW selection with no boundary concerns, hand off to src.cw.two_burn_targeting, state the two burn vectors and total delta-v, and report GMAT verification as VERIFIED (PASS) with explicit position/velocity error values well inside the stated tolerances.",
+    "must_state": [
+      "selection: CW rendezvous (unqualified)",
+      "all six required assumption items supported",
+      "GMAT verification status: VERIFIED / PASS",
+      "trajectory screenshot artifact reference"
+    ],
+    "must_not_state": [
+      "a boundary/qualified concern (there is none for this case)",
+      "a model-validity concern (there is none for this case)"
+    ]
+  },
+  "solvable": true,
+  "reproducible_evidence": {
+    "_comment": "AC3: solvable cases include a reproducible GMAT script/result reference and a required trajectory screenshot reference, generated via the existing scripts/run_cw_gmat_slice.py pipeline (reused as a black box, not re-implemented or modified here).",
+    "reproduce_command": ".venv/bin/python scripts/run_cw_gmat_slice.py --gmat GmatConsole-R2026a",
+    "gmat_script_reference": "examples/cw_gmat_slice_example/ (regenerated by the command above)",
+    "verification_result_reference": "examples/cw_gmat_slice_example/verification_result.json",
+    "trajectory_screenshot_reference": "examples/cw_gmat_slice_example/trajectory.svg",
+    "screenshot_source": "svg_fallback"
+  }
+}

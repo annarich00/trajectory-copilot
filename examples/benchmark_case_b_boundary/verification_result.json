@@ -1,0 +1,61 @@
+{
+  "case_id": "benchmark_case_b_boundary_cw",
+  "cw": {
+    "mean_motion_radps": 0.0011440365869807487,
+    "transfer_time_s": 2746.0596010140175,
+    "targeting_status": "singular-reachable",
+    "targeting_reason": "Phi_rv is singular or ill-conditioned; terminal position is reachable. Returned initial velocity is the SVD-pseudoinverse minimum-norm solution.",
+    "condition_number": 8.895249266593008e+16,
+    "rank": 2,
+    "reachability_residual_m": 1.3406493525361332e-13,
+    "dv0_mps": [
+      0.07268977301537823,
+      -0.03003096040824467,
+      0.0
+    ],
+    "dv1_mps": [
+      -0.06731022698462177,
+      -0.004290137201177963,
+      0.0
+    ],
+    "total_delta_v_mps": 0.14609578582350083,
+    "final_state_m_mps": [
+      -7.105427357601002e-14,
+      1.1368683772161603e-13,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "gmat": {
+    "attempted": true,
+    "exit_status": 0,
+    "reason": "GMAT exited successfully.",
+    "final_state_m_mps": [
+      0.015481687145923071,
+      -0.04383584404222707,
+      -2.4303930351710502e-14,
+      -6.379207488786666e-07,
+      -3.06516397560909e-05,
+      -1.000996098260454e-15
+    ]
+  },
+  "comparison": {
+    "status": "PASS",
+    "position_error_m": 0.04648939513255535,
+    "velocity_error_mps": 3.06582772284912e-05,
+    "tolerances": {
+      "position_m": 1.0,
+      "velocity_mps": 0.001,
+      "delta_v_mps": 0.001
+    },
+    "reason": "GMAT final state matches the CW analytical final state within tolerance."
+  },
+  "verified": true,
+  "failure_mode": null,
+  "verification_status": "VERIFIED",
+  "trajectory_artifact": "examples/benchmark_case_b_boundary/trajectory.svg",
+  "trajectory_artifact_nonempty": true,
+  "screenshot_source": "svg_fallback"
+}
