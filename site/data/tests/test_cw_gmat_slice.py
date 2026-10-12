@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -410,6 +411,99 @@ def test_attempt_real_gmat_gui_screenshot_documents_observed_sandbox_blocker(tmp
     else:
         assert result.reason, "a non-captured attempt must still explain why, not merely assert failure"
 
+
+
+def test_launch_managed_xvfb_starts_and_verifies_a_real_tcp_listening_display():
+    """AC1/AC2: ``_launch_managed_xvfb`` actually launches ``Xvfb ... -nolisten unix -listen
+    tcp`` (required because this environment's ``/tmp/.X11-unix`` is mounted read-only, blocking
+    Xvfb's default Unix-domain socket) and verifies -- by polling the TCP listener, not assuming
+    -- that it actually started before returning a display string."""
+    if not shutil.which("Xvfb"):
+        pytest.skip("Xvfb is not installed in this environment")
+    managed = gmat_verify._launch_managed_xvfb()
+    assert managed is not None, "a real Xvfb binary is installed; launching it must succeed"
+    try:
+        assert managed.display.startswith(":")
+        assert managed.process.poll() is None, "the Xvfb process must still be alive after startup is confirmed"
+        import socket
+
+        port = 6000 + int(managed.display.lstrip(":"))
+        with socket.create_connection(("127.0.0.1", port), timeout=2):
+            pass  # The TCP listener (not a Unix-domain socket) is reachable, confirming AC2.
+    finally:
+        managed.process.terminate()
+        managed.process.wait(timeout=5)
+
+
+def test_attempt_gmat_gui_screenshot_explicit_display_override_skips_own_xvfb(monkeypatch):
+    """The pre-existing ``display=""`` explicit-override test above must keep passing
+    unmodified; this test further confirms ``use_own_xvfb`` is never consulted once an explicit
+    ``display`` (even a real one) is supplied, so existing external-DISPLAY callers are
+    unaffected by the new default self-contained-Xvfb behavior."""
+    launched = []
+    monkeypatch.setattr(gmat_verify, "_launch_managed_xvfb", lambda **kwargs: launched.append(1) or None)
+    result = gmat_verify.attempt_gmat_gui_screenshot(
+        "definitely-not-a-real-gmat-gui-binary", Path("/tmp/does-not-matter.script"),
+        Path("/tmp/does-not-matter.png"), display=":123", use_own_xvfb=True,
+    )
+    assert launched == [], "an explicit display override must win; no Xvfb should be launched"
+    assert result.attempted is False
+    assert "was not found" in result.reason
+
+
+@pytest.mark.skipif(
+    not shutil.which("Xvfb") or not shutil.which("GMAT-R2026a"),
+    reason="Xvfb or the real GMAT-R2026a GUI binary is not available in this environment. Note: "
+    "GMAT-R2026a's '--version' flag opens a real blocking GUI window rather than printing a "
+    "banner and returning, so (unlike GmatConsole-R2026a) its availability is never confirmed "
+    "via ``check_gmat_available`` here -- only a plain executable-presence check, exactly as "
+    "``attempt_gmat_gui_screenshot`` itself does before launching it.",
+)
+def test_attempt_gmat_gui_screenshot_self_contained_xvfb_captures_real_window(tmp_path, monkeypatch):
+    """AC1/AC2/AC3/AC4/AC5 end-to-end: with no DISPLAY inherited at all, the default
+    ``use_own_xvfb=True`` path launches and manages its own Xvfb display, locates the real GMAT
+    main window via the Xlib window-tree walk (not the full virtual screen), captures a verified
+    non-blank render (real pixel-variance check), and the asset-loading fix means the fixed-up
+    render has a strictly larger well-formed capture than the un-fixed
+    (``gmat_lib_dir=Path("/nonexistent-gmat-lib-dir")``) baseline captured from the same script.
+    """
+    monkeypatch.delenv("DISPLAY", raising=False)
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+    script_path = tmp_path / "gui_preview.script"
+    script_path.write_text(
+        gmat_verify.generate_gmat_gui_preview_script(
+            radius_m=6728000.0,
+            deputy_state0_si=np.array([15.0, -200.0, 0.0, -0.14, 0.0, 0.0]),
+            dv0_mps=np.array([0.0, 0.01, 0.0]),
+            dv1_mps=np.array([0.0, -0.01, 0.0]),
+            transfer_s=1373.0,
+        )
+    )
+    fixed_png = tmp_path / "trajectory_fixed.png"
+    fixed_result = gmat_verify.attempt_gmat_gui_screenshot(
+        "GMAT-R2026a", script_path, fixed_png, render_wait_s=8.0,
+    )
+    assert fixed_result.attempted is True, fixed_result.reason
+    assert fixed_result.captured is True, fixed_result.reason
+    assert "real GMAT application window" in fixed_result.reason
+    assert gmat_verify.validate_gui_screenshot(fixed_png).ok is True
+
+    broken_png = tmp_path / "trajectory_broken.png"
+    broken_result = gmat_verify.attempt_gmat_gui_screenshot(
+        "GMAT-R2026a", script_path, broken_png, render_wait_s=8.0,
+        gmat_lib_dir=Path("/nonexistent-gmat-lib-dir"),
+    )
+    assert broken_result.attempted is True, broken_result.reason
+    # Before/after evidence (AC4): without the real lib/ dir on LD_LIBRARY_PATH, GMAT's
+    # asset-loading osgPlugins cannot resolve their own libosg/libosgDB dependencies, so the
+    # resulting render is missing its Earth texture and spacecraft model and is a strictly
+    # smaller well-formed PNG than the asset-loading-fixed capture above -- even when the
+    # un-fixed render is still non-blank enough to count as "captured" (a flat, textureless
+    # sphere, not a crash).
+    if broken_result.captured:
+        assert fixed_png.stat().st_size > broken_png.stat().st_size, (
+            fixed_png.stat().st_size, broken_png.stat().st_size,
+        )
 
 def test_slice_distinguishes_screenshot_source_gmat_gui_from_svg_fallback(tmp_path, monkeypatch):
     """AC5: the structured result's ``screenshot_source`` field distinguishes a real captured

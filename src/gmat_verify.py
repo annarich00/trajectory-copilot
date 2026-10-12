@@ -614,69 +614,204 @@ class GMATGUIScreenshotResult:
     reason: str
 
 
+@dataclass(frozen=True)
+class _ManagedXvfbDisplay:
+    """A self-managed Xvfb virtual display started by ``_launch_managed_xvfb``.
+
+    ``display`` is the ``:N`` string to pass as ``DISPLAY``; ``process`` is
+    the live ``Xvfb`` subprocess (terminated by the caller once the real GMAT
+    GUI capture attempt finishes, successfully or not).
+    """
+
+    display: str
+    process: subprocess.Popen
+
+
+def _launch_managed_xvfb(*, width: int = 1920, height: int = 1080, start_display: int = 90) -> _ManagedXvfbDisplay | None:
+    """Launch and verify a self-contained Xvfb virtual display (AC1, AC2).
+
+    Picks the first free ``:N`` display number from ``start_display``,
+    launches ``Xvfb :N -screen 0 <width>x<height>x24 -nolisten unix -listen
+    tcp``, and *verifies* it actually started by polling its TCP listener
+    (``127.0.0.1:<6000+N>``) rather than assuming success. ``-listen tcp`` is
+    required because this environment mounts ``/tmp/.X11-unix`` read-only,
+    which blocks Xvfb's default Unix-domain socket. Returns ``None`` (after
+    killing the subprocess) if the Xvfb process exits early or never opens
+    its TCP listener within a few seconds; never returns a display string
+    that was not actually confirmed live.
+    """
+    xvfb = shutil.which("Xvfb")
+    if not xvfb:
+        return None
+    import socket
+
+    for display_number in range(start_display, start_display + 50):
+        if Path(f"/tmp/.X11-unix/X{display_number}").exists():
+            continue
+        try:
+            process = subprocess.Popen(
+                [xvfb, f":{display_number}", "-screen", "0", f"{width}x{height}x24", "-nolisten", "unix", "-listen", "tcp"],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            )
+        except OSError:
+            return None
+        port = 6000 + display_number
+        deadline = time.monotonic() + 5.0
+        started = False
+        while time.monotonic() < deadline:
+            if process.poll() is not None:
+                break  # Xvfb exited early (e.g. display number already taken); try the next one.
+            try:
+                with socket.create_connection(("127.0.0.1", port), timeout=0.5):
+                    started = True
+                    break
+            except OSError:
+                time.sleep(0.2)
+        if started:
+            return _ManagedXvfbDisplay(f":{display_number}", process)
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=5)
+    return None
+
+
+def _find_window_by_title(xlib_display, title_substring: str):
+    """Walk the X window tree from the root to find the first window whose
+    WM name contains ``title_substring`` (AC3's window-tree walk, used to
+    locate the real GMAT main window instead of capturing the full virtual
+    screen).
+    """
+    root = xlib_display.screen().root
+
+    def walk(win):
+        try:
+            name = win.get_wm_name()
+        except Exception:
+            name = None
+        if name and title_substring in str(name):
+            return win
+        try:
+            children = win.query_tree().children
+        except Exception:
+            return None
+        for child in children:
+            found = walk(child)
+            if found is not None:
+                return found
+        return None
+
+    return walk(root)
+
+
+def _locate_gmat_window_region(display: str, *, deadline_s: float) -> dict[str, int] | None:
+    """Poll (up to ``deadline_s`` seconds) for the real GMAT main window under
+    ``display`` and return its absolute ``{left, top, width, height}`` mss
+    capture region, located via a python-xlib window-tree walk
+    (``root.translate_coords`` for the absolute offset) rather than
+    capturing the full virtual screen. Returns ``None`` if the window never
+    appears within the deadline.
+    """
+    try:
+        from Xlib import display as xlib_display_module
+    except ImportError:
+        return None
+    xlib_display = xlib_display_module.Display(display)
+    try:
+        root = xlib_display.screen().root
+        deadline = time.monotonic() + deadline_s
+        while time.monotonic() < deadline:
+            window = _find_window_by_title(xlib_display, "General Mission Analysis Tool (GMAT)")
+            if window is not None:
+                geometry = window.get_geometry()
+                coords = root.translate_coords(window, 0, 0)
+                return {"left": coords.x, "top": coords.y, "width": geometry.width, "height": geometry.height}
+            time.sleep(0.5)
+        return None
+    finally:
+        xlib_display.close()
+
+
 def attempt_gmat_gui_screenshot(
     gui_executable: str,
     script_path: Path,
     output_path: Path,
     *,
     display: str | None = None,
+    use_own_xvfb: bool = True,
     render_wait_s: float = 6.0,
+    gmat_lib_dir: Path | None = None,
 ) -> GMATGUIScreenshotResult:
-    """Attempt a real GMAT GUI (OrbitView/OpenFrames) screenshot capture.
+    """Attempt a real, self-contained GMAT GUI (OrbitView/OpenFrames) screenshot capture.
 
     This is the AC1 real-render attempt that ``scripts/run_cw_gmat_slice.py``
     calls *before* falling back to the deterministic SVG plot: it launches
     ``gui_executable`` (the GMAT GUI binary, e.g. ``GMAT-R2026a``, as opposed
     to the console-mode ``GmatConsole-R2026a`` used for numeric
-    verification) against ``script_path`` under the configured display,
-    waits for it to render, grabs the screen, and validates that something
-    real (non-blank) was actually captured -- never silently claiming a
-    screenshot without observed, non-trivial pixel content.
+    verification) against ``script_path``, waits for it to render, grabs the
+    real GMAT application window (not the whole virtual screen), and
+    validates that something real (non-blank) was actually captured --
+    never silently claiming a screenshot without observed, non-trivial pixel
+    content.
 
-    REPRODUCIBLE BLOCKER (TJC-2 investigation; exact evidence, not an
-    assumption). In this sandboxed WSLg (WSL2 + RDP-backed) environment:
+    ``display``/``use_own_xvfb`` (TJC-3): ``display`` keeps its original,
+    narrower meaning -- an explicit override of which *already-running*
+    display to use (``None`` falls back to ``os.environ.get("DISPLAY")``).
+    When an explicit ``display`` is given (including ``""``, meaning
+    "no display"), it always wins and no Xvfb is launched, preserving the
+    original external-DISPLAY-dependent behavior exactly. Otherwise, when
+    ``use_own_xvfb`` is ``True`` (the default), this function launches and
+    manages its own self-contained Xvfb virtual display (verified to
+    actually start by polling its TCP listener -- ``-listen tcp`` is used
+    because this environment's ``/tmp/.X11-unix`` is mounted read-only,
+    blocking Xvfb's default Unix-domain socket) instead of depending on any
+    inherited ``DISPLAY``, so a realistic call requires no manual setup.
 
-    - A reachable X display genuinely exists (confirmed: ``DISPLAY=:0``,
-      backed by WSLg, with a live ``/tmp/.X11-unix/X0`` socket).
-    - ``GMAT-R2026a -ns -r <script>`` under that display, with
-      ``LIBGL_ALWAYS_SOFTWARE=1`` (required -- without it, GMAT's default
-      GPU/Zink path fails immediately with ``libEGL warning: failed to get
-      driver name for fd -1`` / ``MESA: error: ZINK: failed to choose
-      pdev``), genuinely launches, loads ``OrbitView`` via the
-      ``libOVtoOFI`` plugin, and maps real top-level and child GTK/
-      OpenFrames windows. This was confirmed independently via a
-      python-xlib window-tree walk showing e.g. a ``1100x865`` top-level
-      window and ``1024x768`` / ``782x502`` child windows, every one with
-      ``map_state == IsViewable`` -- i.e. this is a real running GUI with
-      real mapped content, not a crash.
-    - However, external pixel capture of that rendered content is blocked
-      in this sandbox: repeated ``mss`` full-display grabs of ``DISPLAY=:0``
-      (at 3s, 6s, 15s, and 20s post-launch render waits) all returned
-      byte-identical, uniformly blank images (md5
-      ``4e9fd36a75989219291d002dd3739145``, confirmed identical to a grab
-      taken with *no* GMAT process running at all); and direct X11
-      ``XGetImage`` calls against the mapped window IDs raised
-      ``BadDrawable``/``BadMatch`` protocol errors rather than returning
-      pixel data. No system screenshot utility (``xwd``, ``scrot``,
-      ``import``) is installed, and installing one requires ``apt-get``
-      with sudo, which this shell does not have (``sudo -n true`` ->
-      "interactive authentication is required").
-    - Conclusion: this WSLg/XWayland sandbox's compositor does not expose
-      the real GPU-rendered OpenFrames/OrbitView buffer to standard
-      external X11 screen-capture mechanisms, independent of GMAT itself.
-      This function still attempts the real capture every time it runs (per
-      AC1); if the environment changes (a genuine Xvfb-backed display, or a
-      capture mechanism that can read the compositor's real buffer becomes
-      available), it will start succeeding without any code change, rather
-      than needing to be re-implemented.
+    ASSET-LOADING FIX (TJC-3; confirmed, not merely hypothesized). GMAT's
+    OpenFrames OrbitView renderer loads its 3ds-model and jpeg-texture
+    assets (e.g. ``aura.3ds``, ``ModifiedBlueMarble.jpg``) through
+    ``lib/osgPlugins-3.6.5/osgdb_3ds.so`` / ``osgdb_jpeg.so``, which
+    themselves link against ``libosg.so.161``/``libosgDB.so.161`` from
+    GMAT's own ``lib/`` directory. Without that directory on
+    ``LD_LIBRARY_PATH``, those plugin ``.so`` files fail to resolve
+    (``ldd`` reports ``libosgDB.so.161 => not found``), so OpenFrames cannot
+    load the plugin and logs "OpenFrames cannot find or cannot load the
+    model/texture ..." even though the asset files genuinely exist on disk
+    -- a dynamic-linking problem, not a missing-file or working-directory
+    problem. Reproduced directly: with GMAT's ``bin/`` as the working
+    directory and no ``LD_LIBRARY_PATH`` override, ``GmatLog.txt``/stdout
+    report ``OpenFrames cannot find or cannot load the model
+    ../data/vehicle/models/aura.3ds`` and the matching texture errors for
+    ``ModifiedBlueMarble.jpg``/``ModifiedBlueMarble_night.jpg``; adding
+    ``gmat_lib_dir`` (GMAT's ``lib/`` directory, auto-derived from
+    ``gui_executable``'s path by default: ``<...>/bin/../lib``) to
+    ``LD_LIBRARY_PATH`` eliminates every one of those errors from the same
+    run, and the captured OrbitView region's PNG grows from ~46KB (flat
+    black Earth sphere, no texture/model) to ~140KB with correspondingly
+    different pixel content once the texture/model load successfully.
     """
-    display = display if display is not None else os.environ.get("DISPLAY")
+    explicit_display = display is not None
+    managed_xvfb: _ManagedXvfbDisplay | None = None
+    if explicit_display:
+        # The explicit override always wins (even an explicit "" meaning "no
+        # display"): no Xvfb is launched, matching the original behavior.
+        pass
+    elif use_own_xvfb:
+        # Default enhancement (AC1): manage our own self-contained Xvfb
+        # display rather than relying on any inherited DISPLAY.
+        managed_xvfb = _launch_managed_xvfb()
+        display = managed_xvfb.display if managed_xvfb is not None else os.environ.get("DISPLAY")
+    else:
+        display = os.environ.get("DISPLAY")
     if not display:
         return GMATGUIScreenshotResult(
             False, False, None,
-            "no DISPLAY environment variable is configured; a real GMAT GUI render requires a "
-            "reachable X display (e.g. a virtual framebuffer, or a WSLg-backed X11/XWayland "
-            "display as in this environment) and none was found.",
+            "no DISPLAY environment variable is configured and no self-contained Xvfb virtual "
+            "display could be started; a real GMAT GUI render requires a reachable X display "
+            "(e.g. a managed Xvfb virtual framebuffer, or an inherited X11/XWayland display) and "
+            "none was found.",
         )
     resolved = (
         gui_executable
@@ -684,6 +819,9 @@ def attempt_gmat_gui_screenshot(
         else (shutil.which(gui_executable) if "/" not in gui_executable else None)
     )
     if not resolved:
+        if managed_xvfb is not None:
+            managed_xvfb.process.terminate()
+            managed_xvfb.process.wait(timeout=5)
         return GMATGUIScreenshotResult(
             False, False, None, f"GMAT GUI executable '{gui_executable}' was not found or is not a file."
         )
@@ -691,29 +829,40 @@ def attempt_gmat_gui_screenshot(
         import mss  # Optional capture dependency; imported lazily so a missing
         import mss.tools  # install never breaks the console-mode verification path.
     except ImportError as exc:
+        if managed_xvfb is not None:
+            managed_xvfb.process.terminate()
+            managed_xvfb.process.wait(timeout=5)
         return GMATGUIScreenshotResult(
             True, False, None,
             f"GMAT GUI executable '{resolved}' is available but no screen-capture library "
             f"('mss') is installed to attempt validating its rendered output: {exc}",
         )
+    gmat_lib_dir = gmat_lib_dir if gmat_lib_dir is not None else Path(resolved).resolve().parent.parent / "lib"
     env = dict(os.environ)
     env["DISPLAY"] = display
     env.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")
     env.pop("WAYLAND_DISPLAY", None)
     env["GDK_BACKEND"] = "x11"
+    if Path(gmat_lib_dir).is_dir():
+        existing = env.get("LD_LIBRARY_PATH")
+        env["LD_LIBRARY_PATH"] = f"{gmat_lib_dir}:{existing}" if existing else str(gmat_lib_dir)
     try:
         process = subprocess.Popen(
             [resolved, "-ns", "-r", str(script_path)], env=env,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
         )
     except OSError as exc:
+        if managed_xvfb is not None:
+            managed_xvfb.process.terminate()
+            managed_xvfb.process.wait(timeout=5)
         return GMATGUIScreenshotResult(True, False, None, f"GMAT GUI executable could not be launched: {exc}")
     try:
         time.sleep(render_wait_s)
+        window_region = _locate_gmat_window_region(display, deadline_s=3.0)
         try:
-            with mss.MSS() as sct:
-                monitor = sct.monitors[1] if len(sct.monitors) > 1 else sct.monitors[0]
-                grabbed = sct.grab(monitor)
+            with mss.MSS(display=display) as sct:
+                region = window_region if window_region is not None else sct.monitors[0]
+                grabbed = sct.grab(region)
         except Exception as exc:  # pragma: no cover - defensive: capture backend failure
             return GMATGUIScreenshotResult(
                 True, False, None, f"GMAT GUI process launched but screen capture failed: {exc}"
@@ -722,17 +871,18 @@ def attempt_gmat_gui_screenshot(
         if pixels.size == 0 or len(np.unique(pixels)) <= 1:
             return GMATGUIScreenshotResult(
                 True, False, None,
-                "GMAT GUI process launched and mapped real window(s) under the configured "
+                "GMAT GUI process launched under the configured "
                 f"DISPLAY ({display}), but the captured screen image was uniformly blank (every "
-                "pixel identical): this sandboxed display's compositor does not expose the "
-                "rendered OpenFrames/OrbitView buffer to external screen capture. See this "
-                "function's docstring for the full reproducible evidence.",
+                "pixel identical): either the real GMAT main window could not be located via the "
+                "X window-tree walk, or the display's compositor does not expose the rendered "
+                "OpenFrames/OrbitView buffer to external screen capture.",
             )
         output_path.parent.mkdir(parents=True, exist_ok=True)
         mss.tools.to_png(grabbed.rgb, grabbed.size, output=str(output_path))
+        located = "the real GMAT application window" if window_region is not None else "the full virtual display (window not located)"
         return GMATGUIScreenshotResult(
             True, True, str(output_path),
-            f"captured a non-blank {grabbed.size[0]}x{grabbed.size[1]} GMAT GUI screen render.",
+            f"captured a non-blank {grabbed.size[0]}x{grabbed.size[1]} GMAT GUI render of {located}.",
         )
     finally:
         process.terminate()
@@ -741,6 +891,13 @@ def attempt_gmat_gui_screenshot(
         except subprocess.TimeoutExpired:
             process.kill()
             process.wait(timeout=5)
+        if managed_xvfb is not None:
+            managed_xvfb.process.terminate()
+            try:
+                managed_xvfb.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                managed_xvfb.process.kill()
+                managed_xvfb.process.wait(timeout=5)
 
 
 def generate_gmat_gui_preview_script(
