@@ -1,11 +1,17 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
   updated: '2026-10-12',
-  commitSubject: 'TJC-2: attempt real GMAT GUI screenshot and persist discoverable artifacts',
+  commitSubject: 'TJC-1.19: assemble a unified GMAT verification report (numerical + screenshot + human-readable)',
   groups: [
     {
       label: 'Completed',
       items: [
+        {
+          id: 'TJC-1.19', date: '2026-10-12', title: 'Return a unified numerical and visual verification report',
+          commit: 'TJC-1.19: assemble a unified GMAT verification report (numerical + screenshot + human-readable)', hash: 'pending final commit',
+          outcome: 'Added src/verification_report.py: a single assemble_verification_report(...) entry point and UnifiedVerificationReport frozen dataclass that formalizes scripts/run_cw_gmat_slice.py\'s previously ad hoc verification_result.json dict-building into one explicit structure. Every outcome now carries, together: GMAT version/run identity, the compared CW/GMAT final states with declared units and tolerances, measured position/velocity discrepancies, the PASS/WARNING/FAIL/INCOMPLETE comparison status, and a screenshot artifact reference with an explicit media_type (image/svg+xml or image/png), path, caption, and case_id/run_id association. assemble_verification_report re-enforces (not merely assumes) the never-a-false-PASS invariant at construction time: requesting verified=True without GMAT having actually attempted, exited zero, produced a parsed final state, compared PASS, and had a valid screenshot raises ValueError immediately. Added UnifiedVerificationReport.to_human_readable(), satisfying the report\'s operator-facing requirement: it explicitly distinguishes "the CW solver itself succeeded" from "GMAT independently verified it," and explains likely discrepancy causes when supported by evidence (a bounded WARNING-level overrun reads as likely numerical/integrator precision; a large-margin FAIL reads as a likely frame/unit/convention mismatch). Wired this into every exit path of scripts/run_cw_gmat_slice.py (CW_TARGETING_INFEASIBLE, MISSING_GMAT, EXECUTION_ERROR, MALFORMED_OUTPUT, NUMERICAL_DISAGREEMENT, SCREENSHOT_FAILURE, VERIFIED) as a new unified_verification_report key in verification_result.json plus a sibling verification_report.txt, without changing any existing top-level field the prior 18 tests already depended on. Added tests/test_verification_report.py (23 new tests covering PASS/WARNING/FAIL, each GMAT failure mode, missing/corrupt screenshots refusing a false PASS, and the human-readable solver-vs-verification distinction) and extended tests/test_cw_gmat_slice.py\'s existing fixtures with unified_verification_report assertions; all 91 repo tests pass.',
+          links: [['GMAT verification page', '#/cw-gmat-slice'], ['Unified report module', 'data/src/verification_report.py'], ['Runner', 'data/scripts/run_cw_gmat_slice.py'], ['Report tests', 'data/tests/test_verification_report.py'], ['Slice tests', 'data/tests/test_cw_gmat_slice.py']]
+        },
         {
           id: 'TJC-2', date: '2026-10-12', title: 'Capture a real GMAT GUI screenshot and store it in a discoverable location',
           commit: 'TJC-2: attempt real GMAT GUI screenshot and persist discoverable artifacts', hash: 'pending final commit',

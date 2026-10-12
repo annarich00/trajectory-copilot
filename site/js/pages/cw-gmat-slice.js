@@ -1,11 +1,13 @@
 'use strict';
 
 window.TCPages['cw-gmat-slice'] = async function (root) {
-  const [caseText, runner, verifyModule, verifyTests, exampleSvg, exampleResult] = await Promise.all([
+  const [caseText, runner, verifyModule, reportModule, verifyTests, reportTests, exampleSvg, exampleResult] = await Promise.all([
     TC.fetchText('data/examples/cw_gmat_vertical_slice.yaml'),
     TC.fetchText('data/scripts/run_cw_gmat_slice.py'),
     TC.fetchText('data/src/gmat_verify.py'),
+    TC.fetchText('data/src/verification_report.py'),
     TC.fetchText('data/tests/test_cw_gmat_slice.py'),
+    TC.fetchText('data/tests/test_verification_report.py'),
     TC.fetchText('data/examples/cw_gmat_slice_example/trajectory.svg'),
     TC.fetchText('data/examples/cw_gmat_slice_example/verification_result.json'),
   ]);
@@ -74,16 +76,36 @@ window.TCPages['cw-gmat-slice'] = async function (root) {
     <div style="background:#fff;border-radius:6px;padding:8px;display:inline-block">${exampleSvg}</div>
     ${TC.codeBlock(exampleResult, 1)}
 
+    <h2>7. Unified verification report (TJC-1.19)</h2>
+    <p>Every run above, regardless of which outcome it reaches, now also assembles one explicit <code>src/verification_report.py::UnifiedVerificationReport</code> dataclass (embedded as the <code>unified_verification_report</code> key of <code>verification_result.json</code>, and written separately as a plain-text operator report at <code>verification_report.txt</code>) instead of only the ad hoc, scattered dict fields built up field-by-field across the runner's branches. One structure always carries, together:</p>
+    <ul>
+      <li>GMAT version/run identity (<code class="mono">gmat_executable</code>, <code class="mono">gmat_version_banner</code>, <code class="mono">gmat_attempted</code>, <code class="mono">gmat_exit_status</code>);</li>
+      <li>compared states, declared units, and configured tolerances (<code class="mono">cw_final_state_m_mps</code>, <code class="mono">gmat_final_state_m_mps</code>, <code class="mono">units</code>, <code class="mono">tolerances</code>);</li>
+      <li>measured discrepancies and the <code class="mono">PASS</code>/<code class="mono">WARNING</code>/<code class="mono">FAIL</code>/<code class="mono">INCOMPLETE</code> comparison status; and</li>
+      <li>a directly accessible <code class="mono">screenshot</code> artifact reference with an explicit <code class="mono">media_type</code> (<code>image/svg+xml</code> or <code>image/png</code>), <code class="mono">path</code>, <code class="mono">caption</code>, and <code class="mono">case_id</code>/<code class="mono">run_id</code> association, so it is always clear which run this screenshot belongs to.</li>
+    </ul>
+    <p><strong>The never-a-false-PASS invariant is re-enforced, not merely assumed, at this layer too:</strong> <code class="mono">assemble_verification_report</code> raises <code>ValueError</code> immediately if a caller ever requests <code>verified=True</code> while GMAT was not attempted, exited nonzero, produced no parsed final state, compared as anything other than <code>PASS</code>, or has an invalid screenshot &mdash; so missing numerical output, failed GMAT execution, or a missing/corrupt screenshot can never be threaded through into a false pass at the report-assembly layer either.</p>
+    <p><strong>The human-readable report distinguishes solver success from independent GMAT verification (AC4):</strong> <code class="mono">UnifiedVerificationReport.to_human_readable()</code> explicitly separates "the CW solver itself succeeded at computing a candidate" from "GMAT independently verified it," and explains likely discrepancy causes when the evidence supports it &mdash; a bounded <code>WARNING</code>-level tolerance overrun reads as likely ordinary numerical/integrator precision, while a large-margin <code>FAIL</code> reads as more likely a frame/unit/state-ordering mismatch. Example excerpt from a real <code>VERIFIED</code> run:</p>
+    ${TC.codeBlock(`SOLVER: The clohessy-wiltshire-linearized-fixed-duration-two-impulse solver SUCCEEDED at computing a candidate solution (status='unique'). Phi_rv is well-conditioned; returned the unique inverse solution.
+
+INDEPENDENT VERIFICATION: GMAT independently verified the candidate solution. Position error 7.941e-03 m and velocity error 1.168e-05 m/s are both within tolerance (position tolerance 1.0 m, velocity tolerance 0.001 m/s). A solver success alone does NOT by itself constitute this independent verification -- this GMAT comparison is what does.`, 0)}
+
     <h2>Authoritative source mirrors</h2>
     ${TC.authorityBanner('Exact synchronized source mirrors; Python remains authoritative. This browser does not execute it.')}
     <details><summary style="cursor:pointer;color:var(--accent)">src/gmat_verify.py (script generation, execution, parsing, comparison, screenshot validation, real-GUI screenshot attempt)</summary>
       ${TC.codeBlock(verifyModule, 1)}
+    </details>
+    <details><summary style="cursor:pointer;color:var(--accent)">src/verification_report.py (TJC-1.19 unified report assembly and human-readable rendering)</summary>
+      ${TC.codeBlock(reportModule, 1)}
     </details>
     <details><summary style="cursor:pointer;color:var(--accent)">scripts/run_cw_gmat_slice.py (orchestration entry point)</summary>
       ${TC.codeBlock(runner, 1)}
     </details>
     <details><summary style="cursor:pointer;color:var(--accent)">tests/test_cw_gmat_slice.py (failure-mode tests, screenshot-source tests, the real end-to-end GMAT run)</summary>
       ${TC.codeBlock(verifyTests, 1)}
+    </details>
+    <details><summary style="cursor:pointer;color:var(--accent)">tests/test_verification_report.py (TJC-1.19 unified report assembly/formatting tests)</summary>
+      ${TC.codeBlock(reportTests, 1)}
     </details>
   `;
 };

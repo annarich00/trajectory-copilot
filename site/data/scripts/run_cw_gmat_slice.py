@@ -47,14 +47,17 @@ import json
 import math
 import os
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from src.cw import solve_cw_rendezvous  # noqa: E402
+from src.cw import CW_RENDEZVOUS_UNITS, solve_cw_rendezvous  # noqa: E402
 from src.gmat_verify import (  # noqa: E402
+    GMATComparisonResult,
+    ScreenshotResult,
     attempt_gmat_gui_screenshot,
     check_gmat_available,
     compare_gmat_final_state,
@@ -65,6 +68,7 @@ from src.gmat_verify import (  # noqa: E402
     validate_gui_screenshot,
     validate_screenshot,
 )
+from src.verification_report import assemble_verification_report  # noqa: E402
 
 
 def load_simple_yaml(path: Path) -> dict:
@@ -122,6 +126,18 @@ def _write_result(output_dir: Path, result: dict) -> dict:
     return result
 
 
+def _write_human_readable_report(output_dir: Path, report) -> None:
+    """Write the AC4 operator-facing narrative alongside the machine-readable JSON.
+
+    Distinct file, distinct audience: ``verification_result.json`` is the
+    machine-readable contract; ``verification_report.txt`` is meant to be
+    read directly by an operator and makes the solver-success-vs-
+    independent-GMAT-verification distinction explicit (see
+    ``UnifiedVerificationReport.to_human_readable``).
+    """
+    (output_dir / "verification_report.txt").write_text(report.to_human_readable() + "\n")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--case", type=Path, default=ROOT / "examples/cw_gmat_vertical_slice.yaml")
@@ -144,6 +160,7 @@ def main() -> int:
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     tolerances = {"position_m": case["pos_tol"], "velocity_mps": case["vel_tol"], "delta_v_mps": case["dv_tol"]}
+    run_id = f"{case['case_id']}-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
 
     n = math.sqrt(case["mu"] / case["radius_m"] ** 3)
     period = 2 * math.pi / n
@@ -169,11 +186,28 @@ def main() -> int:
         "gui_screenshot_attempt": None,
         "artifact_storage_convention": str(ROOT / "artifacts/cw_gmat_slice/README.md"),
         "verified": False, "failure_mode": None, "verification_status": None,
+        "unified_verification_report": None, "verification_report_path": str(output_dir / "verification_report.txt"),
     }
 
     if not solution.feasible:
         base_result["failure_mode"] = "CW_TARGETING_INFEASIBLE"
         base_result["verification_status"] = f"NOT VERIFIED: CW targeting infeasible: {solution.reason}"
+        report = assemble_verification_report(
+            case_id=case["case_id"], run_id=run_id,
+            solver_name="clohessy-wiltshire-linearized-fixed-duration-two-impulse",
+            solver_status=solution.status, solver_feasible=False, solver_reason=solution.reason,
+            gmat_availability=None, gmat_run=None,
+            cw_final_state_si=None, gmat_final_state_si=None, comparison=None,
+            units=CW_RENDEZVOUS_UNITS,
+            tolerances=tolerances,
+            screenshot_result=ScreenshotResult(False, None, "no screenshot artifact was generated: CW targeting is infeasible."),
+            screenshot_media_type="image/svg+xml",
+            screenshot_caption="CW relative trajectory plot (not generated: targeting infeasible).",
+            failure_mode="CW_TARGETING_INFEASIBLE", verified=False,
+            verification_status=base_result["verification_status"],
+        )
+        base_result["unified_verification_report"] = report.to_dict()
+        _write_human_readable_report(output_dir, report)
         _write_result(output_dir, base_result)
         return 1
 
@@ -245,15 +279,45 @@ def main() -> int:
     base_result["trajectory_artifact"] = str(screenshot_path)
     base_result["trajectory_artifact_nonempty"] = screenshot.ok
     base_result["screenshot_source"] = screenshot_source
+    screenshot_media_type = "image/png" if screenshot_source == "gmat_gui" else "image/svg+xml"
+    screenshot_caption = (
+        f"GMAT GUI (OrbitView/OpenFrames) trajectory render for case '{case['case_id']}'."
+        if screenshot_source == "gmat_gui"
+        else f"Deterministic SVG relative-trajectory plot for case '{case['case_id']}'."
+    )
+
+    def _finish(
+        *, failure_mode: str | None, verified: bool, verification_status: str,
+        gmat_availability=None, gmat_run=None, gmat_final_state_si=None, comparison: GMATComparisonResult | None = None,
+    ) -> int:
+        base_result["verification_status"] = verification_status
+        base_result["failure_mode"] = failure_mode
+        base_result["verified"] = verified
+        report = assemble_verification_report(
+            case_id=case["case_id"], run_id=run_id,
+            solver_name="clohessy-wiltshire-linearized-fixed-duration-two-impulse",
+            solver_status=solution.status, solver_feasible=True, solver_reason=solution.reason,
+            gmat_availability=gmat_availability, gmat_run=gmat_run,
+            cw_final_state_si=solution.final_state, gmat_final_state_si=gmat_final_state_si, comparison=comparison,
+            units=CW_RENDEZVOUS_UNITS, tolerances=tolerances,
+            screenshot_result=screenshot, screenshot_media_type=screenshot_media_type,
+            screenshot_caption=screenshot_caption,
+            failure_mode=failure_mode, verified=verified, verification_status=verification_status,
+        )
+        base_result["unified_verification_report"] = report.to_dict()
+        _write_human_readable_report(output_dir, report)
+        _write_result(output_dir, base_result)
+        return 0 if verified else 1
 
     # 2. Confirm GMAT availability by actually invoking the executable.
     availability = check_gmat_available(args.gmat)
     if not availability.available:
-        base_result["failure_mode"] = "MISSING_GMAT"
         base_result["gmat"] = {"attempted": False, "exit_status": None, "stdout": "", "stderr": "", "reason": availability.reason}
-        base_result["verification_status"] = f"NOT VERIFIED: MISSING_GMAT: {availability.reason}"
-        _write_result(output_dir, base_result)
-        return 1
+        return _finish(
+            failure_mode="MISSING_GMAT", verified=False,
+            verification_status=f"NOT VERIFIED: MISSING_GMAT: {availability.reason}",
+            gmat_availability=availability,
+        )
 
     # 3. Execute GMAT, capturing logs/exit status.
     run = run_gmat_script(availability.executable, script_path, timeout_s=args.timeout_s)
@@ -262,19 +326,21 @@ def main() -> int:
         "stdout": run.stdout, "stderr": run.stderr, "timed_out": run.timed_out, "reason": run.reason,
     }
     if not run.attempted or run.exit_status != 0:
-        base_result["failure_mode"] = "EXECUTION_ERROR"
-        base_result["verification_status"] = f"NOT VERIFIED: EXECUTION_ERROR: {run.reason}"
-        _write_result(output_dir, base_result)
-        return 1
+        return _finish(
+            failure_mode="EXECUTION_ERROR", verified=False,
+            verification_status=f"NOT VERIFIED: EXECUTION_ERROR: {run.reason}",
+            gmat_availability=availability, gmat_run=run,
+        )
 
     # 4. Parse final-state and trajectory ReportFile output into SI units.
     final_parsed = parse_gmat_report(report_paths["final"], expect_single_row=True)
     trajectory_parsed = parse_gmat_report(report_paths["trajectory"], expect_single_row=False)
     if not final_parsed.ok:
-        base_result["failure_mode"] = "MALFORMED_OUTPUT"
-        base_result["verification_status"] = f"NOT VERIFIED: MALFORMED_OUTPUT: {final_parsed.reason}"
-        _write_result(output_dir, base_result)
-        return 1
+        return _finish(
+            failure_mode="MALFORMED_OUTPUT", verified=False,
+            verification_status=f"NOT VERIFIED: MALFORMED_OUTPUT: {final_parsed.reason}",
+            gmat_availability=availability, gmat_run=run,
+        )
     gmat_final_state = final_parsed.states_si[0]
     base_result["gmat"]["final_state_m_mps"] = gmat_final_state.tolist()
     if trajectory_parsed.ok:
@@ -289,10 +355,11 @@ def main() -> int:
 
     # 5. Validate the screenshot artifact as its own distinct failure mode.
     if not screenshot.ok:
-        base_result["failure_mode"] = "SCREENSHOT_FAILURE"
-        base_result["verification_status"] = f"NOT VERIFIED: SCREENSHOT_FAILURE: {screenshot.reason}"
-        _write_result(output_dir, base_result)
-        return 1
+        return _finish(
+            failure_mode="SCREENSHOT_FAILURE", verified=False,
+            verification_status=f"NOT VERIFIED: SCREENSHOT_FAILURE: {screenshot.reason}",
+            gmat_availability=availability, gmat_run=run, gmat_final_state_si=gmat_final_state,
+        )
 
     # 6. Compare the parsed GMAT final state to the CW analytical final state.
     comparison = compare_gmat_final_state(
@@ -304,15 +371,16 @@ def main() -> int:
         "reason": comparison.reason,
     }
     if comparison.status != "PASS":
-        base_result["failure_mode"] = "NUMERICAL_DISAGREEMENT"
-        base_result["verification_status"] = f"NOT VERIFIED: NUMERICAL_DISAGREEMENT ({comparison.status}): {comparison.reason}"
-        _write_result(output_dir, base_result)
-        return 1
+        return _finish(
+            failure_mode="NUMERICAL_DISAGREEMENT", verified=False,
+            verification_status=f"NOT VERIFIED: NUMERICAL_DISAGREEMENT ({comparison.status}): {comparison.reason}",
+            gmat_availability=availability, gmat_run=run, gmat_final_state_si=gmat_final_state, comparison=comparison,
+        )
 
-    base_result["verified"] = True
-    base_result["verification_status"] = "VERIFIED"
-    _write_result(output_dir, base_result)
-    return 0
+    return _finish(
+        failure_mode=None, verified=True, verification_status="VERIFIED",
+        gmat_availability=availability, gmat_run=run, gmat_final_state_si=gmat_final_state, comparison=comparison,
+    )
 
 
 if __name__ == "__main__":

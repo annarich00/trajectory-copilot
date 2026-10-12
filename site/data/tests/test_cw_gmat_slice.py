@@ -52,6 +52,14 @@ def test_slice_reports_missing_gmat_without_false_verification(tmp_path):
     assert result["cw"]["targeting_status"] == "unique"
     assert result["cw"]["total_delta_v_mps"] > 0
     assert result["comparison"]["tolerances"]["position_m"] == 1.0
+    # TJC-1.19: the unified report structure is assembled for every outcome.
+    unified = result["unified_verification_report"]
+    assert unified["failure_mode"] == "MISSING_GMAT"
+    assert unified["verified"] is False
+    assert unified["screenshot"]["ok"] is True
+    assert unified["screenshot"]["media_type"] == "image/svg+xml"
+    assert "SOLVER" in unified["human_readable_report"]
+    assert (tmp_path / "verification_report.txt").is_file()
 
 
 def test_slice_reports_infeasible_structured_targeting_without_gmat_or_artifact(tmp_path, monkeypatch):
@@ -79,6 +87,13 @@ def test_slice_reports_infeasible_structured_targeting_without_gmat_or_artifact(
     assert result["trajectory_artifact"] is None
     assert result["trajectory_artifact_nonempty"] is False
     assert not (tmp_path / "generated_cw_rendezvous.script").exists()
+    # TJC-1.19: the unified report structure is still assembled for the
+    # earliest failure mode, with an honestly invalid (not-generated) screenshot.
+    unified = result["unified_verification_report"]
+    assert unified["failure_mode"] == "CW_TARGETING_INFEASIBLE"
+    assert unified["verified"] is False
+    assert unified["screenshot"]["ok"] is False
+    assert unified["solver"]["feasible"] is False
 
 
 def test_slice_reports_execution_error_distinct_from_missing_gmat(tmp_path, monkeypatch):
@@ -105,6 +120,10 @@ def test_slice_reports_execution_error_distinct_from_missing_gmat(tmp_path, monk
     assert result["gmat"]["attempted"] is True
     assert result["gmat"]["exit_status"] == 1
     assert (tmp_path / "generated_cw_rendezvous.script").stat().st_size > 0
+    unified = result["unified_verification_report"]
+    assert unified["failure_mode"] == "EXECUTION_ERROR"
+    assert unified["verified"] is False
+    assert "INDEPENDENT VERIFICATION: NOT PERFORMED" in unified["human_readable_report"]
 
 
 def test_slice_reports_malformed_output_when_report_is_corrupt(tmp_path, monkeypatch):
@@ -131,6 +150,10 @@ def test_slice_reports_malformed_output_when_report_is_corrupt(tmp_path, monkeyp
     assert result["verified"] is False
     assert result["failure_mode"] == "MALFORMED_OUTPUT"
     assert result["gmat"]["exit_status"] == 0
+    unified = result["unified_verification_report"]
+    assert unified["failure_mode"] == "MALFORMED_OUTPUT"
+    assert unified["verified"] is False
+    assert unified["comparison"]["status"] == "INCOMPLETE"
 
 
 def test_slice_reports_numerical_disagreement_when_gmat_state_is_perturbed(tmp_path, monkeypatch):
@@ -167,6 +190,11 @@ def test_slice_reports_numerical_disagreement_when_gmat_state_is_perturbed(tmp_p
     assert result["failure_mode"] == "NUMERICAL_DISAGREEMENT"
     assert result["comparison"]["status"] in ("WARNING", "FAIL")
     assert result["comparison"]["position_error_m"] > result["comparison"]["tolerances"]["position_m"]
+    unified = result["unified_verification_report"]
+    assert unified["failure_mode"] == "NUMERICAL_DISAGREEMENT"
+    assert unified["verified"] is False
+    assert unified["comparison"]["status"] in ("WARNING", "FAIL")
+    assert "LIKELY CAUSE" in unified["human_readable_report"]
 
 
 def test_slice_reports_screenshot_failure_when_svg_writer_is_corrupted(tmp_path, monkeypatch):
@@ -205,6 +233,11 @@ def test_slice_reports_screenshot_failure_when_svg_writer_is_corrupted(tmp_path,
     assert result["verified"] is False
     assert result["failure_mode"] == "SCREENSHOT_FAILURE"
     assert result["trajectory_artifact_nonempty"] is False
+    unified = result["unified_verification_report"]
+    assert unified["failure_mode"] == "SCREENSHOT_FAILURE"
+    assert unified["verified"] is False
+    assert unified["screenshot"]["ok"] is False
+    assert "SCREENSHOT: MISSING OR INVALID" in unified["human_readable_report"]
 
 
 @pytest.mark.skipif(
@@ -226,6 +259,11 @@ def test_slice_real_gmat_run_matches_cw_analytical_final_state(tmp_path):
     assert result["comparison"]["position_error_m"] < 1.0
     assert result["comparison"]["velocity_error_mps"] < 0.001
     assert returncode == 0
+    unified = result["unified_verification_report"]
+    assert unified["verified"] is True
+    assert unified["comparison"]["status"] == "PASS"
+    assert "GMAT independently verified the candidate solution" in unified["human_readable_report"]
+    assert (tmp_path / "verification_report.txt").is_file()
 
 
 def test_generate_gmat_script_requires_absolute_report_paths(tmp_path):
