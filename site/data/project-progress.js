@@ -1,11 +1,17 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
-  updated: '2026-10-12',
-  commitSubject: 'TJC-1.9: create the four-category rendezvous benchmark',
+  updated: '2026-10-13',
+  commitSubject: 'TJC-1.16: connect the formalizer, model selector, solvers, and GMAT verification into one workflow',
   groups: [
     {
       label: 'Completed',
       items: [
+        {
+          id: 'TJC-1.16', date: '2026-10-13', title: 'Harden the complete workflow after the early vertical slice',
+          commit: 'TJC-1.16: connect the formalizer, model selector, solvers, and GMAT verification into one workflow', hash: 'pending final commit',
+          outcome: 'Added src/workflow.py::run_rendezvous_workflow(RendezvousCase, output_dir, gmat_executable), the single connected entry point joining the narrowed formalizer\'s structured-case readiness check (READY_TO_SOLVE / NEEDS_CLARIFICATION / OUT_OF_SCOPE), src/model_selector.py::select_model, the deterministic CW and bounded two-body paths, and GMAT verification into one pipeline. A NEEDS_CLARIFICATION or OUT_OF_SCOPE case returns immediately with focused clarification questions and runs no model selection, solver, or GMAT call at all. A CW selection reuses -- not duplicates -- the already-hardened vertical slice: refactored scripts/run_cw_gmat_slice.py\'s main() into a reusable run_cw_rendezvous_gmat_verification(case, output_dir, ...) helper that returns (result, returncode) without writing files, so both main() (writes verification_result.json/verification_report.txt as before) and src/workflow.py call the exact same solve -> script-generation -> execution -> parsing -> comparison -> screenshot -> UnifiedVerificationReport pipeline. A bounded-two-body-fallback selection (CW-invalid but otherwise supported) still receives independent GMAT verification -- never a skip -- via new src/gmat_verify.py::generate_two_body_coast_script/parse_inertial_report support generalized from scripts/generate_benchmark_gmat_evidence.py\'s existing benchmark-case-c logic. UNSUPPORTED/NEEDS MORE INFORMATION selections return an explicit non-authoritative result with no physics or GMAT execution. Every outcome\'s to_dict() carries the recorded facts/assumptions, model-selection reasoning, exact tool inputs/outputs, numeric tolerances, artifact paths (script, report files, screenshot), and a trust_statement distinguishing "the deterministic solver succeeded" from "GMAT independently verified it." Added tests/test_workflow.py (14 new tests: happy-path VERIFIED, needs-clarification and out-of-scope short-circuits asserting zero physics/model-selection/GMAT calls, CW-invalid routed to the two-body fallback with GMAT verification genuinely attempted and reaching VERIFIED under a stand-in GMAT run, NUMERICAL_DISAGREEMENT, MISSING_GMAT, EXECUTION_ERROR, MALFORMED_OUTPUT, SCREENSHOT_FAILURE, UNSUPPORTED, NEEDS MORE INFORMATION, and an AC5 record-shape test). All 116 repo tests pass (102 pre-existing plus 14 new), with zero changes to scripts/run_cw_gmat_slice.py\'s existing CLI behavior or its own 18 tests.',
+          links: [['Workflow module', 'data/src/workflow.py'], ['Workflow tests', 'data/tests/test_workflow.py'], ['Vertical slice runner', 'data/scripts/run_cw_gmat_slice.py'], ['GMAT verification page', '#/cw-gmat-slice'], ['Model selector page', '#/model-selector']]
+        },
         {
           id: 'TJC-1.9', date: '2026-10-12', title: 'Create the four-category rendezvous benchmark',
           commit: 'TJC-1.9: create the four-category rendezvous benchmark', hash: '41b77df',

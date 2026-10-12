@@ -126,7 +126,7 @@ def _write_result(output_dir: Path, result: dict) -> dict:
     return result
 
 
-def _write_human_readable_report(output_dir: Path, report) -> None:
+def _write_human_readable_report(output_dir: Path, human_readable_report: str) -> None:
     """Write the AC4 operator-facing narrative alongside the machine-readable JSON.
 
     Distinct file, distinct audience: ``verification_result.json`` is the
@@ -135,36 +135,76 @@ def _write_human_readable_report(output_dir: Path, report) -> None:
     independent-GMAT-verification distinction explicit (see
     ``UnifiedVerificationReport.to_human_readable``).
     """
-    (output_dir / "verification_report.txt").write_text(report.to_human_readable() + "\n")
+    (output_dir / "verification_report.txt").write_text(human_readable_report + "\n")
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--case", type=Path, default=ROOT / "examples/cw_gmat_vertical_slice.yaml")
-    parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/cw_gmat_slice")
-    parser.add_argument("--gmat", default=os.environ.get("GMAT_EXECUTABLE", "GmatConsole-R2026a"))
-    parser.add_argument("--gmat-gui", default=os.environ.get("GMAT_GUI_EXECUTABLE", "GMAT-R2026a"))
-    parser.add_argument(
-        "--skip-gui-screenshot", action="store_true",
-        help="skip attempting a real GMAT GUI screenshot and go straight to the SVG fallback "
-        "(useful in environments with no reachable display at all; the attempt is otherwise "
-        "always made first per AC1).",
-    )
-    parser.add_argument("--timeout-s", type=float, default=180.0)
-    args = parser.parse_args()
-    if not args.case.is_file():
-        print(json.dumps({"verified": False, "failure": f"missing structured input: {args.case}"}))
-        return 2
+def run_cw_rendezvous_gmat_verification(
+    case: dict,
+    output_dir: Path,
+    *,
+    gmat_executable: str,
+    gmat_gui_executable: str,
+    skip_gui_screenshot: bool,
+    timeout_s: float = 180.0,
+) -> tuple[dict, int]:
+    """Run one complete CW-to-GMAT verification and return ``(result, returncode)``.
 
-    case = load_simple_yaml(args.case)
-    output_dir = args.output_dir
+    This is the reusable core of ``main()`` below: solve CW, generate/execute
+    the GMAT script, parse/compare its output, attempt/validate the
+    trajectory screenshot, and assemble one ``UnifiedVerificationReport``.
+    It performs every step ``main()`` used to perform inline, but does not
+    write any files itself (not ``verification_result.json``, not
+    ``verification_report.txt``, not even the generated GMAT script/
+    screenshot paths outside of what GMAT/screenshot generation requires) --
+    ``output_dir`` is still used as the working directory for the generated
+    GMAT script, ReportFile output, and screenshot artifacts, since GMAT
+    itself requires real file paths to read/write, but the two top-level
+    result files remain ``main()``'s responsibility. This lets
+    ``src/workflow.py`` call the exact same CW/GMAT verification logic
+    without duplicating it and without requiring a real GMAT installation
+    for every unit test (the same stand-in/monkeypatch patterns used by
+    ``tests/test_cw_gmat_slice.py`` apply here too).
+
+    Parameters
+    ----------
+    case:
+        A structured case dict shaped like ``load_simple_yaml``'s return
+        value: ``case_id``, ``input_path``, ``mu``, ``radius_m``, ``state0``,
+        ``target``, ``pos_tol``, ``vel_tol``, ``dv_tol``, and either
+        ``transfer_fraction`` (fraction of the circular reference-orbit
+        period) or a direct ``transfer_s`` (fixed transfer duration in
+        seconds, used as-is when present -- ``src/workflow.py`` supplies
+        this directly rather than re-deriving a period fraction).
+    output_dir:
+        Directory the generated GMAT script, ReportFile output, and
+        screenshot artifacts are written into. Created if missing.
+    gmat_executable:
+        The console-mode GMAT executable used for numeric verification.
+    gmat_gui_executable:
+        The GUI-mode GMAT executable used for the optional real screenshot
+        attempt.
+    skip_gui_screenshot:
+        When ``True``, skip the real GMAT GUI screenshot attempt and go
+        straight to the deterministic SVG fallback.
+    timeout_s:
+        GMAT execution timeout in seconds.
+
+    Returns
+    -------
+    tuple[dict, int]
+        The structured result dict (the same shape previously written to
+        ``verification_result.json``, including ``unified_verification_report``)
+        and a process-style returncode (``0`` when ``verified`` is ``True``,
+        ``1`` otherwise).
+    """
+    output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     tolerances = {"position_m": case["pos_tol"], "velocity_mps": case["vel_tol"], "delta_v_mps": case["dv_tol"]}
     run_id = f"{case['case_id']}-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
 
     n = math.sqrt(case["mu"] / case["radius_m"] ** 3)
     period = 2 * math.pi / n
-    transfer_s = case["transfer_fraction"] * period
+    transfer_s = case["transfer_s"] if "transfer_s" in case else case["transfer_fraction"] * period
     state0 = np.array(case["state0"])
     target = np.array(case["target"])
 
@@ -207,9 +247,7 @@ def main() -> int:
             verification_status=base_result["verification_status"],
         )
         base_result["unified_verification_report"] = report.to_dict()
-        _write_human_readable_report(output_dir, report)
-        _write_result(output_dir, base_result)
-        return 1
+        return base_result, 1
 
     cw_summary.update(
         final_state_m_mps=solution.final_state.tolist(),
@@ -251,7 +289,7 @@ def main() -> int:
     screenshot_path = output_dir / "trajectory.svg"
     screenshot_source = "svg_fallback"
     gui_result = None
-    if not args.skip_gui_screenshot:
+    if not skip_gui_screenshot:
         gui_preview_script_path.write_text(
             generate_gmat_gui_preview_script(
                 radius_m=case["radius_m"], deputy_state0_si=state0,
@@ -259,7 +297,7 @@ def main() -> int:
             )
         )
         gui_png_path = output_dir / "trajectory_gmat_gui.png"
-        gui_result = attempt_gmat_gui_screenshot(args.gmat_gui, gui_preview_script_path, gui_png_path)
+        gui_result = attempt_gmat_gui_screenshot(gmat_gui_executable, gui_preview_script_path, gui_png_path)
         base_result["gui_screenshot_attempt"] = {
             "attempted": gui_result.attempted, "captured": gui_result.captured, "reason": gui_result.reason,
         }
@@ -289,7 +327,7 @@ def main() -> int:
     def _finish(
         *, failure_mode: str | None, verified: bool, verification_status: str,
         gmat_availability=None, gmat_run=None, gmat_final_state_si=None, comparison: GMATComparisonResult | None = None,
-    ) -> int:
+    ) -> tuple[dict, int]:
         base_result["verification_status"] = verification_status
         base_result["failure_mode"] = failure_mode
         base_result["verified"] = verified
@@ -305,12 +343,10 @@ def main() -> int:
             failure_mode=failure_mode, verified=verified, verification_status=verification_status,
         )
         base_result["unified_verification_report"] = report.to_dict()
-        _write_human_readable_report(output_dir, report)
-        _write_result(output_dir, base_result)
-        return 0 if verified else 1
+        return base_result, (0 if verified else 1)
 
     # 2. Confirm GMAT availability by actually invoking the executable.
-    availability = check_gmat_available(args.gmat)
+    availability = check_gmat_available(gmat_executable)
     if not availability.available:
         base_result["gmat"] = {"attempted": False, "exit_status": None, "stdout": "", "stderr": "", "reason": availability.reason}
         return _finish(
@@ -320,7 +356,7 @@ def main() -> int:
         )
 
     # 3. Execute GMAT, capturing logs/exit status.
-    run = run_gmat_script(availability.executable, script_path, timeout_s=args.timeout_s)
+    run = run_gmat_script(availability.executable, script_path, timeout_s=timeout_s)
     base_result["gmat"] = {
         "attempted": run.attempted, "exit_status": run.exit_status,
         "stdout": run.stdout, "stderr": run.stderr, "timed_out": run.timed_out, "reason": run.reason,
@@ -381,6 +417,37 @@ def main() -> int:
         failure_mode=None, verified=True, verification_status="VERIFIED",
         gmat_availability=availability, gmat_run=run, gmat_final_state_si=gmat_final_state, comparison=comparison,
     )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--case", type=Path, default=ROOT / "examples/cw_gmat_vertical_slice.yaml")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/cw_gmat_slice")
+    parser.add_argument("--gmat", default=os.environ.get("GMAT_EXECUTABLE", "GmatConsole-R2026a"))
+    parser.add_argument("--gmat-gui", default=os.environ.get("GMAT_GUI_EXECUTABLE", "GMAT-R2026a"))
+    parser.add_argument(
+        "--skip-gui-screenshot", action="store_true",
+        help="skip attempting a real GMAT GUI screenshot and go straight to the SVG fallback "
+        "(useful in environments with no reachable display at all; the attempt is otherwise "
+        "always made first per AC1).",
+    )
+    parser.add_argument("--timeout-s", type=float, default=180.0)
+    args = parser.parse_args()
+    if not args.case.is_file():
+        print(json.dumps({"verified": False, "failure": f"missing structured input: {args.case}"}))
+        return 2
+
+    case = load_simple_yaml(args.case)
+    output_dir = args.output_dir
+    result, returncode = run_cw_rendezvous_gmat_verification(
+        case, output_dir,
+        gmat_executable=args.gmat, gmat_gui_executable=args.gmat_gui,
+        skip_gui_screenshot=args.skip_gui_screenshot, timeout_s=args.timeout_s,
+    )
+    human_readable_report = result["unified_verification_report"]["human_readable_report"]
+    _write_human_readable_report(output_dir, human_readable_report)
+    _write_result(output_dir, result)
+    return returncode
 
 
 if __name__ == "__main__":
