@@ -4,3 +4,14 @@ __pycache__/
 *.py[cod]
 .coverage
 htmlcov/
+
+# TJC-2: artifacts/cw_gmat_slice/ is the persistent, discoverable default
+# output location for scripts/run_cw_gmat_slice.py (see
+# artifacts/cw_gmat_slice/README.md for the full convention). Everything a
+# real invocation writes there (generated GMAT scripts, ReportFile logs,
+# the trajectory screenshot/plot, verification_result.json) is ignored to
+# avoid bloating repo history with ephemeral per-run output; only the
+# README itself stays tracked. One small representative example run is
+# committed separately and persistently under examples/cw_gmat_slice_example/.
+artifacts/cw_gmat_slice/*
+!artifacts/cw_gmat_slice/README.md

@@ -12,7 +12,15 @@ For the fixed-duration, two-impulse CW rendezvous case in ``--case``
 4. parses the final-state and trajectory ReportFile output back into SI
    units and compares the GMAT final state to the CW analytical final
    state at configured tolerances; and
-5. writes/validates a non-empty trajectory screenshot (SVG) artifact.
+5. attempts a real GMAT GUI (OrbitView/OpenFrames) trajectory screenshot
+   first (``src/gmat_verify.py::attempt_gmat_gui_screenshot``), falling
+   back to a deterministic SVG line plot only when that real render
+   cannot be captured, and writes/validates whichever artifact resulted.
+
+By default (no ``--output-dir``), every artifact above is written to the
+persistent, discoverable ``artifacts/cw_gmat_slice/`` directory at the repo
+root (see ``artifacts/cw_gmat_slice/README.md``), not only an ephemeral
+caller-supplied or temp directory.
 
 Every outcome is one of six mutually distinct, never-silently-passing
 failure modes, or ``VERIFIED``:
@@ -47,11 +55,14 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from src.cw import solve_cw_rendezvous  # noqa: E402
 from src.gmat_verify import (  # noqa: E402
+    attempt_gmat_gui_screenshot,
     check_gmat_available,
     compare_gmat_final_state,
+    generate_gmat_gui_preview_script,
     generate_gmat_script,
     parse_gmat_report,
     run_gmat_script,
+    validate_gui_screenshot,
     validate_screenshot,
 )
 
@@ -116,6 +127,13 @@ def main() -> int:
     parser.add_argument("--case", type=Path, default=ROOT / "examples/cw_gmat_vertical_slice.yaml")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/cw_gmat_slice")
     parser.add_argument("--gmat", default=os.environ.get("GMAT_EXECUTABLE", "GmatConsole-R2026a"))
+    parser.add_argument("--gmat-gui", default=os.environ.get("GMAT_GUI_EXECUTABLE", "GMAT-R2026a"))
+    parser.add_argument(
+        "--skip-gui-screenshot", action="store_true",
+        help="skip attempting a real GMAT GUI screenshot and go straight to the SVG fallback "
+        "(useful in environments with no reachable display at all; the attempt is otherwise "
+        "always made first per AC1).",
+    )
     parser.add_argument("--timeout-s", type=float, default=180.0)
     args = parser.parse_args()
     if not args.case.is_file():
@@ -147,7 +165,9 @@ def main() -> int:
         "case_id": case["case_id"], "input": case["input_path"], "cw": cw_summary,
         "gmat": {"attempted": False, "exit_status": None, "stdout": "", "stderr": ""},
         "comparison": {"status": None, "position_error_m": None, "velocity_error_mps": None, "tolerances": tolerances},
-        "trajectory_artifact": None, "trajectory_artifact_nonempty": False,
+        "trajectory_artifact": None, "trajectory_artifact_nonempty": False, "screenshot_source": None,
+        "gui_screenshot_attempt": None,
+        "artifact_storage_convention": str(ROOT / "artifacts/cw_gmat_slice/README.md"),
         "verified": False, "failure_mode": None, "verification_status": None,
     }
 
@@ -177,11 +197,54 @@ def main() -> int:
             transfer_s=transfer_s, report_paths=report_paths,
         )
     )
+
+    # 1a. Attempt a real GMAT GUI (OrbitView/OpenFrames) screenshot BEFORE
+    # falling back to the deterministic SVG plot (AC1). This is a genuine
+    # attempt, actually invoking the GMAT GUI binary under the configured
+    # DISPLAY -- not a plain capability guess -- and is only ever treated as
+    # a success when a real, non-blank image is observed
+    # (``GMATGUIScreenshotResult.captured``). See
+    # ``src/gmat_verify.py::attempt_gmat_gui_screenshot`` for the exact,
+    # reproducible blocker evidence (AC2) observed in this environment: a
+    # real GMAT-R2026a GUI process launches and maps real OrbitView/
+    # OpenFrames windows under a reachable WSLg X display, but every
+    # external screen-capture attempt against that display returns a
+    # uniformly blank image -- the sandbox's compositor does not expose the
+    # rendered buffer to standard X11 screen-grab mechanisms. Until/unless
+    # that changes, every run falls back to the SVG plot below, and
+    # ``screenshot_source`` records which artifact was actually produced.
+    gui_preview_script_path = output_dir / "generated_cw_rendezvous_gui_preview.script"
     screenshot_path = output_dir / "trajectory.svg"
-    write_svg(screenshot_path, solution.trajectory_states)
-    screenshot = validate_screenshot(screenshot_path)
+    screenshot_source = "svg_fallback"
+    gui_result = None
+    if not args.skip_gui_screenshot:
+        gui_preview_script_path.write_text(
+            generate_gmat_gui_preview_script(
+                radius_m=case["radius_m"], deputy_state0_si=state0,
+                dv0_mps=solution.dv0_mps, dv1_mps=solution.dv1_mps, transfer_s=transfer_s,
+            )
+        )
+        gui_png_path = output_dir / "trajectory_gmat_gui.png"
+        gui_result = attempt_gmat_gui_screenshot(args.gmat_gui, gui_preview_script_path, gui_png_path)
+        base_result["gui_screenshot_attempt"] = {
+            "attempted": gui_result.attempted, "captured": gui_result.captured, "reason": gui_result.reason,
+        }
+        if gui_result.captured:
+            gui_screenshot = validate_gui_screenshot(gui_png_path)
+            if gui_screenshot.ok:
+                screenshot_path = gui_png_path
+                screenshot_source = "gmat_gui"
+
+    if screenshot_source == "svg_fallback":
+        write_svg(screenshot_path, solution.trajectory_states)
+    screenshot = (
+        validate_gui_screenshot(screenshot_path)
+        if screenshot_source == "gmat_gui"
+        else validate_screenshot(screenshot_path)
+    )
     base_result["trajectory_artifact"] = str(screenshot_path)
     base_result["trajectory_artifact_nonempty"] = screenshot.ok
+    base_result["screenshot_source"] = screenshot_source
 
     # 2. Confirm GMAT availability by actually invoking the executable.
     availability = check_gmat_available(args.gmat)
@@ -217,9 +280,10 @@ def main() -> int:
     if trajectory_parsed.ok:
         base_result["gmat"]["trajectory_times_s"] = trajectory_parsed.times_s.tolist()
         base_result["gmat"]["trajectory_states_m_mps"] = trajectory_parsed.states_si.tolist()
-        write_svg(screenshot_path, trajectory_parsed.states_si)
-        screenshot = validate_screenshot(screenshot_path)
-        base_result["trajectory_artifact_nonempty"] = screenshot.ok
+        if screenshot_source == "svg_fallback":
+            write_svg(screenshot_path, trajectory_parsed.states_si)
+            screenshot = validate_screenshot(screenshot_path)
+            base_result["trajectory_artifact_nonempty"] = screenshot.ok
     else:
         base_result["gmat"]["trajectory_parse_warning"] = trajectory_parsed.reason
 

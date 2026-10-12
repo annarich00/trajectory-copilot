@@ -1,0 +1,224 @@
+{
+  "case_id": "circular_leo_quarter_orbit_rendezvous",
+  "input": "examples/cw_gmat_vertical_slice.yaml",
+  "cw": {
+    "mean_motion_radps": 0.0011440365869807487,
+    "transfer_time_s": 1373.0298005070088,
+    "targeting_status": "unique",
+    "targeting_reason": "Phi_rv is well-conditioned; returned the unique inverse solution.",
+    "condition_number": 2.8613578313321737,
+    "rank": 3,
+    "reachability_residual_m": 7.105427357601002e-15,
+    "final_state_m_mps": [
+      7.105427357601002e-15,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "dv0_mps": [
+      -0.02007271750558942,
+      0.04571526114337226,
+      0.0
+    ],
+    "dv1_mps": [
+      -0.1429121687008782,
+      -0.08003635875279473,
+      0.0
+    ],
+    "total_delta_v_mps": 0.21372570050575607
+  },
+  "gmat": {
+    "attempted": true,
+    "exit_status": 0,
+    "stdout": "\n********************************************\n***  GMAT Console Application\n********************************************\n\nGeneral Mission Analysis Tool\nConsole Based Version\nBuild Date: Mar 30 2026  10:09:27\n\n\nGMAT working directory set to '/home/anna_ford/opt/GMAT/R2026a/bin/'\nModerator is updating data files...\nModerator is creating core engine...\n\nlibpython3.12.so.1.0: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libPythonInterface_py312\" did not open.\n\nlibmex.so: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libMatlabInterface\" did not open.\nSkipping \"../plugins/libOpenFramesInterface\": GUI plugins are skipped in console mode\n\nlibOpenFramesInterface.so.R2026a: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libOVtoOFI\" did not open.\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSetting nutation file to ../data/planetary_coeff/NUTATION.DAT\nSetting leap seconds file to ../data/time/tai-utc.dat\n2026-10-12 10:29:35 GMAT Moderator successfully created core engine\n\nInterpreting scripts from the file.\n***** file: /tmp/tjc2_example_run/generated_cw_rendezvous.script\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully interpreted the script\n.................... Print out the whole sequence ........................................\n   Command::NoOp\n   Command::BeginMissionSequence\n   Command::GMAT\n   Command::Report\n   Command::GMAT\n   Command::Maneuver\n   Command::GMAT\n   Command::Report\n   Command::GMAT\n   Command::GMAT\n   Command::Propagate\n   Command::GMAT\n   Command::Maneuver\n   Command::GMAT\n   Command::Report\n   Command::GMAT\n.................... End sequence ........................................................\nRunning mission...\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nKernel ../data/planetary_ephem/spk/DE405AllPlanets.bsp has been loaded.\nKernel ../data/planetary_coeff/SPICEPlanetaryConstantsKernel.tpc has been loaded.\nKernel ../data/time/SPICELeapSecondKernel.tls has been loaded.\nKernel ../data/planetary_coeff/SPICEEarthPredictedKernel.bpc has been loaded.\nKernel ../data/planetary_coeff/SPICEEarthCurrentKernel.bpc has been loaded.\nKernel ../data/planetary_coeff/earth_latest_high_prec.bpc has been loaded.\nKernel ../data/planetary_coeff/SPICELunaCurrentKernel.bpc has been loaded.\nKernel ../data/planetary_coeff/SPICELunaFrameKernel.tf has been loaded.\nUsing default potential file \"../data/gravity/earth/JGM2.cof\" for GravityField object \"GravityField.Earth\"\n\nMission run completed.\n===> Total Run Time: 0.053 seconds\n\n========================================\n\n\n*** GMAT Integration test (Console version) successful! ***\n\nModerator is deleting core engine...\n",
+    "stderr": "",
+    "timed_out": false,
+    "reason": "GMAT exited successfully.",
+    "final_state_m_mps": [
+      0.005615024748182718,
+      -0.005615545421646335,
+      2.1325582792276631e-13,
+      4.751809574404268e-06,
+      -1.066436785879685e-05,
+      1.310000228611482e-17
+    ],
+    "trajectory_times_s": [
+      0.0,
+      59.99999988125637,
+      146.1357115767896,
+      235.8420722186565,
+      325.9591066162102,
+      416.1220118170604,
+      506.2900904333219,
+      596.4584091911092,
+      686.6268728510477,
+      776.7952123540454,
+      866.9635594007559,
+      957.131957996171,
+      1047.299966833089,
+      1137.468471983448,
+      1227.637515566312,
+      1317.807518772315,
+      1373.02980084205
+    ],
+    "trajectory_states_m_mps": [
+      [
+        15.00000000032742,
+        -200.0,
+        0.0,
+        -0.160072717505589,
+        0.04571526114305906,
+        0.0
+      ],
+      [
+        5.697376528211996,
+        -196.61154616444,
+        4.352557291233823e-15,
+        -0.1498929718500627,
+        0.06700027269138542,
+        1.403580616085214e-16
+      ],
+      [
+        -6.541674826993259,
+        -189.6119597501982,
+        1.367432953987297e-14,
+        -0.1340576903588073,
+        0.09500412258418187,
+        -4.7796267789622015e-18
+      ],
+      [
+        -17.77574927104477,
+        -179.9091304196811,
+        1.47609913693765e-14,
+        -0.1161857296808125,
+        0.1207086254696155,
+        -5.0748236081001015e-18
+      ],
+      [
+        -27.39015739162363,
+        -168.01028807138928,
+        -6.195859496389669e-15,
+        -0.09700129617207212,
+        0.1427073023697382,
+        -2.425308628965529e-16
+      ],
+      [
+        -35.23125761524009,
+        -154.30320938885401,
+        -2.221494763766295e-14,
+        -0.07677631868631968,
+        0.1606485799777541,
+        -1.290872167615219e-16
+      ],
+      [
+        -41.21066216129091,
+        -139.16838740860248,
+        -4.1294247968156593e-14,
+        -0.05573403382123087,
+        0.17433019125850951,
+        -1.9652492718184141e-16
+      ],
+      [
+        -45.26431367318173,
+        -122.9976107711028,
+        -3.820916618553888e-14,
+        -0.03409922073355073,
+        0.1836055417729969,
+        1.938075193274109e-16
+      ],
+      [
+        -47.349104382568996,
+        -106.19300249015939,
+        -2.085916328496213e-15,
+        -0.012101900651770189,
+        0.18837597563656722,
+        5.684075852962482e-16
+      ],
+      [
+        -47.44286734915923,
+        -89.1634636405458,
+        5.085432598869909e-14,
+        0.010024007487760939,
+        0.1885907566339304,
+        6.17316176319214e-16
+      ],
+      [
+        -45.54461308386974,
+        -72.32021250433509,
+        9.707609320805128e-14,
+        0.032043315847531305,
+        0.1842476102794296,
+        3.659213419790874e-16
+      ],
+      [
+        -41.67452235492965,
+        -56.072503471064415,
+        1.401064618379928e-13,
+        0.05372194753180756,
+        0.1753927074970614,
+        4.528279996355976e-16
+      ],
+      [
+        -35.87377115358217,
+        -40.823339922012075,
+        1.727204048062474e-13,
+        0.07482933271435073,
+        0.1621202637272122,
+        3.359602231767083e-16
+      ],
+      [
+        -28.20397072308171,
+        -26.9648877095242,
+        1.964345541610067e-13,
+        0.09514127931696452,
+        0.14457125677765278,
+        2.072743807128558e-16
+      ],
+      [
+        -18.7466283343993,
+        -14.874696347396851,
+        2.0842151658683538e-13,
+        0.1144418349262085,
+        0.12293219167411971,
+        1.004116033233838e-16
+      ],
+      [
+        -7.602204960166637,
+        -4.911493357926252,
+        2.127354275255959e-13,
+        0.13252585944488648,
+        0.09743294280559403,
+        1.20371739791654e-17
+      ],
+      [
+        0.005615024748182718,
+        -0.005615545421646335,
+        2.1325582792276631e-13,
+        0.1429169205104524,
+        0.08002569438498731,
+        1.310000228611429e-17
+      ]
+    ]
+  },
+  "comparison": {
+    "status": "PASS",
+    "position_error_m": 0.007941212332207074,
+    "velocity_error_mps": 1.1675120387351017e-05,
+    "tolerances": {
+      "position_m": 1.0,
+      "velocity_mps": 0.001,
+      "delta_v_mps": 0.001
+    },
+    "reason": "GMAT final state matches the CW analytical final state within tolerance."
+  },
+  "trajectory_artifact": "examples/cw_gmat_slice_example/trajectory.svg",
+  "trajectory_artifact_nonempty": true,
+  "screenshot_source": "svg_fallback",
+  "gui_screenshot_attempt": null,
+  "artifact_storage_convention": "artifacts/cw_gmat_slice/README.md",
+  "verified": true,
+  "failure_mode": null,
+  "verification_status": "VERIFIED"
+}

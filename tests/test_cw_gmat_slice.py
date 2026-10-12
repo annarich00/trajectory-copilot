@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -14,17 +15,19 @@ import scripts.run_cw_gmat_slice as slice_runner  # noqa: E402
 from src import gmat_verify  # noqa: E402
 
 
-def _run(tmp_path, gmat="definitely-not-gmat", monkeypatch=None, argv_extra=None):
+def _run(tmp_path, gmat="definitely-not-gmat", monkeypatch=None, argv_extra=None, skip_gui_screenshot=True):
     import sys as _sys
 
     argv = ["run_cw_gmat_slice.py", "--output-dir", str(tmp_path), "--gmat", gmat]
+    if skip_gui_screenshot:
+        argv += ["--skip-gui-screenshot"]
     if argv_extra:
         argv += argv_extra
     if monkeypatch is not None:
         monkeypatch.setattr(_sys, "argv", argv)
         return slice_runner.main()
     completed = subprocess.run(
-        [sys.executable, "scripts/run_cw_gmat_slice.py", "--output-dir", str(tmp_path), "--gmat", gmat],
+        [sys.executable, "scripts/run_cw_gmat_slice.py", *argv[1:]],
         cwd=ROOT, capture_output=True, text=True, check=False,
     )
     return completed.returncode
@@ -44,6 +47,7 @@ def test_slice_reports_missing_gmat_without_false_verification(tmp_path):
     assert result["failure_mode"] == "MISSING_GMAT"
     assert result["gmat"]["attempted"] is False
     assert result["trajectory_artifact_nonempty"] is True
+    assert result["screenshot_source"] == "svg_fallback"
     assert (tmp_path / "generated_cw_rendezvous.script").stat().st_size > 0
     assert result["cw"]["targeting_status"] == "unique"
     assert result["cw"]["total_delta_v_mps"] > 0
@@ -292,3 +296,116 @@ def test_validate_screenshot_distinguishes_missing_empty_and_well_formed(tmp_pat
     good = tmp_path / "good.svg"
     good.write_text('<svg xmlns="http://www.w3.org/2000/svg"></svg>')
     assert gmat_verify.validate_screenshot(good).ok is True
+
+
+def test_validate_gui_screenshot_distinguishes_missing_small_and_well_formed_png(tmp_path):
+    missing = gmat_verify.validate_gui_screenshot(tmp_path / "missing.png")
+    assert missing.ok is False and "does not exist" in missing.reason
+
+    too_small = tmp_path / "tiny.png"
+    too_small.write_bytes(b"\x89PNG\r\n\x1a\n")
+    assert gmat_verify.validate_gui_screenshot(too_small).ok is False
+
+    not_png = tmp_path / "not_png.png"
+    not_png.write_bytes(b"not a png file" + b"\x00" * 200)
+    assert gmat_verify.validate_gui_screenshot(not_png).ok is False
+
+    real_png = tmp_path / "real.png"
+    real_png.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 200)
+    assert gmat_verify.validate_gui_screenshot(real_png).ok is True
+
+
+def test_attempt_gmat_gui_screenshot_reports_missing_display_without_launching():
+    """No DISPLAY configured at all: distinct, explicit reason, no launch attempted."""
+    result = gmat_verify.attempt_gmat_gui_screenshot(
+        "definitely-not-a-real-gmat-gui-binary", Path("/tmp/does-not-matter.script"),
+        Path("/tmp/does-not-matter.png"), display="",
+    )
+    assert result.attempted is False
+    assert result.captured is False
+    assert "DISPLAY" in result.reason
+
+
+def test_attempt_gmat_gui_screenshot_reports_missing_executable(monkeypatch):
+    monkeypatch.setenv("DISPLAY", ":0")
+    result = gmat_verify.attempt_gmat_gui_screenshot(
+        "definitely-not-a-real-gmat-gui-binary", Path("/tmp/does-not-matter.script"), Path("/tmp/does-not-matter.png"),
+    )
+    assert result.attempted is False
+    assert result.captured is False
+    assert "was not found" in result.reason
+
+
+@pytest.mark.skipif(
+    not os.environ.get("DISPLAY"),
+    reason="no DISPLAY environment variable configured in this environment; a real GMAT GUI "
+    "screenshot capture attempt requires a reachable X display (e.g. this sandboxed WSLg "
+    "DISPLAY=:0, or a genuine Xvfb-backed display elsewhere).",
+)
+def test_attempt_real_gmat_gui_screenshot_documents_observed_sandbox_blocker(tmp_path):
+    """(g) Real end-to-end attempt at a GMAT GUI screenshot under this environment's actual
+    reachable display. Actually launches GMAT-R2026a and actually attempts a screen capture --
+    does not assume the outcome. As investigated and documented in
+    ``src/gmat_verify.py::attempt_gmat_gui_screenshot``'s docstring, this sandboxed WSLg
+    environment's compositor does not expose the rendered OpenFrames/OrbitView buffer to
+    external X11 screen capture, so ``captured`` is expected to be ``False`` here with an
+    explicit reason -- but ``attempted`` must still be ``True`` (GMAT GUI really launches and
+    maps real windows), and if a future environment change makes real capture possible, this
+    test will observe ``captured is True`` without needing to be rewritten.
+    """
+    script_path = tmp_path / "gui_preview.script"
+    script_path.write_text(
+        gmat_verify.generate_gmat_gui_preview_script(
+            radius_m=6728000.0,
+            deputy_state0_si=np.array([15.0, -200.0, 0.0, -0.14, 0.0, 0.0]),
+            dv0_mps=np.array([0.0, 0.01, 0.0]),
+            dv1_mps=np.array([0.0, -0.01, 0.0]),
+            transfer_s=1373.0,
+        )
+    )
+    result = gmat_verify.attempt_gmat_gui_screenshot(
+        "GMAT-R2026a", script_path, tmp_path / "trajectory_gmat_gui.png", render_wait_s=6.0,
+    )
+    assert result.attempted is True, result.reason
+    if result.captured:
+        assert gmat_verify.validate_gui_screenshot(Path(result.path)).ok is True
+    else:
+        assert result.reason, "a non-captured attempt must still explain why, not merely assert failure"
+
+
+def test_slice_distinguishes_screenshot_source_gmat_gui_from_svg_fallback(tmp_path, monkeypatch):
+    """AC5: the structured result's ``screenshot_source`` field distinguishes a real captured
+    GMAT GUI render from the SVG fallback, and only exists as of TJC-2."""
+    assert _run(tmp_path / "fallback_run", gmat="definitely-not-gmat") == 1
+    fallback_result = _result(tmp_path / "fallback_run")
+    assert fallback_result["screenshot_source"] == "svg_fallback"
+    assert fallback_result["trajectory_artifact"].endswith(".svg")
+
+    def fake_gui_capture(gui_executable, script_path, output_path, **kwargs):
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 200)
+        return gmat_verify.GMATGUIScreenshotResult(True, True, str(output_path), "captured a non-blank render.")
+
+    monkeypatch.setattr(slice_runner, "attempt_gmat_gui_screenshot", fake_gui_capture)
+    gui_run_dir = tmp_path / "gui_run"
+    assert _run(gui_run_dir, gmat="definitely-not-gmat", monkeypatch=monkeypatch, skip_gui_screenshot=False) == 1
+    gui_result = _result(gui_run_dir)
+    assert gui_result["screenshot_source"] == "gmat_gui"
+    assert gui_result["trajectory_artifact"].endswith(".png")
+    assert gui_result["trajectory_artifact_nonempty"] is True
+    assert gui_result["gui_screenshot_attempt"] == {
+        "attempted": True, "captured": True, "reason": "captured a non-blank render.",
+    }
+
+
+def test_slice_default_output_dir_is_the_persistent_artifacts_location():
+    """AC3: the documented, persistent default output location (no --output-dir override) is
+    actually ``artifacts/cw_gmat_slice`` at the repo root, with a tracked README explaining the
+    convention."""
+    import inspect as _inspect
+
+    source = _inspect.getsource(slice_runner.main)
+    assert '"--output-dir", type=Path, default=ROOT / "artifacts/cw_gmat_slice"' in source
+    readme = ROOT / "artifacts" / "cw_gmat_slice" / "README.md"
+    assert readme.is_file(), "artifacts/cw_gmat_slice/README.md must document the persistent output convention"
+    assert "gitignore" in readme.read_text().lower()

@@ -30,12 +30,22 @@ below, returned by the functions in this module and assembled by
 A sixth, earlier failure mode, ``CW_TARGETING_INFEASIBLE``, is reported by
 the caller before any GMAT script is generated: a singular-infeasible CW
 boundary condition is a candidate-stage failure, not a GMAT one.
+
+GUI screenshot capture (TJC-2): ``attempt_gmat_gui_screenshot`` genuinely
+attempts a real GMAT GUI (OrbitView/OpenFrames) render under a reachable X
+display before the caller falls back to the deterministic SVG plot. See its
+docstring for the exact, reproducible blocker observed in this sandboxed
+WSLg environment (``screenshot_source`` in the final result is
+``"gmat_gui"`` only when a non-blank render was actually captured, else
+``"svg_fallback"``).
 """
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -407,3 +417,268 @@ def validate_screenshot(path: Path) -> ScreenshotResult:
     if "<svg" not in text or "</svg>" not in text:
         return ScreenshotResult(False, str(path), f"screenshot artifact is not well-formed SVG: {path}")
     return ScreenshotResult(True, str(path), f"screenshot artifact is non-empty, well-formed SVG ({size} bytes).")
+
+
+def validate_gui_screenshot(path: Path) -> ScreenshotResult:
+    """Validate a captured real GMAT GUI (OrbitView/OpenFrames) screenshot PNG.
+
+    Distinct from ``validate_screenshot`` (which validates the SVG fallback
+    plot): checks for a well-formed, non-trivial PNG file rather than SVG
+    markup. A missing, truncated, or non-PNG artifact is treated the same as
+    the SVG ``SCREENSHOT_FAILURE`` failure mode by the caller.
+    """
+    path = Path(path)
+    if not path.is_file():
+        return ScreenshotResult(False, None, f"GUI screenshot artifact does not exist: {path}")
+    data = path.read_bytes()
+    if len(data) < 128:
+        return ScreenshotResult(
+            False, str(path), f"GUI screenshot artifact is too small to be a real render ({len(data)} bytes): {path}"
+        )
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ScreenshotResult(False, str(path), f"GUI screenshot artifact is not a well-formed PNG: {path}")
+    return ScreenshotResult(
+        True, str(path), f"GUI screenshot artifact is a non-empty, well-formed PNG ({len(data)} bytes)."
+    )
+
+
+@dataclass(frozen=True)
+class GMATGUIScreenshotResult:
+    """Outcome of attempting a real GMAT GUI (OrbitView/OpenFrames) screenshot.
+
+    ``attempted`` is ``True`` whenever the GUI binary was actually launched
+    under a reachable display (even if the capture itself then failed);
+    ``captured`` is ``True`` only when a real, non-blank image was written to
+    the output path. Both are kept distinct from a plain existence check, in
+    the same spirit as ``check_gmat_available``: a success signal is only
+    trusted when actually observed, not assumed.
+    """
+
+    attempted: bool
+    captured: bool
+    path: str | None
+    reason: str
+
+
+def attempt_gmat_gui_screenshot(
+    gui_executable: str,
+    script_path: Path,
+    output_path: Path,
+    *,
+    display: str | None = None,
+    render_wait_s: float = 6.0,
+) -> GMATGUIScreenshotResult:
+    """Attempt a real GMAT GUI (OrbitView/OpenFrames) screenshot capture.
+
+    This is the AC1 real-render attempt that ``scripts/run_cw_gmat_slice.py``
+    calls *before* falling back to the deterministic SVG plot: it launches
+    ``gui_executable`` (the GMAT GUI binary, e.g. ``GMAT-R2026a``, as opposed
+    to the console-mode ``GmatConsole-R2026a`` used for numeric
+    verification) against ``script_path`` under the configured display,
+    waits for it to render, grabs the screen, and validates that something
+    real (non-blank) was actually captured -- never silently claiming a
+    screenshot without observed, non-trivial pixel content.
+
+    REPRODUCIBLE BLOCKER (TJC-2 investigation; exact evidence, not an
+    assumption). In this sandboxed WSLg (WSL2 + RDP-backed) environment:
+
+    - A reachable X display genuinely exists (confirmed: ``DISPLAY=:0``,
+      backed by WSLg, with a live ``/tmp/.X11-unix/X0`` socket).
+    - ``GMAT-R2026a -ns -r <script>`` under that display, with
+      ``LIBGL_ALWAYS_SOFTWARE=1`` (required -- without it, GMAT's default
+      GPU/Zink path fails immediately with ``libEGL warning: failed to get
+      driver name for fd -1`` / ``MESA: error: ZINK: failed to choose
+      pdev``), genuinely launches, loads ``OrbitView`` via the
+      ``libOVtoOFI`` plugin, and maps real top-level and child GTK/
+      OpenFrames windows. This was confirmed independently via a
+      python-xlib window-tree walk showing e.g. a ``1100x865`` top-level
+      window and ``1024x768`` / ``782x502`` child windows, every one with
+      ``map_state == IsViewable`` -- i.e. this is a real running GUI with
+      real mapped content, not a crash.
+    - However, external pixel capture of that rendered content is blocked
+      in this sandbox: repeated ``mss`` full-display grabs of ``DISPLAY=:0``
+      (at 3s, 6s, 15s, and 20s post-launch render waits) all returned
+      byte-identical, uniformly blank images (md5
+      ``4e9fd36a75989219291d002dd3739145``, confirmed identical to a grab
+      taken with *no* GMAT process running at all); and direct X11
+      ``XGetImage`` calls against the mapped window IDs raised
+      ``BadDrawable``/``BadMatch`` protocol errors rather than returning
+      pixel data. No system screenshot utility (``xwd``, ``scrot``,
+      ``import``) is installed, and installing one requires ``apt-get``
+      with sudo, which this shell does not have (``sudo -n true`` ->
+      "interactive authentication is required").
+    - Conclusion: this WSLg/XWayland sandbox's compositor does not expose
+      the real GPU-rendered OpenFrames/OrbitView buffer to standard
+      external X11 screen-capture mechanisms, independent of GMAT itself.
+      This function still attempts the real capture every time it runs (per
+      AC1); if the environment changes (a genuine Xvfb-backed display, or a
+      capture mechanism that can read the compositor's real buffer becomes
+      available), it will start succeeding without any code change, rather
+      than needing to be re-implemented.
+    """
+    display = display if display is not None else os.environ.get("DISPLAY")
+    if not display:
+        return GMATGUIScreenshotResult(
+            False, False, None,
+            "no DISPLAY environment variable is configured; a real GMAT GUI render requires a "
+            "reachable X display (e.g. a virtual framebuffer, or a WSLg-backed X11/XWayland "
+            "display as in this environment) and none was found.",
+        )
+    resolved = (
+        gui_executable
+        if "/" in gui_executable and Path(gui_executable).is_file()
+        else (shutil.which(gui_executable) if "/" not in gui_executable else None)
+    )
+    if not resolved:
+        return GMATGUIScreenshotResult(
+            False, False, None, f"GMAT GUI executable '{gui_executable}' was not found or is not a file."
+        )
+    try:
+        import mss  # Optional capture dependency; imported lazily so a missing
+        import mss.tools  # install never breaks the console-mode verification path.
+    except ImportError as exc:
+        return GMATGUIScreenshotResult(
+            True, False, None,
+            f"GMAT GUI executable '{resolved}' is available but no screen-capture library "
+            f"('mss') is installed to attempt validating its rendered output: {exc}",
+        )
+    env = dict(os.environ)
+    env["DISPLAY"] = display
+    env.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")
+    env.pop("WAYLAND_DISPLAY", None)
+    env["GDK_BACKEND"] = "x11"
+    try:
+        process = subprocess.Popen(
+            [resolved, "-ns", "-r", str(script_path)], env=env,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+    except OSError as exc:
+        return GMATGUIScreenshotResult(True, False, None, f"GMAT GUI executable could not be launched: {exc}")
+    try:
+        time.sleep(render_wait_s)
+        try:
+            with mss.MSS() as sct:
+                monitor = sct.monitors[1] if len(sct.monitors) > 1 else sct.monitors[0]
+                grabbed = sct.grab(monitor)
+        except Exception as exc:  # pragma: no cover - defensive: capture backend failure
+            return GMATGUIScreenshotResult(
+                True, False, None, f"GMAT GUI process launched but screen capture failed: {exc}"
+            )
+        pixels = np.frombuffer(bytes(grabbed.rgb), dtype=np.uint8)
+        if pixels.size == 0 or len(np.unique(pixels)) <= 1:
+            return GMATGUIScreenshotResult(
+                True, False, None,
+                "GMAT GUI process launched and mapped real window(s) under the configured "
+                f"DISPLAY ({display}), but the captured screen image was uniformly blank (every "
+                "pixel identical): this sandboxed display's compositor does not expose the "
+                "rendered OpenFrames/OrbitView buffer to external screen capture. See this "
+                "function's docstring for the full reproducible evidence.",
+            )
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        mss.tools.to_png(grabbed.rgb, grabbed.size, output=str(output_path))
+        return GMATGUIScreenshotResult(
+            True, True, str(output_path),
+            f"captured a non-blank {grabbed.size[0]}x{grabbed.size[1]} GMAT GUI screen render.",
+        )
+    finally:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=5)
+
+
+def generate_gmat_gui_preview_script(
+    *,
+    radius_m: float,
+    deputy_state0_si: np.ndarray,
+    dv0_mps: np.ndarray,
+    dv1_mps: np.ndarray,
+    transfer_s: float,
+) -> str:
+    """Generate a GMAT GUI-mode preview script with a real ``OrbitView`` resource.
+
+    Mirrors ``generate_gmat_script``'s Spacecraft/Burn/Propagator setup
+    exactly, so the rendered trajectory corresponds to the same CW
+    rendezvous case, but substitutes an ``OrbitView`` resource for
+    ``ReportFile`` numeric output. Unlike the console-mode numeric
+    verification script, this script is meant to be run under the GMAT GUI
+    binary (e.g. ``GMAT-R2026a``), not ``GmatConsole-R2026a``, so that
+    OrbitView/OpenFrames can actually render (see
+    ``attempt_gmat_gui_screenshot``).
+    """
+    deputy_state0_si = np.asarray(deputy_state0_si, dtype=float).reshape(6)
+    dv0_mps = np.asarray(dv0_mps, dtype=float).reshape(3)
+    dv1_mps = np.asarray(dv1_mps, dtype=float).reshape(3)
+    sma_km = radius_m * M_TO_KM
+    x_km, y_km, z_km = (deputy_state0_si[:3] * M_TO_KM).tolist()
+    vx_kms, vy_kms, vz_kms = (deputy_state0_si[3:] * M_TO_KM).tolist()
+    dv0_1, dv0_2, dv0_3 = (dv0_mps * M_TO_KM).tolist()
+    dv1_1, dv1_2, dv1_3 = (dv1_mps * M_TO_KM).tolist()
+    return f"""% Generated by src/gmat_verify.py for GUI-mode OrbitView preview (TJC-2);
+% units: km, km/s, seconds. Mirrors generate_gmat_script's Spacecraft/Burn
+% setup for the same CW rendezvous case, substituting a real OrbitView
+% resource for ReportFile numeric output.
+Create Spacecraft Chief Deputy;
+Chief.DateFormat = UTCGregorian;
+Chief.Epoch = '01 Jan 2026 00:00:00.000';
+Chief.CoordinateSystem = EarthMJ2000Eq;
+Chief.DisplayStateType = Keplerian;
+Chief.SMA = {sma_km:.9f};
+Chief.ECC = 0;
+Chief.INC = 0;
+Chief.RAAN = 0;
+Chief.AOP = 0;
+Chief.TA = 0;
+
+Create ForceModel FM;
+FM.CentralBody = Earth;
+FM.PrimaryBodies = {{Earth}};
+FM.GravityField.Earth.Degree = 0;
+FM.GravityField.Earth.Order = 0;
+
+Create Propagator Prop;
+Prop.FM = FM;
+
+Create CoordinateSystem LVLH;
+LVLH.Origin = Chief;
+LVLH.Axes = ObjectReferenced;
+LVLH.Primary = Earth;
+LVLH.Secondary = Chief;
+LVLH.XAxis = R;
+LVLH.ZAxis = N;
+
+Deputy.DateFormat = UTCGregorian;
+Deputy.Epoch = '01 Jan 2026 00:00:00.000';
+Deputy.CoordinateSystem = LVLH;
+Deputy.DisplayStateType = Cartesian;
+Deputy.X = {x_km:.15f};
+Deputy.Y = {y_km:.15f};
+Deputy.Z = {z_km:.15f};
+Deputy.VX = {vx_kms:.18f};
+Deputy.VY = {vy_kms:.18f};
+Deputy.VZ = {vz_kms:.18f};
+
+Create ImpulsiveBurn Burn1 Burn2;
+Burn1.CoordinateSystem = LVLH;
+Burn1.Element1 = {dv0_1:.18f};
+Burn1.Element2 = {dv0_2:.18f};
+Burn1.Element3 = {dv0_3:.18f};
+Burn2.CoordinateSystem = LVLH;
+Burn2.Element1 = {dv1_1:.18f};
+Burn2.Element2 = {dv1_2:.18f};
+Burn2.Element3 = {dv1_3:.18f};
+
+Create OrbitView TrajectoryView;
+TrajectoryView.Add = {{Chief, Deputy, Earth}};
+TrajectoryView.CoordinateSystem = EarthMJ2000Eq;
+TrajectoryView.ViewPointVector = [0 0 30000];
+TrajectoryView.ViewDirection = Earth;
+TrajectoryView.ShowPlot = true;
+
+BeginMissionSequence;
+Maneuver Burn1(Deputy);
+Propagate Prop(Chief, Deputy) {{Chief.ElapsedSecs = {transfer_s:.9f}}};
+Maneuver Burn2(Deputy);
+"""

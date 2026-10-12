@@ -40,6 +40,8 @@ MAPPINGS = {
     "examples/rendezvous_case_01.yaml": "site/data/examples/rendezvous_case_01.yaml",
     "examples/rendezvous_case_02.yaml": "site/data/examples/rendezvous_case_02.yaml",
     "examples/cw_gmat_vertical_slice.yaml": "site/data/examples/cw_gmat_vertical_slice.yaml",
+    "examples/cw_gmat_slice_example/verification_result.json": "site/data/examples/cw_gmat_slice_example/verification_result.json",
+    "examples/cw_gmat_slice_example/trajectory.svg": "site/data/examples/cw_gmat_slice_example/trajectory.svg",
     "evaluations/formalizer/test_01_underspecified.txt": "site/data/evaluations/test_01_underspecified.txt",
     "evaluations/formalizer/test_02_cw_complete.txt": "site/data/evaluations/test_02_cw_complete.txt",
     "evaluations/formalizer/test_03_cw_validity.txt": "site/data/evaluations/test_03_cw_validity.txt",

@@ -1,11 +1,17 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
-  updated: '2026-10-11',
-  commitSubject: 'TJC-1.21: harden GMAT execution, comparison, and screenshot capture',
+  updated: '2026-10-12',
+  commitSubject: 'TJC-2: attempt real GMAT GUI screenshot and persist discoverable artifacts',
   groups: [
     {
       label: 'Completed',
       items: [
+        {
+          id: 'TJC-2', date: '2026-10-12', title: 'Capture a real GMAT GUI screenshot and store it in a discoverable location',
+          commit: 'TJC-2: attempt real GMAT GUI screenshot and persist discoverable artifacts', hash: 'pending final commit',
+          outcome: 'Added src/gmat_verify.py::attempt_gmat_gui_screenshot, which genuinely attempts a real GMAT GUI (OrbitView/OpenFrames) screenshot (launching GMAT-R2026a under the configured DISPLAY, waiting, and grabbing the screen) before scripts/run_cw_gmat_slice.py falls back to the deterministic SVG plot. Investigated real-display feasibility in this sandboxed WSLg environment: a reachable X display genuinely exists and GMAT-R2026a genuinely launches and maps real OrbitView/OpenFrames windows (confirmed via a python-xlib window-tree walk), but every external screen-capture attempt against that display returned a uniformly blank image regardless of wait duration, and direct XGetImage calls on the mapped windows raised X protocol errors; no screenshot utility is installed and installing one requires unavailable sudo. This exact reproducible evidence is documented in the function\'s docstring and recorded in the result\'s screenshot_source field ("gmat_gui" vs "svg_fallback"). Made the already-declared artifacts/cw_gmat_slice/ default output directory the actual persistent, discoverable location for real runs (tracked README.md documenting the gitignore convention for per-run outputs), added a small permanently-committed example run under examples/cw_gmat_slice_example/, and referenced both from the educational site and verification_result.json itself (artifact_storage_convention field). Extended tests/test_cw_gmat_slice.py with GUI-screenshot-path tests (including an environment-conditional real-attempt test with an explicit skip reason) and a screenshot_source-distinguishing test; all 68 repo tests pass.',
+          links: [['GMAT verification page', '#/cw-gmat-slice'], ['Real-GUI screenshot attempt', 'data/src/gmat_verify.py'], ['Runner', 'data/scripts/run_cw_gmat_slice.py'], ['Tests', 'data/tests/test_cw_gmat_slice.py'], ['Example artifact', 'data/examples/cw_gmat_slice_example/verification_result.json']]
+        },
         {
           id: 'TJC-1.21', date: '2026-10-11', title: 'Harden GMAT execution, comparison, and screenshot capture',
           commit: 'TJC-1.21: harden GMAT execution, comparison, and screenshot capture', hash: 'cc9502c',
