@@ -1,0 +1,109 @@
+{
+  "case_id": "benchmark_case_c_two_body",
+  "readiness": "READY_TO_SOLVE",
+  "outcome": "VERIFIED",
+  "verified": true,
+  "verification_status": "VERIFIED",
+  "clarification_questions": [],
+  "model_selection": {
+    "selection": "bounded two-body fallback",
+    "qualified": false,
+    "reasons": [
+      "Violated CW assumption(s): locality, other_physics."
+    ],
+    "assumptions": [
+      "circularity: supported",
+      "locality: violated",
+      "duration_regime: supported",
+      "frame: supported",
+      "other_physics: violated",
+      "maneuver_assumptions: supported"
+    ],
+    "concerns": [],
+    "deterministic_tool": "src.twobody.propagate_cartesian_state",
+    "missing_items": []
+  },
+  "unified_verification_report": {
+    "case_id": "benchmark_case_c_two_body",
+    "run_id": "benchmark_case_c_two_body-20261014T195516Z",
+    "gmat": {
+      "executable": "/home/anna_ford/opt/GMAT/R2026a/bin/GmatConsole-R2026a",
+      "version_banner": "\n********************************************\n***  GMAT Console Application\n********************************************\n\nGeneral Mission Analysis Tool\nConsole Based Version\nBuild Date: Mar 30 2026  10:09:27\n\n\nGMAT working directory set to '/home/anna_ford/opt/GMAT/R2026a/bin/'\nModerator is updating data files...\nModerator is creating core engine...\n\nlibpython3.12.so.1.0: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libPythonInterface_py312\" did not open.\n\nlibmex.so: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libMatlabInterface\" did not open.\nSkipping \"../plugins/libOpenFramesInterface\": GUI plugins are skipped in console mode\n\nlibOpenFramesInterface.so.R2026a: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libOVtoOFI\" did not open.\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSetting nutation file to ../data/planetary_coeff/NUTATION.DAT\nSetting leap seconds file to ../data/time/tai-utc.dat\n2026-10-14 15:55:16 GMAT Moderator successfully created core engine\n\n\nBuild Date: Mar 30 2026  10:09:27\n\nModerator is deleting core engine...\n",
+      "attempted": true,
+      "exit_status": 0,
+      "reason": "GMAT exited successfully."
+    },
+    "solver": {
+      "name": "point-mass-two-body-fixed-step-rk4-coast",
+      "status": "coast",
+      "feasible": true,
+      "reason": "src.twobody.propagate_cartesian_state succeeded at propagating the declared inertial coast state."
+    },
+    "comparison": {
+      "cw_final_state_m_mps": [
+        5258694.860896885,
+        5730917.235484777,
+        0.0,
+        -5274.619259140002,
+        4839.995423329594,
+        0.0
+      ],
+      "gmat_final_state_m_mps": [
+        5258694.862968419,
+        5730917.236157319,
+        -4.833584760832874e-12,
+        -5274.619254503345,
+        4839.995425801466,
+        -1.2770151057121579e-14
+      ],
+      "units": [
+        [
+          "position",
+          "m"
+        ],
+        [
+          "velocity",
+          "m/s"
+        ],
+        [
+          "time",
+          "s"
+        ],
+        [
+          "gravitational_parameter",
+          "m^3/s^2"
+        ]
+      ],
+      "tolerances": {
+        "position_m": 1.0,
+        "velocity_mps": 0.001
+      },
+      "position_error_m": 0.002177972124993837,
+      "velocity_error_mps": 5.2544024700638365e-06,
+      "status": "PASS",
+      "reason": "GMAT final state matches the CW analytical final state within tolerance."
+    },
+    "screenshot": {
+      "media_type": "image/svg+xml",
+      "path": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_c/trajectory.svg",
+      "caption": "Two-body inertial coast displacement plot for case 'benchmark_case_c_two_body'.",
+      "case_id": "benchmark_case_c_two_body",
+      "run_id": "benchmark_case_c_two_body-20261014T195516Z",
+      "ok": true,
+      "reason": "screenshot artifact is non-empty, well-formed SVG (589 bytes)."
+    },
+    "failure_mode": null,
+    "verified": true,
+    "verification_status": "VERIFIED",
+    "human_readable_report": "Verification report for case 'benchmark_case_c_two_body' (run 'benchmark_case_c_two_body-20261014T195516Z')\n\nSOLVER: The point-mass-two-body-fixed-step-rk4-coast solver SUCCEEDED at computing a candidate solution (status='coast'). src.twobody.propagate_cartesian_state succeeded at propagating the declared inertial coast state.\n\nINDEPENDENT VERIFICATION: GMAT independently verified the candidate solution. Position error 2.178e-03 m and velocity error 5.254e-06 m/s are both within tolerance (position tolerance 1.0 m, velocity tolerance 0.001 m/s). A solver success alone does NOT by itself constitute this independent verification -- this GMAT comparison is what does.\n\nSCREENSHOT: a valid image/svg+xml trajectory artifact is available at '/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_c/trajectory.svg' (Two-body inertial coast displacement plot for case 'benchmark_case_c_two_body'.).\n\nOVERALL: VERIFIED"
+  },
+  "artifacts": {
+    "generated_script": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_c/generated_two_body_coast.script",
+    "trajectory_screenshot": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_c/trajectory.svg",
+    "report_files": {
+      "final": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_c/d_final.txt",
+      "trajectory": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_c/d_trajectory.txt"
+    }
+  },
+  "trust_statement": "The point-mass two-body RK4 coast solver succeeded AND GMAT independently verified its propagated state (comparison status PASS): a genuine, independently checked VERIFIED result."
+}

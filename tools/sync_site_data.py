@@ -63,6 +63,18 @@ MAPPINGS = {
     "examples/benchmark_case_c_two_body/trajectory.svg": "site/data/examples/benchmark_case_c_two_body/trajectory.svg",
     "tests/test_benchmark_fixtures.py": "site/data/tests/test_benchmark_fixtures.py",
     "scripts/generate_benchmark_gmat_evidence.py": "site/data/scripts/generate_benchmark_gmat_evidence.py",
+    "evaluations/baseline_comparison/README.md": "site/data/evaluations/baseline_comparison/README.md",
+    "evaluations/baseline_comparison/REPORT.md": "site/data/evaluations/baseline_comparison/REPORT.md",
+    "evaluations/baseline_comparison/run_workflow_cases.py": "site/data/evaluations/baseline_comparison/run_workflow_cases.py",
+    "evaluations/baseline_comparison/case_a_baseline_llm_response.md": "site/data/evaluations/baseline_comparison/case_a_baseline_llm_response.md",
+    "evaluations/baseline_comparison/case_b_baseline_llm_response.md": "site/data/evaluations/baseline_comparison/case_b_baseline_llm_response.md",
+    "evaluations/baseline_comparison/case_c_baseline_llm_response.md": "site/data/evaluations/baseline_comparison/case_c_baseline_llm_response.md",
+    "evaluations/baseline_comparison/case_d_baseline_llm_response.md": "site/data/evaluations/baseline_comparison/case_d_baseline_llm_response.md",
+    "evaluations/baseline_comparison/case_a_workflow_result.json": "site/data/evaluations/baseline_comparison/case_a_workflow_result.json",
+    "evaluations/baseline_comparison/case_b_workflow_result.json": "site/data/evaluations/baseline_comparison/case_b_workflow_result.json",
+    "evaluations/baseline_comparison/case_c_workflow_result.json": "site/data/evaluations/baseline_comparison/case_c_workflow_result.json",
+    "evaluations/baseline_comparison/case_d_workflow_result.json": "site/data/evaluations/baseline_comparison/case_d_workflow_result.json",
+    "tests/test_baseline_comparison.py": "site/data/tests/test_baseline_comparison.py",
 }
 
 

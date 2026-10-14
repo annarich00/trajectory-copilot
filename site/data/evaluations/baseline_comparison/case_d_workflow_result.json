@@ -1,0 +1,18 @@
+{
+  "case_id": "benchmark_case_d_ambiguous",
+  "readiness": "NEEDS_CLARIFICATION",
+  "outcome": "NEEDS_CLARIFICATION",
+  "verified": false,
+  "verification_status": "NOT VERIFIED: NEEDS_CLARIFICATION",
+  "clarification_questions": [
+    "Which central body and gravitational parameter apply?",
+    "What circular reference-orbit altitude, radius, or complete elements apply?",
+    "Which LVLH axis/sign convention defines \"behind\"?",
+    "What are the complete initial relative position and velocity vectors, including units?",
+    "What terminal relative position and velocity, impulsive maneuver assumptions, and outputs are required?"
+  ],
+  "model_selection": null,
+  "unified_verification_report": null,
+  "artifacts": {},
+  "trust_statement": "No deterministic solver or GMAT verification was attempted: the structured case is not yet READY TO SOLVE. Resolve the clarification question(s) above before any physics is run."
+}

@@ -1,11 +1,17 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
   updated: '2026-10-14',
-  commitSubject: 'TJC-4: refresh the committed GMAT vertical-slice example with a real GMAT GUI screenshot',
+  commitSubject: 'TJC-1.22: evaluate the complete workflow against a direct-LLM baseline on the four-category benchmark',
   groups: [
     {
       label: 'Completed',
       items: [
+        {
+          id: 'TJC-1.22', date: '2026-10-14', title: 'Evaluate the scoped workflow against a direct-LLM baseline',
+          commit: 'TJC-1.22: evaluate the complete workflow against a direct-LLM baseline on the four-category benchmark', hash: 'pending final commit',
+          outcome: 'Ran all four evaluations/benchmark/ cases through both a direct natural-language-to-LLM-answer baseline and the complete src/workflow.py::run_rendezvous_workflow (TJC-1.16). No live external LLM API is available in this sandboxed worktree, so the baseline side was honestly produced by the same implementing model, single-shot, with no access to src/, any .pi/skills/ file, the model selector, or GMAT -- disclosed explicitly in evaluations/baseline_comparison/README.md and REPORT.md as a legitimate design choice, not a hidden limitation. The full-workflow side (evaluations/baseline_comparison/run_workflow_cases.py) built each case directly from the already-committed evaluations/benchmark/* fixture values and called the real workflow against a real GmatConsole-R2026a installation for cases (a)/(b)/(c) (independently re-confirming, not replacing, the already-committed GMAT evidence in examples/cw_gmat_slice_example/, examples/benchmark_case_b_boundary/, examples/benchmark_case_c_two_body/), and case (d) correctly short-circuited at NEEDS_CLARIFICATION with zero model-selection/solver/GMAT calls. Found and documented specific, named error types the architecture prevented or detected: case (d) showed the direct-LLM baseline silently inventing five unauthorized assumptions (reference altitude, LVLH axis/sign convention, initial relative velocity, terminal condition, maneuver count) to force a confident numeric answer out of an ambiguous request, which the formalizer-level readiness short-circuit prevents by construction; case (b) showed the baseline missing the documented singular-but-reachable CW targeting-conditioning boundary that src/model_selector.py explicitly detects and surfaces as a qualified=True result with named concerns; cases (a)/(b)/(c) showed the baseline\'s numeric answers were close to the GMAT-verified reference but backed only by an informal "I have not verified this" disclaimer, versus the workflow\'s real, independently executed GMAT comparison and validated trajectory screenshot in every solvable case. Conclusions in REPORT.md are explicitly scoped to these four cases and this project\'s narrow supported rendezvous class, with no claim of general LLM-vs-architecture superiority. Added tests/test_baseline_comparison.py (17 new tests, schema/structure checks matching tests/test_benchmark_fixtures.py\'s pattern, no GMAT re-run) and a new #/baseline-comparison site page. All 146 repo tests pass (129 pre-existing plus 17 new, zero regressions); python3 tools/compare_upstream.py --check and python3 tools/sync_site_data.py --check both pass; ./run_site.sh smoke-tested the new route and its fetched artifacts.',
+          links: [['Baseline-comparison page', '#/baseline-comparison'], ['Report', 'data/evaluations/baseline_comparison/REPORT.md'], ['Methodology', 'data/evaluations/baseline_comparison/README.md'], ['Workflow runner', 'data/evaluations/baseline_comparison/run_workflow_cases.py'], ['Structural tests', 'data/tests/test_baseline_comparison.py'], ['Benchmark fixtures', '#/benchmark']]
+        },
         {
           id: 'TJC-4', date: '2026-10-14', title: 'Refresh the committed GMAT vertical-slice example with a real GMAT GUI screenshot',
           commit: 'TJC-4: refresh the committed GMAT vertical-slice example with a real GMAT GUI screenshot', hash: 'pending final commit',
@@ -151,7 +157,7 @@ window.TCProjectProgress = {
       label: 'Blocked / planned',
       items: [
         {id: 'TJC-1.21 / 1.19', title: 'Harden GMAT and unified report', outcome: 'Planned after the vertical slice; GMAT is not currently integrated.'},
-        {id: 'TJC-1.16 / 1.9 / 1.22 / 1.23', title: 'Reconnect, benchmark, compare, report', outcome: 'Planned behind component hardening.'}
+        {id: 'TJC-1.23', title: 'Document scoped semester results and reproducibility', outcome: 'Blocked on TJC-1.22 (now complete); ready to start.'}
       ]
     },
     {

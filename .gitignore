@@ -15,3 +15,9 @@ htmlcov/
 # committed separately and persistently under examples/cw_gmat_slice_example/.
 artifacts/cw_gmat_slice/*
 !artifacts/cw_gmat_slice/README.md
+
+# TJC-1.22: evaluations/baseline_comparison/workflow_artifacts/ is the
+# per-run working directory run_workflow_cases.py writes generated GMAT
+# scripts/ReportFile logs/trajectory plots into; only the parsed
+# case_*_workflow_result.json files (committed) are the durable evidence.
+evaluations/baseline_comparison/workflow_artifacts/
