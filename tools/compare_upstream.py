@@ -28,6 +28,7 @@ APPROVED_LOCAL_SITE_ALIGNMENT = {
     'site/js/pages/singularity.js',
     'site/js/pages/model-validity.js',
     'site/js/physics.js',
+    'site/server.js',
 }
 # Post-import authoritative and verbatim-mirror changes completed by scoped
 # Backlog tasks. They are compared through their own synchronization checks.

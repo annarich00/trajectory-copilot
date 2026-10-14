@@ -32,7 +32,7 @@
   "gmat": {
     "attempted": true,
     "exit_status": 0,
-    "stdout": "\n********************************************\n***  GMAT Console Application\n********************************************\n\nGeneral Mission Analysis Tool\nConsole Based Version\nBuild Date: Mar 30 2026  10:09:27\n\n\nGMAT working directory set to '/home/anna_ford/opt/GMAT/R2026a/bin/'\nModerator is updating data files...\nModerator is creating core engine...\n\nlibpython3.12.so.1.0: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libPythonInterface_py312\" did not open.\n\nlibmex.so: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libMatlabInterface\" did not open.\nSkipping \"../plugins/libOpenFramesInterface\": GUI plugins are skipped in console mode\n\nlibOpenFramesInterface.so.R2026a: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libOVtoOFI\" did not open.\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSetting nutation file to ../data/planetary_coeff/NUTATION.DAT\nSetting leap seconds file to ../data/time/tai-utc.dat\n2026-10-12 10:29:35 GMAT Moderator successfully created core engine\n\nInterpreting scripts from the file.\n***** file: /tmp/tjc2_example_run/generated_cw_rendezvous.script\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully interpreted the script\n.................... Print out the whole sequence ........................................\n   Command::NoOp\n   Command::BeginMissionSequence\n   Command::GMAT\n   Command::Report\n   Command::GMAT\n   Command::Maneuver\n   Command::GMAT\n   Command::Report\n   Command::GMAT\n   Command::GMAT\n   Command::Propagate\n   Command::GMAT\n   Command::Maneuver\n   Command::GMAT\n   Command::Report\n   Command::GMAT\n.................... End sequence ........................................................\nRunning mission...\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nKernel ../data/planetary_ephem/spk/DE405AllPlanets.bsp has been loaded.\nKernel ../data/planetary_coeff/SPICEPlanetaryConstantsKernel.tpc has been loaded.\nKernel ../data/time/SPICELeapSecondKernel.tls has been loaded.\nKernel ../data/planetary_coeff/SPICEEarthPredictedKernel.bpc has been loaded.\nKernel ../data/planetary_coeff/SPICEEarthCurrentKernel.bpc has been loaded.\nKernel ../data/planetary_coeff/earth_latest_high_prec.bpc has been loaded.\nKernel ../data/planetary_coeff/SPICELunaCurrentKernel.bpc has been loaded.\nKernel ../data/planetary_coeff/SPICELunaFrameKernel.tf has been loaded.\nUsing default potential file \"../data/gravity/earth/JGM2.cof\" for GravityField object \"GravityField.Earth\"\n\nMission run completed.\n===> Total Run Time: 0.053 seconds\n\n========================================\n\n\n*** GMAT Integration test (Console version) successful! ***\n\nModerator is deleting core engine...\n",
+    "stdout": "\n********************************************\n***  GMAT Console Application\n********************************************\n\nGeneral Mission Analysis Tool\nConsole Based Version\nBuild Date: Mar 30 2026  10:09:27\n\n\nGMAT working directory set to '/home/anna_ford/opt/GMAT/R2026a/bin/'\nModerator is updating data files...\nModerator is creating core engine...\n\nlibpython3.12.so.1.0: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libPythonInterface_py312\" did not open.\n\nlibmex.so: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libMatlabInterface\" did not open.\nSkipping \"../plugins/libOpenFramesInterface\": GUI plugins are skipped in console mode\n\nlibOpenFramesInterface.so.R2026a: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libOVtoOFI\" did not open.\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSetting nutation file to ../data/planetary_coeff/NUTATION.DAT\nSetting leap seconds file to ../data/time/tai-utc.dat\n2026-10-14 10:17:13 GMAT Moderator successfully created core engine\n\nInterpreting scripts from the file.\n***** file: /tmp/tjc4_example_run/generated_cw_rendezvous.script\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully interpreted the script\n.................... Print out the whole sequence ........................................\n   Command::NoOp\n   Command::BeginMissionSequence\n   Command::GMAT\n   Command::Report\n   Command::GMAT\n   Command::Maneuver\n   Command::GMAT\n   Command::Report\n   Command::GMAT\n   Command::GMAT\n   Command::Propagate\n   Command::GMAT\n   Command::Maneuver\n   Command::GMAT\n   Command::Report\n   Command::GMAT\n.................... End sequence ........................................................\nRunning mission...\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nKernel ../data/planetary_ephem/spk/DE405AllPlanets.bsp has been loaded.\nKernel ../data/planetary_coeff/SPICEPlanetaryConstantsKernel.tpc has been loaded.\nKernel ../data/time/SPICELeapSecondKernel.tls has been loaded.\nKernel ../data/planetary_coeff/SPICEEarthPredictedKernel.bpc has been loaded.\nKernel ../data/planetary_coeff/SPICEEarthCurrentKernel.bpc has been loaded.\nKernel ../data/planetary_coeff/earth_latest_high_prec.bpc has been loaded.\nKernel ../data/planetary_coeff/SPICELunaCurrentKernel.bpc has been loaded.\nKernel ../data/planetary_coeff/SPICELunaFrameKernel.tf has been loaded.\nUsing default potential file \"../data/gravity/earth/JGM2.cof\" for GravityField object \"GravityField.Earth\"\n\nMission run completed.\n===> Total Run Time: 0.053 seconds\n\n========================================\n\n\n*** GMAT Integration test (Console version) successful! ***\n\nModerator is deleting core engine...\n",
     "stderr": "",
     "timed_out": false,
     "reason": "GMAT exited successfully.",
@@ -213,12 +213,100 @@
     },
     "reason": "GMAT final state matches the CW analytical final state within tolerance."
   },
-  "trajectory_artifact": "examples/cw_gmat_slice_example/trajectory.svg",
+  "trajectory_artifact": "examples/cw_gmat_slice_example/trajectory_gmat_gui.png",
   "trajectory_artifact_nonempty": true,
-  "screenshot_source": "svg_fallback",
-  "gui_screenshot_attempt": null,
+  "screenshot_source": "gmat_gui",
+  "gui_screenshot_attempt": {
+    "attempted": true,
+    "captured": true,
+    "reason": "captured a non-blank 1024x768 GMAT GUI render of the real GMAT application window."
+  },
   "artifact_storage_convention": "artifacts/cw_gmat_slice/README.md",
   "verified": true,
   "failure_mode": null,
-  "verification_status": "VERIFIED"
+  "verification_status": "VERIFIED",
+  "unified_verification_report": {
+    "case_id": "circular_leo_quarter_orbit_rendezvous",
+    "run_id": "circular_leo_quarter_orbit_rendezvous-20261014T141706Z",
+    "gmat": {
+      "executable": "/home/anna_ford/opt/GMAT/R2026a/bin/GmatConsole-R2026a",
+      "version_banner": "\n********************************************\n***  GMAT Console Application\n********************************************\n\nGeneral Mission Analysis Tool\nConsole Based Version\nBuild Date: Mar 30 2026  10:09:27\n\n\nGMAT working directory set to '/home/anna_ford/opt/GMAT/R2026a/bin/'\nModerator is updating data files...\nModerator is creating core engine...\n\nlibpython3.12.so.1.0: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libPythonInterface_py312\" did not open.\n\nlibmex.so: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libMatlabInterface\" did not open.\nSkipping \"../plugins/libOpenFramesInterface\": GUI plugins are skipped in console mode\n\nlibOpenFramesInterface.so.R2026a: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libOVtoOFI\" did not open.\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSetting nutation file to ../data/planetary_coeff/NUTATION.DAT\nSetting leap seconds file to ../data/time/tai-utc.dat\n2026-10-14 10:17:13 GMAT Moderator successfully created core engine\n\n\nBuild Date: Mar 30 2026  10:09:27\n\nModerator is deleting core engine...\n",
+      "attempted": true,
+      "exit_status": 0,
+      "reason": "GMAT exited successfully."
+    },
+    "solver": {
+      "name": "clohessy-wiltshire-linearized-fixed-duration-two-impulse",
+      "status": "unique",
+      "feasible": true,
+      "reason": "Phi_rv is well-conditioned; returned the unique inverse solution."
+    },
+    "comparison": {
+      "cw_final_state_m_mps": [
+        7.105427357601002e-15,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gmat_final_state_m_mps": [
+        0.005615024748182718,
+        -0.005615545421646335,
+        2.1325582792276631e-13,
+        4.751809574404268e-06,
+        -1.066436785879685e-05,
+        1.310000228611482e-17
+      ],
+      "units": [
+        [
+          "position",
+          "m"
+        ],
+        [
+          "velocity",
+          "m/s"
+        ],
+        [
+          "time",
+          "s"
+        ],
+        [
+          "mean_motion",
+          "rad/s"
+        ],
+        [
+          "delta_v",
+          "m/s"
+        ],
+        [
+          "gravitational_parameter",
+          "m^3/s^2"
+        ]
+      ],
+      "tolerances": {
+        "position_m": 1.0,
+        "velocity_mps": 0.001,
+        "delta_v_mps": 0.001
+      },
+      "position_error_m": 0.007941212332207074,
+      "velocity_error_mps": 1.1675120387351017e-05,
+      "status": "PASS",
+      "reason": "GMAT final state matches the CW analytical final state within tolerance."
+    },
+    "screenshot": {
+      "media_type": "image/png",
+      "path": "examples/cw_gmat_slice_example/trajectory_gmat_gui.png",
+      "caption": "GMAT GUI (OrbitView/OpenFrames) trajectory render for case 'circular_leo_quarter_orbit_rendezvous'.",
+      "case_id": "circular_leo_quarter_orbit_rendezvous",
+      "run_id": "circular_leo_quarter_orbit_rendezvous-20261014T141706Z",
+      "ok": true,
+      "reason": "GUI screenshot artifact is a non-empty, well-formed PNG (199193 bytes)."
+    },
+    "failure_mode": null,
+    "verified": true,
+    "verification_status": "VERIFIED",
+    "human_readable_report": "Verification report for case 'circular_leo_quarter_orbit_rendezvous' (run 'circular_leo_quarter_orbit_rendezvous-20261014T141706Z')\n\nSOLVER: The clohessy-wiltshire-linearized-fixed-duration-two-impulse solver SUCCEEDED at computing a candidate solution (status='unique'). Phi_rv is well-conditioned; returned the unique inverse solution.\n\nINDEPENDENT VERIFICATION: GMAT independently verified the candidate solution. Position error 7.941e-03 m and velocity error 1.168e-05 m/s are both within tolerance (position tolerance 1.0 m, velocity tolerance 0.001 m/s). A solver success alone does NOT by itself constitute this independent verification -- this GMAT comparison is what does.\n\nSCREENSHOT: a valid image/png trajectory artifact is available at 'examples/cw_gmat_slice_example/trajectory_gmat_gui.png' (GMAT GUI (OrbitView/OpenFrames) trajectory render for case 'circular_leo_quarter_orbit_rendezvous'.).\n\nOVERALL: VERIFIED"
+  },
+  "verification_report_path": "examples/cw_gmat_slice_example/verification_report.txt"
 }

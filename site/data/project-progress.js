@@ -1,11 +1,17 @@
 /* Static living-progress model. Update truthfully at each task completion. */
 window.TCProjectProgress = {
-  updated: '2026-10-13',
-  commitSubject: 'TJC-1.8: add focused tests closing coverage gaps in the connected workflow and LLM-facing skill layer',
+  updated: '2026-10-14',
+  commitSubject: 'TJC-4: refresh the committed GMAT vertical-slice example with a real GMAT GUI screenshot',
   groups: [
     {
       label: 'Completed',
       items: [
+        {
+          id: 'TJC-4', date: '2026-10-14', title: 'Refresh the committed GMAT vertical-slice example with a real GMAT GUI screenshot',
+          commit: 'TJC-4: refresh the committed GMAT vertical-slice example with a real GMAT GUI screenshot', hash: 'pending final commit',
+          outcome: 'Regenerated examples/cw_gmat_slice_example/ with a real run of scripts/run_cw_gmat_slice.py (--gmat GmatConsole-R2026a --gmat-gui GMAT-R2026a) in this environment, now TJC-3-fixed: verification_result.json records screenshot_source "gmat_gui" and comparison status PASS (position error ~0.0079 m, velocity error ~1.17e-5 m/s), with the committed artifact replaced by the real, non-blank, correctly-textured 199,193-byte trajectory_gmat_gui.png (the stale trajectory.svg fallback and its outdated verification_result.json were removed). Updated the example README.md to document exactly how/when this capture reproduces (a reachable X display plus GMAT-R2026a and GmatConsole-R2026a both installed and runnable) versus when scripts/run_cw_gmat_slice.py legitimately falls back to the SVG plot instead, so a reader without those tools understands why they might see a different screenshot_source. Updated site/js/pages/cw-gmat-slice.js to render the real PNG via an <img> tag (fetching JSON text only, not the binary PNG, through TC.fetchText) and to describe TJC-3\'s asset-loading fix instead of the stale "always falls back to SVG" narrative; added a \'.png\': \'image/png\' MIME mapping to site/server.js (previously missing, so the PNG served as text/plain) and the matching entry to tools/compare_upstream.py\'s APPROVED_LOCAL_SITE_ALIGNMENT set. Found and fixed one in-scope fixture drift: evaluations/benchmark/case_a_straightforward_cw.json\'s reproducible_evidence block (which reuses this same example as case a\'s GMAT evidence) still referenced trajectory.svg/svg_fallback and needed the same screenshot_source/filename update, confirmed by tests/test_benchmark_fixtures.py::test_committed_gmat_evidence_matches_fixture_references. Synced tools/sync_site_data.py\'s MAPPINGS (trajectory.svg entry replaced with trajectory_gmat_gui.png) and regenerated every affected site/data/ mirror. All 129 repo tests pass (zero regressions against the pre-task 129-passed baseline); python3 tools/compare_upstream.py --check and python3 tools/sync_site_data.py --check both pass; ./run_site.sh smoke-tested the #/cw-gmat-slice route, the regenerated verification_result.json, the PNG (confirmed served with Content-Type: image/png), and the updated case_a fixture.',
+          links: [['GMAT verification page', '#/cw-gmat-slice'], ['Regenerated example', 'data/examples/cw_gmat_slice_example/verification_result.json'], ['Real GUI screenshot', 'data/examples/cw_gmat_slice_example/trajectory_gmat_gui.png'], ['Benchmark fixture', 'data/evaluations/benchmark/case_a_straightforward_cw.json'], ['Site page', 'data/scripts/run_cw_gmat_slice.py']]
+        },
         {
           id: 'TJC-3', date: '2026-10-12', title: 'Capture a real GMAT GUI screenshot using Xvfb and fix missing OrbitView textures/models',
           commit: 'TJC-3: launch a self-contained Xvfb display and fix GMAT OrbitView asset loading', hash: 'pending final commit',

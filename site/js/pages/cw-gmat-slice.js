@@ -1,14 +1,13 @@
 'use strict';
 
 window.TCPages['cw-gmat-slice'] = async function (root) {
-  const [caseText, runner, verifyModule, reportModule, verifyTests, reportTests, exampleSvg, exampleResult] = await Promise.all([
+  const [caseText, runner, verifyModule, reportModule, verifyTests, reportTests, exampleResult] = await Promise.all([
     TC.fetchText('data/examples/cw_gmat_vertical_slice.yaml'),
     TC.fetchText('data/scripts/run_cw_gmat_slice.py'),
     TC.fetchText('data/src/gmat_verify.py'),
     TC.fetchText('data/src/verification_report.py'),
     TC.fetchText('data/tests/test_cw_gmat_slice.py'),
     TC.fetchText('data/tests/test_verification_report.py'),
-    TC.fetchText('data/examples/cw_gmat_slice_example/trajectory.svg'),
     TC.fetchText('data/examples/cw_gmat_slice_example/verification_result.json'),
   ]);
   root.innerHTML = `
@@ -54,10 +53,10 @@ window.TCPages['cw-gmat-slice'] = async function (root) {
     <h2>4. Parsed outputs and tolerance logic</h2>
     <p>The report reserves explicit provisional tolerances: final position <strong>1 m</strong>, final velocity <strong>0.001 m/s</strong>, and total maneuver delta-v <strong>0.001 m/s</strong>. <code>src/gmat_verify.py::compare_gmat_final_state</code> returns one of three structured statuses: <code>PASS</code> (within tolerance), <code>WARNING</code> (within a configurable multiple of tolerance &mdash; a bounded disagreement, not a pass), or <code>FAIL</code> (beyond that margin). Both <code>WARNING</code> and <code>FAIL</code> surface as the <code>NUMERICAL_DISAGREEMENT</code> failure mode in the final result; neither is ever reported as verified.</p>
 
-    <h2>5. Screenshot capture: real GMAT GUI attempt, then SVG fallback (TJC-2)</h2>
-    <p><code>src/gmat_verify.py::attempt_gmat_gui_screenshot</code> genuinely attempts a real GMAT GUI (OrbitView/OpenFrames) render <strong>before</strong> the SVG fallback is used: it launches the GMAT GUI binary (<code>GMAT-R2026a</code>, as opposed to the console-mode <code>GmatConsole-R2026a</code> used for numeric verification) against a generated <code>OrbitView</code> preview script under the configured <code>DISPLAY</code>, waits for it to render, and grabs the screen &mdash; only ever reporting success when a real, non-blank image is actually observed.</p>
-    <p><strong>Investigated and documented blocker (reproducible evidence, not an assumption):</strong> in this project's sandboxed WSLg environment, a real X display genuinely exists (<code class="mono">DISPLAY=:0</code>), and <code>GMAT-R2026a</code> genuinely launches under it and maps real OrbitView/OpenFrames windows (confirmed via a window-tree inspection showing real, viewable child windows) &mdash; this is not a crash. However, every attempt to externally capture that rendered content returned a uniformly blank image (confirmed at multiple wait durations, with identical results to a capture taken with no GMAT process running at all), and direct X11 <code>XGetImage</code> calls against the mapped windows failed outright. No system screenshot utility is installed, and installing one requires <code>sudo</code>, which is unavailable in this environment. The sandbox's compositor does not expose the rendered buffer to standard external X11 screen-capture mechanisms.</p>
-    <p>Every run therefore currently falls back to a deterministic SVG plot of the relative trajectory (<code>scripts/run_cw_gmat_slice.py::write_svg</code>), overlaid with the parsed GMAT trajectory report points when GMAT output is available. The structured result's <code>screenshot_source</code> field (<code>"gmat_gui"</code> or <code>"svg_fallback"</code>) always records which artifact was actually produced, so this never has to be inferred or assumed from the file extension alone. <code>src/gmat_verify.py::validate_screenshot</code>/<code>validate_gui_screenshot</code> check the artifact exists, is non-empty, and is well-formed, returning the artifact's path and non-empty status as explicit fields of <code>verification_result.json</code>.</p>
+    <h2>5. Screenshot capture: real GMAT GUI attempt, then SVG fallback (TJC-2, fixed TJC-3)</h2>
+    <p><code>src/gmat_verify.py::attempt_gmat_gui_screenshot</code> genuinely attempts a real GMAT GUI (OrbitView/OpenFrames) render <strong>before</strong> the SVG fallback is used: it launches the GMAT GUI binary (<code>GMAT-R2026a</code>, as opposed to the console-mode <code>GmatConsole-R2026a</code> used for numeric verification) against a generated <code>OrbitView</code> preview script under the configured <code>DISPLAY</code> (launching its own self-contained Xvfb when none is inherited), waits for it to render, and grabs the real GMAT application window &mdash; only ever reporting success when a real, non-blank image is actually observed.</p>
+    <p><strong>TJC-3 fixed a reproducible OpenFrames asset-loading bug that previously blocked this capture:</strong> GMAT's OpenFrames OrbitView renderer loads its 3ds-model and jpeg-texture assets through plugin <code>.so</code> files that themselves link against GMAT's own <code>lib/</code> directory; without that directory on <code>LD_LIBRARY_PATH</code>, those plugins silently failed to resolve and OpenFrames logged (truthfully) that it could not load the model/texture, even though the asset files existed on disk. Adding GMAT's <code>lib/</code> directory to <code>LD_LIBRARY_PATH</code> (auto-derived from the GUI executable's own path) eliminated every one of those errors, and the captured screenshot grew from a ~46&nbsp;KB flat black Earth sphere to a correctly textured, non-blank render. In this environment, every run now genuinely captures a real GMAT GUI screenshot and <code>screenshot_source</code> records <code>"gmat_gui"</code>.</p>
+    <p>If a given environment is missing a reachable X display, or either GMAT executable, <code>scripts/run_cw_gmat_slice.py</code> still falls back to a deterministic SVG plot of the relative trajectory (<code>scripts/run_cw_gmat_slice.py::write_svg</code>), overlaid with the parsed GMAT trajectory report points when GMAT output is available. The structured result's <code>screenshot_source</code> field (<code>"gmat_gui"</code> or <code>"svg_fallback"</code>) always records which artifact was actually produced, so this never has to be inferred or assumed from the file extension alone. <code>src/gmat_verify.py::validate_screenshot</code>/<code>validate_gui_screenshot</code> check the artifact exists, is non-empty, and is well-formed, returning the artifact's path and non-empty status as explicit fields of <code>verification_result.json</code>.</p>
 
     <h2>6. Five distinct failure modes (never a false pass)</h2>
     <table>
@@ -72,8 +71,8 @@ window.TCPages['cw-gmat-slice'] = async function (root) {
     <p>Each failure mode is independently covered by a monkeypatched test in <code>tests/test_cw_gmat_slice.py</code>, plus one real end-to-end run against <code>GmatConsole-R2026a</code> for this benchmark case that asserts the actual observed GMAT exit status and numerical comparison, rather than assuming success.</p>
 
     <h2>Example committed artifact</h2>
-    <p>A permanently committed example run (<code class="mono">examples/cw_gmat_slice_example/</code>) reaches a real <code>VERIFIED</code> result (position error ~0.0079 m, velocity error ~1.17e-5 m/s). Its trajectory artifact, produced by the SVG fallback described above:</p>
-    <div style="background:#fff;border-radius:6px;padding:8px;display:inline-block">${exampleSvg}</div>
+    <p>A permanently committed example run (<code class="mono">examples/cw_gmat_slice_example/</code>) reaches a real <code>VERIFIED</code> result (position error ~0.0079 m, velocity error ~1.17e-5 m/s). Its trajectory artifact is a real captured GMAT GUI (OrbitView/OpenFrames) screenshot (<code>screenshot_source: "gmat_gui"</code>, TJC-3's fix), not the SVG fallback:</p>
+    <div style="background:#fff;border-radius:6px;padding:8px;display:inline-block"><img src="data/examples/cw_gmat_slice_example/trajectory_gmat_gui.png" alt="Real GMAT GUI (OrbitView/OpenFrames) trajectory render for the committed cw_gmat_slice_example case" style="max-width:100%;display:block"></div>
     ${TC.codeBlock(exampleResult, 1)}
 
     <h2>7. Unified verification report (TJC-1.19)</h2>
