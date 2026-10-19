@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trajectory CoPilot — Architecture Graph</title>
+<style>
+  :root {
+    --bg: #0f1420; --bg-panel: #161d2e; --bg-panel-alt: #1b2438;
+    --text: #e8ecf4; --text-dim: #8d97ad; --border: #2a3450;
+    --accent: #5ec8f8;
+    --band-input: #2d3a52;   --band-input-border: #5ec8f8;
+    --band-reason: #3a3350;  --band-reason-border: #b48cf2;
+    --band-compute: #2e4038; --band-compute-border: #52d38a;
+    --band-output: #4a3b2e;  --band-output-border: #f7b955;
+    --kind-llm: #b48cf2; --kind-det: #5ec8f8; --kind-ver: #52d38a;
+    --kind-data: #f7b955; --kind-future: #5a6480;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden;
+  }
+  #graph-pane { flex: 1 1 65%; position: relative; overflow: hidden; border-right: 1px solid var(--border); }
+  svg { width: 100%; height: 100%; cursor: grab; }
+  svg:active { cursor: grabbing; }
+  #side-pane { flex: 1 1 35%; min-width: 360px; max-width: 480px; padding: 20px; overflow-y: auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .subtitle { color: var(--text-dim); font-size: 13px; margin: 0 0 16px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; font-size: 11.5px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .legend-line { width: 26px; height: 0; border-top: 2.5px solid; display: inline-block; }
+  .node-box { cursor: pointer; }
+  .node-rect { stroke-width: 1.8; transition: filter 0.15s; }
+  .node-box:hover .node-rect { filter: brightness(1.3); }
+  .node-box.selected .node-rect { filter: brightness(1.5); stroke-width: 3; }
+  .node-label { font-size: 12px; fill: var(--text); font-weight: 600; pointer-events: none; }
+  .node-sub { font-size: 9.5px; fill: var(--text-dim); pointer-events: none; }
+  .edge-calls { stroke: #8291b8; stroke-width: 2.2; fill: none; marker-end: url(#arrow-calls); }
+  .edge-governs { stroke: var(--kind-llm); stroke-width: 1.3; stroke-dasharray: 2 4; fill: none; marker-end: url(#arrow-governs); opacity: 0.75; }
+  .edge-feedback { stroke: var(--kind-ver); stroke-width: 1.8; stroke-dasharray: 6 3; fill: none; marker-end: url(#arrow-feedback); }
+  .edge-eval { stroke: var(--kind-data); stroke-width: 1.4; stroke-dasharray: 2 3; fill: none; marker-end: url(#arrow-eval); opacity: 0.8; }
+  .edge-label { font-size: 9px; fill: var(--text-dim); pointer-events: none; }
+  .edge-label-bg { fill: var(--bg); opacity: 0.85; }
+  .band-rect { opacity: 0.85; }
+  .band-title { font-size: 13px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+  .band-sub { font-size: 10.5px; }
+  #detail { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  #detail h2 { font-size: 15px; margin: 0 0 8px; }
+  #detail .kind-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; margin-bottom: 10px; }
+  #detail p { font-size: 13px; line-height: 1.55; color: var(--text); margin: 6px 0; }
+  #detail code { background: #10182a; border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-size: 12px; color: var(--accent); }
+  #detail .field { margin-top: 10px; }
+  #detail .field-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+  .placeholder { color: var(--text-dim); font-size: 13px; }
+  #controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 5; }
+  #controls button {
+    background: var(--bg-panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 12px;
+  }
+  #controls button:hover { background: var(--bg-panel-alt); }
+</style>
+</head>
+<body>
+<div id="graph-pane">
+  <div id="controls">
+    <button id="reset-view">Reset view</button>
+    <button id="toggle-future">Hide future/excluded</button>
+    <button id="toggle-governs">Hide "governs" edges</button>
+  </div>
+  <svg id="svg" viewBox="0 0 1360 1620">
+    <defs>
+      <marker id="arrow-calls" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#8291b8"></path>
+      </marker>
+      <marker id="arrow-governs" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#b48cf2"></path>
+      </marker>
+      <marker id="arrow-feedback" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="#52d38a"></path>
+      </marker>
+      <marker id="arrow-eval" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#f7b955"></path>
+      </marker>
+    </defs>
+    <g id="viewport"></g>
+  </svg>
+</div>
+<div id="side-pane">
+  <h1>Trajectory CoPilot — Architecture Graph</h1>
+  <p class="subtitle">Four horizontal layers, top to bottom: Input → Reasoning (LLM-facing skills) → Deterministic Compute &amp; Independent Verification → Output. Three aligned vertical lanes carry the CW path, the orchestrator/GMAT path, and the verification-handoff path. Click any node for its real file path and status.</p>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--kind-llm)"></span>LLM-facing skill</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--kind-det)"></span>Deterministic Python</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--kind-ver)"></span>Independent verifier</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--kind-data)"></span>Data / fixture</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--kind-future)"></span>Future / excluded</span>
+  </div>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-line" style="border-color:#8291b8"></span>Actual call / data flow (runs with zero LLM calls)</span>
+  </div>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-line" style="border-color:#b48cf2; border-top-style:dotted;"></span>Skill documents/governs this code (not a runtime call)</span>
+  </div>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-line" style="border-color:#52d38a; border-top-style:dashed;"></span>Result returned back up to orchestrator</span>
+  </div>
+  <div id="detail"><p class="placeholder">Select a node in the graph to see details here.</p></div>
+</div>
+
+<script>
+'use strict';
+
+/*
+ * Layout mirrors the professor's reference figure: horizontal colored bands,
+ * top-to-bottom primary flow. Three vertical lanes keep every node's logical
+ * "column" consistent across all four bands (CW lane, orchestrator/GMAT
+ * lane, verification/eval lane), so edges mostly travel straight down within
+ * a lane instead of crossing diagonally through other boxes.
+ *
+ * IMPORTANT accuracy note (confirmed directly in src/workflow.py):
+ * the .pi/skills/*.md files are a PARALLEL natural-language contract for
+ * conversational/LLM-driven use. They are NOT a sequential gate that
+ * run_rendezvous_workflow() passes through at runtime -- that function
+ * calls select_model() / cw.py / twobody.py / gmat_verify.py directly as
+ * plain Python, with zero LLM calls in between. So skill-to-code edges are
+ * drawn as thin dotted purple "governs" edges, visually distinct from the
+ * thicker solid gray "calls" edges that make up the actual automated
+ * pipeline, and distinct again from the dashed green "result returned"
+ * edges and dotted orange "evaluated by" edges.
+ */
+
+const LANE_X = { A: 70, B: 440, C: 820 };
+const LANE_W = { A: 300, B: 330, C: 300 };
+
+const BANDS = [
+  { y: 20,   h: 170, fill: 'var(--band-input)',   border: 'var(--band-input-border)',   title: '1 · INPUT LAYER',              sub: 'natural-language request → structured case' },
+  { y: 210,  h: 300, fill: 'var(--band-reason)',  border: 'var(--band-reason-border)',  title: '2 · REASONING LAYER (LLM-facing skills)', sub: 'documents how each stage should be used; does not itself execute physics' },
+  { y: 530,  h: 870, fill: 'var(--band-compute)', border: 'var(--band-compute-border)', title: '3 · DETERMINISTIC COMPUTE & INDEPENDENT VERIFICATION', sub: 'plain Python -- run_rendezvous_workflow() calls these directly, no LLM in the loop' },
+  { y: 1420, h: 180, fill: 'var(--band-output)', border: 'var(--band-output-border)',  title: '4 · OUTPUT LAYER',              sub: 'one unified, trust-labeled report' },
+];
+
+const NODES = [
+  // ===== Band 1: Input =====
+  { id: 'nl_request', x: LANE_X.A, y: 60, w: LANE_W.A, h: 56, kind: 'data',
+    label: 'Natural-language request', sub: 'operator input',
+    detail: { kindLabel: 'Input', title: 'Natural-language rendezvous request',
+      body: 'Free-text description of a two-spacecraft rendezvous: e.g. "chaser at [15,-200,0] m needs to reach the target after a quarter orbit." No structure guaranteed yet.',
+      file: null, status: 'n/a' } },
+  { id: 'formalizer_skill', x: LANE_X.B, y: 60, w: LANE_W.B, h: 56, kind: 'llm',
+    label: 'orbital-problem-formalizer', sub: 'LLM-facing skill (prompt)',
+    detail: { kindLabel: 'LLM-facing skill', title: 'orbital-problem-formalizer',
+      body: 'Converts the request into a structured, provenance-labeled spec (every field tagged specified / derived / assumed / missing / ambiguous / contradictory / unit-inconsistent / out-of-scope). Never solves or invents a numeric value.',
+      file: '.pi/skills/orbital-problem-formalizer/SKILL.md', status: 'Active, hardened (TJC-1.12)' } },
+  { id: 'structured_case', x: LANE_X.C, y: 60, w: LANE_W.C, h: 56, kind: 'data',
+    label: 'Structured case (RendezvousCase)', sub: 'readiness + physical inputs',
+    detail: { kindLabel: 'Data', title: 'Structured case (RendezvousCase)',
+      body: 'Python restatement of the formalizer\'s output: readiness (READY_TO_SOLVE / NEEDS_CLARIFICATION / OUT_OF_SCOPE), clarification questions, and -- when ready -- the physical inputs the solver needs. This is the actual object run_rendezvous_workflow() receives.',
+      file: 'src/workflow.py (RendezvousCase)', status: 'Active' } },
+
+  // ===== Band 2: Reasoning / LLM-facing skills (documents, does not execute) =====
+  { id: 'model_selector_skill', x: LANE_X.A, y: 250, w: LANE_W.A, h: 60, kind: 'llm',
+    label: 'orbital-model-selector', sub: 'documents CW vs. two-body choice',
+    detail: { kindLabel: 'LLM-facing skill', title: 'orbital-model-selector',
+      body: 'Describes how to choose CW vs. bounded two-body vs. UNSUPPORTED/NEEDS-MORE-INFO from assumption items. Documents the decision for conversational use -- the actual decision at runtime is made by select_model(), not by this skill being "called."',
+      file: '.pi/skills/orbital-model-selector/SKILL.md', status: 'Active' } },
+  { id: 'cw_skill', x: LANE_X.A, y: 340, w: LANE_W.A, h: 60, kind: 'llm',
+    label: 'cw-rendezvous', sub: 'documents the CW solver contract',
+    detail: { kindLabel: 'LLM-facing skill', title: 'cw-rendezvous (orbital-targeting-planner)',
+      body: 'Governs the fixed-duration two-impulse CW path: requires calling src/cw.py directly for every numeric result, and treats a singular transfer time as rejected, never approximated.',
+      file: '.pi/skills/orbital-targeting-planner/SKILL.md', status: 'Active' } },
+  { id: 'twobody_skill', x: LANE_X.A, y: 430, w: LANE_W.A, h: 60, kind: 'llm',
+    label: 'orbital-two-body-rendezvous', sub: 'documents the fallback contract',
+    detail: { kindLabel: 'LLM-facing skill', title: 'orbital-two-body-rendezvous',
+      body: 'Governs the bounded inertial two-body coast fallback. Must call src/twobody.py directly; explicitly disclaims burn targeting, maneuver execution, optimization, or thrust.',
+      file: '.pi/skills/orbital-two-body-rendezvous/SKILL.md', status: 'Active' } },
+  { id: 'gmat_skill', x: LANE_X.B, y: 250, w: LANE_W.B, h: 60, kind: 'llm',
+    label: 'gmat-rendezvous-verification', sub: 'documents the PASS evidence contract',
+    detail: { kindLabel: 'LLM-facing skill', title: 'gmat-rendezvous-verification',
+      body: 'Requires BOTH a GMAT numerical comparison AND an accessible trajectory screenshot before a result can be PASS. This is the skill under discussion in the pod clinic (tool vs. skill) -- today it documents a contract that src/gmat_verify.py already enforces in code, but the LLM never invokes gmat_verify.py as a tool call.',
+      file: '.pi/skills/gmat-rendezvous-verification/SKILL.md', status: 'Active -- pod-clinic topic' } },
+  { id: 'skills_note', x: LANE_X.B, y: 340, w: LANE_W.B, h: 60, kind: 'future',
+    label: '(no LLM call in the hot path)', sub: 'dotted edges = docs only, not runtime calls',
+    detail: { kindLabel: 'Design note', title: 'Skills are documentation, not a runtime gate',
+      body: 'Confirmed directly in src/workflow.py: run_rendezvous_workflow() calls select_model(), src/cw.py / src/twobody.py, and src/gmat_verify.py as plain Python with zero LLM calls in between. The .pi/skills/*.md files are the natural-language contract for a human or LLM following this manually/conversationally -- they run in parallel to, not inside, the automated pipeline. This is exactly why "GMAT as a tool, not a skill" is a live design question: today neither is actually "the skill calling the tool."',
+      file: 'src/workflow.py', status: 'Architectural fact, not a gap' } },
+  { id: 'eval_note', x: LANE_X.C, y: 250, w: LANE_W.C, h: 150, kind: 'data',
+    label: 'Evaluation corpus', sub: 'exists in parallel, feeds model-selector tests + baseline comparison',
+    detail: { kindLabel: 'Design note', title: 'Where the benchmark/eval lane sits',
+      body: 'evaluations/benchmark/ and evaluations/baseline_comparison/ are not part of the request-time pipeline at all -- they are an offline evaluation harness that calls run_rendezvous_workflow() directly with fixed fixtures, bypassing the formalizer skill entirely (the fixtures already contain the expected structured output).',
+      file: 'evaluations/benchmark/, evaluations/baseline_comparison/', status: 'Active, offline evaluation only' } },
+
+  // ===== Band 3: Deterministic compute & verification =====
+  { id: 'workflow_py', x: LANE_X.B, y: 560, w: LANE_W.B, h: 80, kind: 'det',
+    label: 'run_rendezvous_workflow()', sub: 'single connected orchestrator -- plain Python',
+    detail: { kindLabel: 'Deterministic Python (orchestrator)', title: 'src/workflow.py::run_rendezvous_workflow',
+      body: 'The actual entry point. Checks readiness first (short-circuits NEEDS_CLARIFICATION/OUT_OF_SCOPE before any physics or GMAT call), calls select_model(), dispatches to the CW or two-body solver, always routes the candidate through GMAT verification, and assembles one UnifiedVerificationReport.',
+      file: 'src/workflow.py', status: 'Active, tested (tests/test_workflow.py)' } },
+  { id: 'model_selector_py', x: LANE_X.A, y: 680, w: LANE_W.A, h: 72, kind: 'det',
+    label: 'select_model()', sub: 'deterministic selection logic',
+    detail: { kindLabel: 'Deterministic Python', title: 'src/model_selector.py::select_model',
+      body: 'Not a learned/numeric-threshold classifier -- combines multiple documented physical-assumption signals (circularity, locality, duration regime, frame, maneuver assumptions, targeting conditioning) to return CW rendezvous / bounded two-body fallback / qualified CW / UNSUPPORTED / NEEDS MORE INFORMATION.',
+      file: 'src/model_selector.py', status: 'Active, tested (tests/test_model_selector.py)' } },
+  { id: 'cw_py', x: LANE_X.A, y: 800, w: LANE_W.A, h: 72, kind: 'det',
+    label: 'src/cw.py', sub: 'CW STM + two-burn targeting',
+    detail: { kindLabel: 'Deterministic Python', title: 'src/cw.py',
+      body: 'Clohessy-Wiltshire state-transition matrix, mean_motion(), and two_burn_targeting() (closed-form two-impulse solve). Independently audited (TJC-1.3, TJC-1.4) with property/invariant tests.',
+      file: 'src/cw.py', status: 'Active, audited + tested (tests/test_cw.py)' } },
+  { id: 'twobody_py', x: LANE_X.A, y: 920, w: LANE_W.A, h: 72, kind: 'det',
+    label: 'src/twobody.py', sub: 'Cartesian point-mass coast',
+    detail: { kindLabel: 'Deterministic Python', title: 'src/twobody.py',
+      body: 'propagate_cartesian_state(): deterministic inertial Cartesian two-body point-mass coast propagation. Independently verified (TJC-1.5) with energy/angular-momentum conservation tests.',
+      file: 'src/twobody.py', status: 'Active, verified + tested (tests/test_twobody.py)' } },
+  { id: 'poliastro', x: LANE_X.A, y: 1040, w: LANE_W.A, h: 80, kind: 'ver',
+    label: 'Poliastro cross-check (optional)', sub: 'pinned external implementation, NOT wired into workflow.py',
+    detail: { kindLabel: 'Independent verifier (optional)', title: 'verification/poliastro/',
+      body: 'Pinned Poliastro 0.17.0 at a fixed commit, run in an isolated Python 3.10 subprocess (never imported by the core solver). A like-for-like cross-check only when the pinned release supports the same physical model -- not a universal oracle. NOT currently called from run_rendezvous_workflow().',
+      file: 'verification/poliastro/adapter.py, docs/poliastro-verification-architecture.md', status: 'Architecture defined (TJC-1.27); contract-test evidence only' } },
+  { id: 'gmat_verify_py', x: LANE_X.B, y: 690, w: LANE_W.B, h: 95, kind: 'det',
+    label: 'src/gmat_verify.py', sub: 'script gen + execution + parsing (handles BOTH CW and two-body candidates)',
+    detail: { kindLabel: 'Deterministic Python', title: 'src/gmat_verify.py',
+      body: 'Generates a GMAT console script from whichever candidate solution arrived (CW or two-body), runs GMAT headlessly via subprocess, parses ReportFile output, compares to the analytical result, and attempts a real GMAT GUI screenshot (falls back to SVG). Six distinguishable failure modes, never silently reported as success. Called directly by run_rendezvous_workflow() as plain Python -- the LLM never invokes this.',
+      file: 'src/gmat_verify.py', status: 'Active -- real GMAT runs captured (TJC-2, TJC-3, TJC-4)' } },
+  { id: 'gmat_exe', x: LANE_X.B, y: 835, w: LANE_W.B, h: 60, kind: 'ver',
+    label: 'Real GMAT executable', sub: 'external, non-interactive subprocess',
+    detail: { kindLabel: 'External tool', title: 'GmatConsole-R2026a / GMAT-R2026a',
+      body: 'The actual NASA GMAT binary, invoked non-interactively (console mode for numeric comparison, GUI mode under Xvfb for screenshots). Reports MISSING_GMAT when absent -- never silently substitutes a fallback as if it were verified.',
+      file: 'external -- GMAT_EXECUTABLE env var / --gmat flag', status: 'Integrated and exercised in this environment' } },
+  { id: 'report_py', x: LANE_X.B, y: 945, w: LANE_W.B, h: 72, kind: 'det',
+    label: 'assemble_verification_report()', sub: 'UnifiedVerificationReport',
+    detail: { kindLabel: 'Deterministic Python', title: 'src/verification_report.py',
+      body: 'The single report shape every outcome gets assembled into: specified facts, assumptions, model-selection reasoning, exact tool inputs/outputs, tolerances, artifact paths, and the trust statement distinguishing "solver succeeded" from "GMAT independently verified it." Raises if verified=True is claimed without the full evidence chain.',
+      file: 'src/verification_report.py', status: 'Active, tested (tests/test_verification_report.py)' } },
+  { id: 'benchmark', x: LANE_X.C, y: 690, w: LANE_W.C, h: 95, kind: 'data',
+    label: 'Four-category benchmark', sub: 'straightforward / boundary / two-body / ambiguous',
+    detail: { kindLabel: 'Data / fixtures', title: 'evaluations/benchmark/',
+      body: 'Four versioned JSON/text cases used to evaluate the whole workflow end-to-end against a direct-LLM baseline. This is the corpus referenced in the "intent-checking sub-agent" brainstorm -- currently only 4+5 labeled cases total, all hand-built (no ready-made public dataset found).',
+      file: 'evaluations/benchmark/, evaluations/formalizer/', status: 'Active, used by tests/test_benchmark_fixtures.py' } },
+  { id: 'baseline_compare', x: LANE_X.C, y: 820, w: LANE_W.C, h: 72, kind: 'data',
+    label: 'Baseline comparison', sub: 'direct-LLM vs. structured workflow',
+    detail: { kindLabel: 'Evaluation result', title: 'evaluations/baseline_comparison/',
+      body: 'Scores the structured workflow against a direct single-shot LLM baseline across all 4 benchmark categories and 8 evaluation dimensions.',
+      file: 'evaluations/baseline_comparison/REPORT.md', status: 'Complete (TJC-1.22)' } },
+  { id: 'optimization', x: LANE_X.C, y: 940, w: LANE_W.C, h: 66, kind: 'future',
+    label: 'src/optimization.py', sub: 'preserved, NOT connected',
+    detail: { kindLabel: 'Future / excluded', title: 'src/optimization.py',
+      body: 'Preserved historical baseline code. Explicitly NOT a promise to connect a solver this semester. Duration-sweep/delta-v trade studies and Pareto fronts are out of scope.',
+      file: 'src/optimization.py', status: 'Dormant / future-work, not wired into run_rendezvous_workflow' } },
+  { id: 'excluded_scope', x: LANE_X.C, y: 1040, w: LANE_W.C, h: 120, kind: 'future',
+    label: 'Explicit non-goals', sub: 'CR3BP, n-body, learned thresholds, broad mission planning',
+    detail: { kindLabel: 'Future / excluded', title: 'Explicit semester non-goals',
+      body: 'No generalized astrodynamics QA, CR3BP/n-body/cislunar dynamics, high-fidelity perturbations beyond verification needs, broad mission planning, multi-target ops, autonomous/generalized trajectory optimization, Pareto fronts, or learned CW-validity boundaries.',
+      file: 'backlog/docs/specifications/semester-scope/doc-1', status: 'Explicit scope boundary' } },
+
+  // ===== Band 4: Output =====
+  { id: 'operator_report', x: LANE_X.B, y: 1460, w: LANE_W.B, h: 80, kind: 'data',
+    label: 'Operator-facing report', sub: 'PASS / FAIL / NEEDS_CLARIFICATION, human-readable + structured',
+    detail: { kindLabel: 'Output', title: 'Final operator-facing result',
+      body: 'Human-readable explanation plus the structured report: burn vectors, final state, GMAT comparison numbers, screenshot reference, and an explicit VERIFIED/NOT VERIFIED/NEEDS CLARIFICATION status. Never claims PASS without the full GMAT numerical+screenshot chain.',
+      file: 'WorkflowResult.to_dict() in src/workflow.py', status: 'Active' } },
+];
+
+// Each edge: [from, to, label, style] where style in {calls, governs, feedback, eval}
+const EDGES = [
+  // Band 1: input flow (all "calls" -- this part really is a live LLM step)
+  ['nl_request', 'formalizer_skill', '', 'calls'],
+  ['formalizer_skill', 'structured_case', '', 'calls'],
+  ['structured_case', 'workflow_py', 'readiness + inputs', 'calls'],
+
+  // Reasoning-layer skills document their code counterpart (dotted purple "governs", never a runtime call).
+  ['model_selector_skill', 'model_selector_py', '', 'governs'],
+  ['cw_skill', 'cw_py', '', 'governs'],
+  ['twobody_skill', 'twobody_py', '', 'governs'],
+  ['gmat_skill', 'gmat_verify_py', '', 'governs'],
+
+  // Actual automated compute pipeline (solid gray, code-to-code, no LLM).
+  ['workflow_py', 'model_selector_py', 'calls', 'calls'],
+  ['model_selector_py', 'cw_py', 'if CW selected', 'calls'],
+  ['model_selector_py', 'twobody_py', 'if two-body selected', 'calls'],
+  ['cw_py', 'gmat_verify_py', 'candidate state', 'calls'],
+  ['twobody_py', 'gmat_verify_py', 'candidate state', 'calls'],
+  ['gmat_verify_py', 'gmat_exe', 'subprocess invoke', 'calls'],
+  ['gmat_exe', 'gmat_verify_py', 'ReportFile + screenshot', 'feedback'],
+  ['gmat_verify_py', 'report_py', 'PASS/FAIL + numbers', 'calls'],
+  ['cw_py', 'poliastro', 'optional cross-check', 'governs'],
+  ['twobody_py', 'poliastro', 'optional cross-check', 'governs'],
+  ['report_py', 'workflow_py', 'assembled report', 'feedback'],
+
+  // Output
+  ['workflow_py', 'operator_report', 'WorkflowResult.to_dict()', 'calls'],
+
+  // Evaluation lane (offline, parallel -- calls workflow_py directly, bypassing the formalizer skill)
+  ['eval_note', 'benchmark', '', 'eval'],
+  ['benchmark', 'workflow_py', 'calls directly with fixed fixtures', 'eval'],
+  ['benchmark', 'baseline_compare', 'scored by', 'eval'],
+];
+
+// ---- Rendering ----
+const KIND_COLORS = {
+  llm: 'var(--kind-llm)', det: 'var(--kind-det)', ver: 'var(--kind-ver)', data: 'var(--kind-data)', future: 'var(--kind-future)'
+};
+const EDGE_CLASS = { calls: 'edge-calls', governs: 'edge-governs', feedback: 'edge-feedback', eval: 'edge-eval' };
+
+const svg = document.getElementById('svg');
+const viewport = document.getElementById('viewport');
+const detailPane = document.getElementById('detail');
+
+function nodeById(id) { return NODES.find(n => n.id === id); }
+
+function renderBands() {
+  BANDS.forEach(b => {
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', 20);
+    rect.setAttribute('y', b.y);
+    rect.setAttribute('width', 1320);
+    rect.setAttribute('height', b.h);
+    rect.setAttribute('class', 'band-rect');
+    rect.setAttribute('fill', b.fill);
+    rect.setAttribute('stroke', b.border);
+    rect.setAttribute('stroke-width', '1.5');
+    rect.setAttribute('rx', 10);
+    viewport.appendChild(rect);
+
+    const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    title.setAttribute('x', 36);
+    title.setAttribute('y', b.y + 22);
+    title.setAttribute('class', 'band-title');
+    title.setAttribute('fill', b.border);
+    title.textContent = b.title;
+    viewport.appendChild(title);
+
+    const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    sub.setAttribute('x', 36);
+    sub.setAttribute('y', b.y + 38);
+    sub.setAttribute('class', 'band-sub');
+    sub.setAttribute('fill', '#8d97ad');
+    sub.textContent = b.sub;
+    viewport.appendChild(sub);
+  });
+}
+
+// Anchor at box edges, preferring vertical (top/bottom) ports when nodes share
+// (or nearly share) an x-range (same lane), and horizontal (side) ports when
+// crossing lanes. This keeps same-lane edges as clean vertical drops and
+// cross-lane edges as clean horizontal jogs, matching the swimlane style.
+function edgeAnchorPoints(from, to) {
+  const fLeft = from.x, fRight = from.x + from.w;
+  const tLeft = to.x, tRight = to.x + to.w;
+  const sameLane = !(fRight <= tLeft || tRight <= fLeft); // horizontal ranges overlap
+  const fcx = from.x + from.w / 2, fcy = from.y + from.h / 2;
+  const tcx = to.x + to.w / 2, tcy = to.y + to.h / 2;
+
+  if (sameLane) {
+    if (tcy >= fcy) return [[fcx, from.y + from.h], [tcx, to.y]];
+    return [[fcx, from.y], [tcx, to.y + to.h]];
+  }
+  // Cross-lane: connect side-to-side at matching vertical level when bands overlap,
+  // otherwise diagonal corner-to-corner.
+  if (tcx >= fcx) return [[from.x + from.w, fcy], [to.x, tcy]];
+  return [[from.x, fcy], [to.x + to.w, tcy]];
+}
+
+function renderEdges() {
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  EDGES.forEach(([fromId, toId, label, style]) => {
+    const from = nodeById(fromId), to = nodeById(toId);
+    if (!from || !to) return;
+    const [[x1, y1], [x2, y2]] = edgeAnchorPoints(from, to);
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const midX = (x1 + x2) / 2, midY = (y1 + y2) / 2;
+    let d;
+    if (Math.abs(y1 - y2) >= Math.abs(x1 - x2)) {
+      // vertical-dominant: gentle S-curve down the lane
+      d = `M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`;
+    } else {
+      // horizontal-dominant: gentle S-curve across lanes
+      d = `M${x1},${y1} C${midX},${y1} ${midX},${y2} ${x2},${y2}`;
+    }
+    path.setAttribute('d', d);
+    path.setAttribute('class', EDGE_CLASS[style] || 'edge-calls');
+    path.dataset.fromKind = from.kind;
+    path.dataset.toKind = to.kind;
+    path.dataset.style = style;
+    g.appendChild(path);
+    if (label) {
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      const approxW = label.length * 5.4 + 8;
+      bg.setAttribute('x', midX - approxW / 2);
+      bg.setAttribute('y', midY - 13);
+      bg.setAttribute('width', approxW);
+      bg.setAttribute('height', 13);
+      bg.setAttribute('class', 'edge-label-bg');
+      g.appendChild(bg);
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', midX);
+      t.setAttribute('y', midY - 3);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('class', 'edge-label');
+      t.textContent = label;
+      g.appendChild(t);
+    }
+  });
+  viewport.appendChild(g);
+}
+
+function renderNodes() {
+  NODES.forEach(n => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'node-box');
+    g.setAttribute('transform', `translate(${n.x},${n.y})`);
+    g.dataset.id = n.id;
+    g.dataset.kind = n.kind;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('class', 'node-rect');
+    rect.setAttribute('width', n.w);
+    rect.setAttribute('height', n.h);
+    rect.setAttribute('rx', 8);
+    rect.setAttribute('ry', 8);
+    rect.setAttribute('fill', '#161d2e');
+    rect.setAttribute('stroke', KIND_COLORS[n.kind]);
+    g.appendChild(rect);
+
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('class', 'node-label');
+    label.setAttribute('x', 12);
+    label.setAttribute('y', 22);
+    n.label.split('\n').forEach((line, i) => {
+      const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+      tspan.setAttribute('x', 12);
+      tspan.setAttribute('dy', i === 0 ? 0 : 14);
+      tspan.textContent = line;
+      label.appendChild(tspan);
+    });
+    g.appendChild(label);
+
+    // Wrap sub-label to box width (char-based wrap, generous width estimate).
+    const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    sub.setAttribute('class', 'node-sub');
+    sub.setAttribute('x', 12);
+    const maxChars = Math.floor((n.w - 20) / 5.6);
+    const words = n.sub.split(' ');
+    const lines = [];
+    let cur = '';
+    words.forEach(w => {
+      if ((cur + ' ' + w).trim().length > maxChars) { lines.push(cur.trim()); cur = w; }
+      else { cur = (cur + ' ' + w).trim(); }
+    });
+    if (cur) lines.push(cur);
+    const subStartY = n.h - 10 - (lines.length - 1) * 11;
+    lines.forEach((line, i) => {
+      const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+      tspan.setAttribute('x', 12);
+      tspan.setAttribute('y', subStartY + i * 11);
+      tspan.textContent = line;
+      sub.appendChild(tspan);
+    });
+    g.appendChild(sub);
+
+    g.addEventListener('click', () => selectNode(n.id));
+    viewport.appendChild(g);
+  });
+}
+
+function selectNode(id) {
+  document.querySelectorAll('.node-box').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+  const n = nodeById(id);
+  if (!n) return;
+  const d = n.detail;
+  detailPane.innerHTML = `
+    <h2>${d.title}</h2>
+    <span class="kind-tag" style="background:${KIND_COLORS[n.kind]}22;color:${KIND_COLORS[n.kind]};border:1px solid ${KIND_COLORS[n.kind]}66;">${d.kindLabel}</span>
+    <p>${d.body}</p>
+    ${d.file ? `<div class="field"><div class="field-label">File</div><p><code>${d.file}</code></p></div>` : ''}
+    <div class="field"><div class="field-label">Status</div><p>${d.status}</p></div>
+  `;
+}
+
+renderBands();
+renderEdges();
+renderNodes();
+
+// ---- Pan / zoom ----
+let viewBox = { x: 0, y: 0, w: 1360, h: 1620 };
+function applyViewBox() {
+  svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+}
+let isPanning = false, panStart = null;
+svg.addEventListener('mousedown', (e) => {
+  isPanning = true;
+  panStart = { x: e.clientX, y: e.clientY, vb: { ...viewBox } };
+});
+window.addEventListener('mousemove', (e) => {
+  if (!isPanning) return;
+  const dx = (e.clientX - panStart.x) * (viewBox.w / svg.clientWidth);
+  const dy = (e.clientY - panStart.y) * (viewBox.h / svg.clientHeight);
+  viewBox.x = panStart.vb.x - dx;
+  viewBox.y = panStart.vb.y - dy;
+  applyViewBox();
+});
+window.addEventListener('mouseup', () => { isPanning = false; });
+svg.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const scale = e.deltaY > 0 ? 1.1 : 0.9;
+  const newW = viewBox.w * scale, newH = viewBox.h * scale;
+  viewBox.x -= (newW - viewBox.w) / 2;
+  viewBox.y -= (newH - viewBox.h) / 2;
+  viewBox.w = newW; viewBox.h = newH;
+  applyViewBox();
+}, { passive: false });
+
+document.getElementById('reset-view').addEventListener('click', () => {
+  viewBox = { x: 0, y: 0, w: 1360, h: 1620 };
+  applyViewBox();
+});
+
+let futureHidden = false;
+document.getElementById('toggle-future').addEventListener('click', (e) => {
+  futureHidden = !futureHidden;
+  document.querySelectorAll('.node-box[data-kind="future"]').forEach(el => {
+    el.style.display = futureHidden ? 'none' : '';
+  });
+  document.querySelectorAll('[data-from-kind], [data-to-kind]').forEach(() => {});
+  document.querySelectorAll('path').forEach(el => {
+    if (el.dataset.fromKind === 'future' || el.dataset.toKind === 'future') {
+      el.style.display = futureHidden ? 'none' : '';
+    }
+  });
+  e.target.textContent = futureHidden ? 'Show future/excluded' : 'Hide future/excluded';
+});
+
+let governsHidden = false;
+document.getElementById('toggle-governs').addEventListener('click', (e) => {
+  governsHidden = !governsHidden;
+  document.querySelectorAll('.edge-governs').forEach(el => {
+    el.style.display = governsHidden ? 'none' : '';
+  });
+  e.target.textContent = governsHidden ? 'Show "governs" edges' : 'Hide "governs" edges';
+});
+</script>
+</body>
+</html>
