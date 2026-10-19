@@ -33,6 +33,13 @@ APPROVED_LOCAL_SITE_ALIGNMENT = {
 # Post-import authoritative and verbatim-mirror changes completed by scoped
 # Backlog tasks. They are compared through their own synchronization checks.
 APPROVED_TASK_OWNED_DIFFERENCES = {
+    # TJC-8: deliberately deleted redundant baseline-import artifacts (a frozen,
+    # unused duplicate of the active .pi/skills/orbital-problem-formalizer/SKILL.md,
+    # and two empty 'See SKILL.md.' README stubs). Provenance is preserved by Git
+    # history and the original docs/baseline-checksums.md commit.
+    'skills/orbital-problem-formalizer/SKILL.md',
+    '.pi/skills/orbital-model-selector/README.md',
+    '.pi/skills/orbital-targeting-planner/README.md',
     'reference/SOURCE.md',
     'site/data/reference/SOURCE.md',
     'site/data/src/twobody.py',
