@@ -791,6 +791,45 @@ def attempt_gmat_gui_screenshot(
     run, and the captured OrbitView region's PNG grows from ~46KB (flat
     black Earth sphere, no texture/model) to ~140KB with correspondingly
     different pixel content once the texture/model load successfully.
+
+    THIS FUNCTION NEVER OPENS AN INTERACTIVE, USER-VISIBLE GMAT WINDOW, AND
+    THAT IS INTENTIONAL, NOT A BUG (confirmed directly, not merely
+    hypothesized). A *separate*, previously attempted approach -- launching
+    ``gui_executable`` directly against an inherited ``DISPLAY``/
+    ``WAYLAND_DISPLAY`` so a human could see and interact with the window on
+    their own desktop -- was tested exhaustively in this sandboxed
+    WSLg/RDP environment and does not work, for two independent, confirmed
+    reasons:
+
+    1. GPU acceleration is unavailable to any process launched from this
+       sandbox: ``/dev/dxg`` (WSL's GPU passthrough device) is present and
+       openable, but ``/dev/dri`` (the DRM render-node enumeration path
+       Mesa's D3D12 Gallium driver requires to actually use it) does not
+       exist here. Forcing real GPU rendering fails immediately with
+       ``libEGL warning: failed to get driver name for fd -1`` --
+       software rendering (``LIBGL_ALWAYS_SOFTWARE=1``, already set by this
+       function) is the only option available to a sandboxed subprocess.
+    2. Independent of (1), WSLg's RDP/RAIL remoting pipeline registers a
+       software-rendered GMAT window at the X11 protocol level (a taskbar
+       icon appears) but never forwards its rendered OpenFrames/OrbitView
+       buffer to the actual Windows desktop compositor -- confirmed via
+       direct X11 property/geometry inspection showing a real, mapped,
+       correctly-focused window whose parent frame nonetheless sits at
+       WSLg's minimized-window sentinel position, and via repeated
+       X11-level un-minimize/raise/focus attempts that correctly changed
+       X11-side window state without ever producing visible content on the
+       user's actual screen.
+
+    Neither limitation is retry-able from inside this sandbox: there is no
+    environment variable, device file, or permission grant that recreates
+    the missing DRM render-node path, and no X11-level window manipulation
+    can force WSLg to forward a buffer it never receives. An agent asked to
+    "pull up the GMAT GUI" for a user to see interactively in this sandboxed
+    environment should say so directly and give the user the exact command
+    to run themselves, in their own terminal (outside the sandbox, where
+    real GPU/display access exists), rather than attempting launches that
+    are already known not to work -- see ``.pi/prompts/rendezvous.md``'s
+    step 5 for the exact required response shape.
     """
     explicit_display = display is not None
     managed_xvfb: _ManagedXvfbDisplay | None = None
