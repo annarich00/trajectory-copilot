@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1460 980" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .title { font-size: 24px; font-weight: 700; fill: #1a1a1a; }
+    .subtitle { font-size: 13px; fill: #555; }
+    .colhead { font-size: 18px; font-weight: 700; }
+    .colsub { font-size: 12px; fill: #444; font-style: italic; }
+    .item { font-size: 13px; fill: #1a1a1a; }
+    .detail { font-size: 12px; fill: #444; }
+    .evidence-label { font-size: 12px; font-weight: 700; fill: #1a1a1a; }
+    .gap-label { font-size: 12px; font-weight: 700; fill: #8a2a00; }
+  </style>
+
+  <rect x="0" y="0" width="1460" height="980" fill="#fafafa"/>
+  <text x="40" y="38" class="title">Trajectory CoPilot — code categorized by evidentiary bar</text>
+  <text x="40" y="60" class="subtitle">Based on repo scan + Backlog (TJC-1 and children) · Core contribution flagged as not yet fully developed</text>
+
+  <!-- Column boxes -->
+  <!-- 1. Throwaway -->
+  <g>
+    <rect x="30" y="85" width="330" height="860" rx="10" fill="#ffffff" stroke="#bbbbbb" stroke-width="1.5"/>
+    <rect x="30" y="85" width="330" height="46" rx="10" fill="#9e9e9e"/>
+    <rect x="30" y="111" width="330" height="20" fill="#9e9e9e"/>
+    <text x="50" y="114" class="colhead" fill="#ffffff">THROWAWAY</text>
+    <text x="50" y="150" class="colsub">Code you will delete</text>
+
+    <text x="50" y="185" class="evidence-label">File</text>
+    <text x="50" y="205" class="item">src/optimization.py</text>
+    <text x="50" y="222" class="detail">(44 lines, dataclasses only)</text>
+
+    <text x="50" y="255" class="evidence-label">Why it's here</text>
+    <text x="50" y="275" class="detail">Never imported by workflow.py,</text>
+    <text x="50" y="292" class="detail">model_selector.py, or any test</text>
+    <text x="50" y="314" class="detail">Ties to deferred, non-goal</text>
+    <text x="50" y="331" class="detail">tasks TJC-1.17 / TJC-1.18</text>
+    <text x="50" y="348" class="detail">(trajectory optimization is an</text>
+    <text x="50" y="365" class="detail">explicit semester non-goal)</text>
+
+    <text x="50" y="405" class="evidence-label">Evidence it has</text>
+    <text x="50" y="425" class="detail">Runs; output looks structurally</text>
+    <text x="50" y="442" class="detail">plausible. No call sites, no</text>
+    <text x="50" y="459" class="detail">tests — candidate to delete or</text>
+    <text x="50" y="476" class="detail">leave as a stub.</text>
+  </g>
+
+  <!-- 2. Scaffolding -->
+  <g>
+    <rect x="380" y="85" width="330" height="860" rx="10" fill="#ffffff" stroke="#bbbbbb" stroke-width="1.5"/>
+    <rect x="380" y="85" width="330" height="46" rx="10" fill="#3b6fb0"/>
+    <rect x="380" y="111" width="330" height="20" fill="#3b6fb0"/>
+    <text x="400" y="114" class="colhead" fill="#ffffff">SCAFFOLDING</text>
+    <text x="400" y="150" class="colsub">Runs the work; if it breaks, you see it fail</text>
+
+    <text x="400" y="185" class="evidence-label">Files</text>
+    <text x="400" y="205" class="item">scripts/run_cw_gmat_slice.py</text>
+    <text x="400" y="223" class="item">scripts/generate_benchmark_</text>
+    <text x="400" y="240" class="item">&#160;&#160;gmat_evidence.py</text>
+    <text x="400" y="258" class="item">evaluations/baseline_comparison/</text>
+    <text x="400" y="275" class="item">&#160;&#160;run_workflow_cases.py</text>
+    <text x="400" y="293" class="item">tools/compare_upstream.py</text>
+    <text x="400" y="310" class="item">tools/sync_site_data.py</text>
+    <text x="400" y="328" class="item">run_site.sh, site/js/*</text>
+    <text x="400" y="345" class="item">.pi/skills/*/SKILL.md</text>
+
+    <text x="400" y="380" class="evidence-label">Evidence it has</text>
+    <text x="400" y="400" class="detail">Ran end-to-end for real, and it</text>
+    <text x="400" y="417" class="detail">was watched: committed example</text>
+    <text x="400" y="434" class="detail">artifacts in</text>
+    <text x="400" y="451" class="detail">examples/cw_gmat_slice_example/,</text>
+    <text x="400" y="468" class="detail">examples/benchmark_case_b_.../,</text>
+    <text x="400" y="485" class="detail">examples/benchmark_case_c_.../</text>
+    <text x="400" y="507" class="detail">Satisfies the scaffolding bar.</text>
+  </g>
+
+  <!-- 3. Infrastructure -->
+  <g>
+    <rect x="730" y="85" width="330" height="860" rx="10" fill="#ffffff" stroke="#bbbbbb" stroke-width="1.5"/>
+    <rect x="730" y="85" width="330" height="46" rx="10" fill="#c98a1e"/>
+    <rect x="730" y="111" width="330" height="20" fill="#c98a1e"/>
+    <text x="750" y="114" class="colhead" fill="#ffffff">INFRASTRUCTURE</text>
+    <text x="750" y="150" class="colsub">Results pass through; silent bugs change numbers</text>
+
+    <text x="750" y="183" class="item">src/cw.py (STM, targeting)</text>
+    <text x="750" y="200" class="detail">&#8594; docs/cw-stm-audit.md: term-by-</text>
+    <text x="750" y="216" class="detail">&#160;&#160;term vs. Clohessy &amp; Wiltshire 1960</text>
+
+    <text x="750" y="240" class="item">src/twobody.py (RK4 propagator)</text>
+    <text x="750" y="257" class="detail">&#8594; cross-checked vs. pinned</text>
+    <text x="750" y="273" class="detail">&#160;&#160;Poliastro 0.17.0 (isolated process)</text>
+
+    <text x="750" y="297" class="item">src/verify.py (LVLH&#8596;inertial)</text>
+    <text x="750" y="314" class="detail">&#8594; round-trip + orthonormality</text>
+    <text x="750" y="330" class="detail">&#160;&#160;tests, test_validation.py</text>
+
+    <text x="750" y="354" class="item">src/gmat_verify.py (parse/compare)</text>
+    <text x="750" y="371" class="detail">&#8594; the real GMAT run itself is the</text>
+    <text x="750" y="387" class="detail">&#160;&#160;independent reference</text>
+
+    <text x="750" y="411" class="item">src/verification_report.py</text>
+    <text x="750" y="428" class="detail">&#8594; tests/test_verification_report.py</text>
+
+    <text x="750" y="465" class="evidence-label">Evidence it has</text>
+    <text x="750" y="485" class="detail">Independent-reference tests that</text>
+    <text x="750" y="502" class="detail">FAIL without the fix. Strongest</text>
+    <text x="750" y="519" class="detail">category in this repo.</text>
+  </g>
+
+  <!-- 4. Core -->
+  <g>
+    <rect x="1080" y="85" width="330" height="860" rx="10" fill="#fff6f0" stroke="#c0392b" stroke-width="2.5"/>
+    <rect x="1080" y="85" width="330" height="46" rx="10" fill="#c0392b"/>
+    <rect x="1080" y="111" width="330" height="20" fill="#c0392b"/>
+    <text x="1100" y="114" class="colhead" fill="#ffffff">CORE</text>
+    <text x="1100" y="150" class="colsub">The formulation + analysis behind the claim</text>
+
+    <text x="1100" y="183" class="item">src/model_selector.py</text>
+    <text x="1100" y="200" class="detail">Assumption-based CW-vs-two-body</text>
+    <text x="1100" y="216" class="detail">decision logic — the actual</text>
+    <text x="1100" y="232" class="detail">intellectual contribution</text>
+
+    <text x="1100" y="256" class="item">src/workflow.py</text>
+    <text x="1100" y="273" class="detail">Connects formulation &#8594; model</text>
+    <text x="1100" y="289" class="detail">selection &#8594; solve &#8594; GMAT into</text>
+    <text x="1100" y="305" class="detail">one claim-bearing pipeline</text>
+
+    <text x="1100" y="329" class="item">evaluations/benchmark/</text>
+    <text x="1100" y="346" class="detail">4 fixtures: straightforward,</text>
+    <text x="1100" y="362" class="detail">boundary, CW-invalid, ambiguous</text>
+
+    <text x="1100" y="386" class="item">evaluations/baseline_comparison/</text>
+    <text x="1100" y="403" class="detail">&#160;&#160;REPORT.md — workflow vs. baseline</text>
+
+    <rect x="1100" y="420" width="290" height="1" fill="#c0392b" opacity="0.4"/>
+
+    <text x="1100" y="445" class="gap-label">GAP</text>
+    <text x="1100" y="462" class="detail">TJC-1.23 (semester results doc)</text>
+    <text x="1100" y="478" class="detail">is still To Do</text>
+
+    <text x="1100" y="502" class="gap-label">GAP</text>
+    <text x="1100" y="519" class="detail">Baseline = same model as the</text>
+    <text x="1100" y="535" class="detail">workflow itself — not an</text>
+    <text x="1100" y="551" class="detail">independent capability check</text>
+
+    <text x="1100" y="575" class="gap-label">DEFERRED (not core)</text>
+    <text x="1100" y="592" class="detail">TJC-1.10 / 1.11 / 1.13: broader</text>
+    <text x="1100" y="608" class="detail">CW-vs-two-body sweep, empirical</text>
+    <text x="1100" y="624" class="detail">validity regime, ambiguity</text>
+    <text x="1100" y="640" class="detail">taxonomy — explicitly future work</text>
+
+    <rect x="1100" y="660" width="290" height="1" fill="#c0392b" opacity="0.4"/>
+
+    <text x="1100" y="685" class="evidence-label">Evidence it needs</text>
+    <text x="1100" y="705" class="detail">A re-run case, a known limit, or</text>
+    <text x="1100" y="721" class="detail">independent data — only partly</text>
+    <text x="1100" y="737" class="detail">met today (4 hand-picked cases,</text>
+    <text x="1100" y="753" class="detail">no independent-model baseline,</text>
+    <text x="1100" y="769" class="detail">no broader validity-regime data)</text>
+  </g>
+
+  <text x="40" y="960" class="subtitle">Generated for class_example_traj_copilot · see TJC-1.23 for the tracked documentation gap</text>
+</svg>

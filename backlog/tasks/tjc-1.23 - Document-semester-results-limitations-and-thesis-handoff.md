@@ -4,16 +4,20 @@ title: Document scoped semester results and reproducibility
 status: To Do
 assignee: []
 created_date: '2026-10-01 14:18'
-updated_date: '2026-10-02 14:11'
+updated_date: '2026-10-28 13:43'
 labels: []
 dependencies:
   - TJC-1.22
+  - TJC-5
+  - TJC-6
+  - TJC-7
+  - TJC-9
 references:
   - /mnt/c/Users/Anna Ford/Downloads/Planning_Trajectory_Copilot.pdf
 parent_task_id: TJC-1
 priority: medium
 type: docs
-ordinal: 24000
+ordinal: 60000
 ---
 
 ## Description
