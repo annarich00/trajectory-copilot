@@ -26,10 +26,10 @@
   },
   "unified_verification_report": {
     "case_id": "benchmark_case_a_straightforward_cw",
-    "run_id": "benchmark_case_a_straightforward_cw-20261014T195514Z",
+    "run_id": "benchmark_case_a_straightforward_cw-20261030T200843Z",
     "gmat": {
       "executable": "/home/anna_ford/opt/GMAT/R2026a/bin/GmatConsole-R2026a",
-      "version_banner": "\n********************************************\n***  GMAT Console Application\n********************************************\n\nGeneral Mission Analysis Tool\nConsole Based Version\nBuild Date: Mar 30 2026  10:09:27\n\n\nGMAT working directory set to '/home/anna_ford/opt/GMAT/R2026a/bin/'\nModerator is updating data files...\nModerator is creating core engine...\n\nlibpython3.12.so.1.0: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libPythonInterface_py312\" did not open.\n\nlibmex.so: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libMatlabInterface\" did not open.\nSkipping \"../plugins/libOpenFramesInterface\": GUI plugins are skipped in console mode\n\nlibOpenFramesInterface.so.R2026a: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libOVtoOFI\" did not open.\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSetting nutation file to ../data/planetary_coeff/NUTATION.DAT\nSetting leap seconds file to ../data/time/tai-utc.dat\n2026-10-14 15:55:15 GMAT Moderator successfully created core engine\n\n\nBuild Date: Mar 30 2026  10:09:27\n\nModerator is deleting core engine...\n",
+      "version_banner": "\n********************************************\n***  GMAT Console Application\n********************************************\n\nGeneral Mission Analysis Tool\nConsole Based Version\nBuild Date: Mar 30 2026  10:09:27\n\n\nGMAT working directory set to '/home/anna_ford/opt/GMAT/R2026a/bin/'\nModerator is updating data files...\nModerator is creating core engine...\n\nlibpython3.12.so.1.0: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libPythonInterface_py312\" did not open.\n\nlibmex.so: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libMatlabInterface\" did not open.\nSkipping \"../plugins/libOpenFramesInterface\": GUI plugins are skipped in console mode\n\nlibOpenFramesInterface.so.R2026a: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libOVtoOFI\" did not open.\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSetting nutation file to ../data/planetary_coeff/NUTATION.DAT\nSetting leap seconds file to ../data/time/tai-utc.dat\n2026-10-30 16:08:50 GMAT Moderator successfully created core engine\n\n\nBuild Date: Mar 30 2026  10:09:27\n\nModerator is deleting core engine...\n",
       "attempted": true,
       "exit_status": 0,
       "reason": "GMAT exited successfully."
@@ -94,27 +94,33 @@
       "reason": "GMAT final state matches the CW analytical final state within tolerance."
     },
     "screenshot": {
-      "media_type": "image/svg+xml",
-      "path": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_a/trajectory.svg",
-      "caption": "Deterministic SVG relative-trajectory plot for case 'benchmark_case_a_straightforward_cw'.",
+      "media_type": "image/png",
+      "path": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/tjc-9/evaluations/baseline_comparison/workflow_artifacts/case_a/trajectory_gmat_gui.png",
+      "caption": "GMAT GUI (OrbitView/OpenFrames) trajectory render for case 'benchmark_case_a_straightforward_cw'.",
       "case_id": "benchmark_case_a_straightforward_cw",
-      "run_id": "benchmark_case_a_straightforward_cw-20261014T195514Z",
+      "run_id": "benchmark_case_a_straightforward_cw-20261030T200843Z",
       "ok": true,
-      "reason": "screenshot artifact is non-empty, well-formed SVG (784 bytes)."
+      "reason": "GUI screenshot artifact is a non-empty, well-formed PNG (199187 bytes)."
     },
     "failure_mode": null,
     "verified": true,
     "verification_status": "VERIFIED",
-    "human_readable_report": "Verification report for case 'benchmark_case_a_straightforward_cw' (run 'benchmark_case_a_straightforward_cw-20261014T195514Z')\n\nSOLVER: The clohessy-wiltshire-linearized-fixed-duration-two-impulse solver SUCCEEDED at computing a candidate solution (status='unique'). Phi_rv is well-conditioned; returned the unique inverse solution.\n\nINDEPENDENT VERIFICATION: GMAT independently verified the candidate solution. Position error 7.941e-03 m and velocity error 1.168e-05 m/s are both within tolerance (position tolerance 1.0 m, velocity tolerance 0.001 m/s). A solver success alone does NOT by itself constitute this independent verification -- this GMAT comparison is what does.\n\nSCREENSHOT: a valid image/svg+xml trajectory artifact is available at '/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_a/trajectory.svg' (Deterministic SVG relative-trajectory plot for case 'benchmark_case_a_straightforward_cw'.).\n\nOVERALL: VERIFIED"
+    "human_readable_report": "Verification report for case 'benchmark_case_a_straightforward_cw' (run 'benchmark_case_a_straightforward_cw-20261030T200843Z')\n\nSOLVER: The clohessy-wiltshire-linearized-fixed-duration-two-impulse solver SUCCEEDED at computing a candidate solution (status='unique'). Phi_rv is well-conditioned; returned the unique inverse solution.\n\nINDEPENDENT VERIFICATION: GMAT independently verified the candidate solution. Position error 7.941e-03 m and velocity error 1.168e-05 m/s are both within tolerance (position tolerance 1.0 m, velocity tolerance 0.001 m/s). A solver success alone does NOT by itself constitute this independent verification -- this GMAT comparison is what does.\n\nSCREENSHOT: a valid image/png trajectory artifact is available at '/home/anna_ford/projects/worktrees/class_example_traj_copilot/tjc-9/evaluations/baseline_comparison/workflow_artifacts/case_a/trajectory_gmat_gui.png' (GMAT GUI (OrbitView/OpenFrames) trajectory render for case 'benchmark_case_a_straightforward_cw'.).\n\nOVERALL: VERIFIED"
   },
   "artifacts": {
-    "generated_script": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_a/generated_cw_rendezvous.script",
-    "trajectory_screenshot": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_a/trajectory.svg",
+    "generated_script": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/tjc-9/evaluations/baseline_comparison/workflow_artifacts/case_a/generated_cw_rendezvous.script",
+    "trajectory_screenshot": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/tjc-9/evaluations/baseline_comparison/workflow_artifacts/case_a/trajectory_gmat_gui.png",
+    "screenshot_source": "gmat_gui",
+    "gui_screenshot_attempt": {
+      "attempted": true,
+      "captured": true,
+      "reason": "captured a non-blank 1024x768 GMAT GUI render of the real GMAT application window."
+    },
     "report_files": {
-      "init": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_a/d_init.txt",
-      "postburn1": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_a/d_postburn1.txt",
-      "final": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_a/d_final.txt",
-      "trajectory": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/pi-worktree-10fc909e-3a44-4c5a-9448-295c06009f50-s0-0/evaluations/baseline_comparison/workflow_artifacts/case_a/d_trajectory.txt"
+      "init": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/tjc-9/evaluations/baseline_comparison/workflow_artifacts/case_a/d_init.txt",
+      "postburn1": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/tjc-9/evaluations/baseline_comparison/workflow_artifacts/case_a/d_postburn1.txt",
+      "final": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/tjc-9/evaluations/baseline_comparison/workflow_artifacts/case_a/d_final.txt",
+      "trajectory": "/home/anna_ford/projects/worktrees/class_example_traj_copilot/tjc-9/evaluations/baseline_comparison/workflow_artifacts/case_a/d_trajectory.txt"
     }
   },
   "trust_statement": "The clohessy-wiltshire-linearized-fixed-duration-two-impulse solver succeeded AND GMAT independently verified its candidate solution (comparison status PASS): this is a genuine, independently checked VERIFIED result, not merely a solver success."

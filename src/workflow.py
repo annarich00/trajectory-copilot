@@ -50,11 +50,14 @@ import numpy as np
 
 from .cw import CW_RENDEZVOUS_UNITS, solve_cw_rendezvous
 from .gmat_verify import (
+    attempt_gmat_gui_screenshot,
     check_gmat_available,
     compare_gmat_final_state,
     generate_two_body_coast_script,
+    generate_two_body_gui_preview_script,
     parse_inertial_report,
     run_gmat_script,
+    validate_gui_screenshot,
     validate_screenshot,
 )
 from .model_selector import ModelSelectionCase, ModelSelectionResult, select_model
@@ -217,7 +220,10 @@ def _unresolved_selection_result(case: RendezvousCase, model_selection: ModelSel
     )
 
 
-def _run_cw_path(case: RendezvousCase, model_selection: ModelSelectionResult, output_dir: Path, gmat_executable: str) -> WorkflowResult:
+def _run_cw_path(
+    case: RendezvousCase, model_selection: ModelSelectionResult, output_dir: Path, gmat_executable: str,
+    gmat_gui_executable: str, attempt_gui_screenshot: bool,
+) -> WorkflowResult:
     """CW rendezvous selection: solve, then reuse the hardened CW/GMAT slice pipeline."""
     import scripts.run_cw_gmat_slice as slice_runner  # local import: avoids a module-load-time dependency cycle
 
@@ -236,14 +242,16 @@ def _run_cw_path(case: RendezvousCase, model_selection: ModelSelectionResult, ou
     }
     result, returncode = slice_runner.run_cw_rendezvous_gmat_verification(
         cw_case, output_dir,
-        gmat_executable=gmat_executable, gmat_gui_executable="GMAT-R2026a",
-        skip_gui_screenshot=True, timeout_s=180.0,
+        gmat_executable=gmat_executable, gmat_gui_executable=gmat_gui_executable,
+        skip_gui_screenshot=not attempt_gui_screenshot, timeout_s=180.0,
     )
     verified = bool(result["verified"])
     report_dict = result["unified_verification_report"]
     artifacts = {
         "generated_script": str(output_dir / "generated_cw_rendezvous.script"),
         "trajectory_screenshot": result.get("trajectory_artifact"),
+        "screenshot_source": result.get("screenshot_source"),
+        "gui_screenshot_attempt": result.get("gui_screenshot_attempt"),
         "report_files": {
             key: str((output_dir / f"d_{key}.txt")) for key in ("init", "postburn1", "final", "trajectory")
         },
@@ -277,7 +285,10 @@ def _run_cw_path(case: RendezvousCase, model_selection: ModelSelectionResult, ou
     )
 
 
-def _run_two_body_path(case: RendezvousCase, model_selection: ModelSelectionResult, output_dir: Path, gmat_executable: str) -> WorkflowResult:
+def _run_two_body_path(
+    case: RendezvousCase, model_selection: ModelSelectionResult, output_dir: Path, gmat_executable: str,
+    gmat_gui_executable: str, attempt_gui_screenshot: bool,
+) -> WorkflowResult:
     """Bounded two-body fallback selection: propagate, then still run GMAT verification.
 
     Mirrors ``scripts/generate_benchmark_gmat_evidence.py::run_two_body_case`` but
@@ -285,6 +296,13 @@ def _run_two_body_path(case: RendezvousCase, model_selection: ModelSelectionResu
     dict, and reuses the general ``generate_two_body_coast_script``/
     ``parse_inertial_report`` support added to ``src/gmat_verify.py`` rather than a
     benchmark-script-local inertial-report parser.
+
+    ``attempt_gui_screenshot`` mirrors ``scripts/run_cw_gmat_slice.py``'s real
+    GMAT GUI screenshot attempt (``attempt_gmat_gui_screenshot``) before
+    falling back to the deterministic SVG plot (``_write_two_body_svg``); a
+    failed/unavailable GUI attempt only changes which artifact is used
+    (``screenshot_source``), never the overall ``verified``/``failure_mode``
+    outcome.
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -304,10 +322,48 @@ def _run_two_body_path(case: RendezvousCase, model_selection: ModelSelectionResu
         )
     )
 
-    screenshot_path = output_dir / "trajectory.svg"
+    # Attempt a real GMAT GUI (OrbitView/OpenFrames) screenshot before falling
+    # back to the deterministic SVG plot (mirrors _run_cw_path's slice_runner
+    # pipeline exactly). A failed/unavailable GUI attempt is never treated as
+    # an overall verification failure -- it only changes screenshot_source.
+    svg_screenshot_path = output_dir / "trajectory.svg"
+    screenshot_source = "svg_fallback"
+    gui_result = None
+    screenshot_path = svg_screenshot_path
+    if attempt_gui_screenshot:
+        gui_preview_script_path = output_dir / "generated_two_body_coast_gui_preview.script"
+        gui_preview_script_path.write_text(
+            generate_two_body_gui_preview_script(
+                state0_si=state0, mu_m3_s2=case.mu_m3_s2, duration_s=case.coast_duration_s,
+            )
+        )
+        gui_png_path = output_dir / "trajectory_gmat_gui.png"
+        gui_result = attempt_gmat_gui_screenshot(gmat_gui_executable, gui_preview_script_path, gui_png_path)
+        if gui_result.captured:
+            gui_screenshot = validate_gui_screenshot(gui_png_path)
+            if gui_screenshot.ok:
+                screenshot_path = gui_png_path
+                screenshot_source = "gmat_gui"
+    gui_screenshot_attempt = (
+        {"attempted": gui_result.attempted, "captured": gui_result.captured, "reason": gui_result.reason}
+        if gui_result is not None
+        else None
+    )
+
     relative_states = np.array([[0.0, 0.0, 0.0], [final_state[0] - state0[0], final_state[1] - state0[1], 0.0]])
-    _write_two_body_svg(screenshot_path, relative_states, case.case_id)
-    screenshot = validate_screenshot(screenshot_path)
+    if screenshot_source == "svg_fallback":
+        _write_two_body_svg(svg_screenshot_path, relative_states, case.case_id)
+    screenshot = (
+        validate_gui_screenshot(screenshot_path)
+        if screenshot_source == "gmat_gui"
+        else validate_screenshot(screenshot_path)
+    )
+    screenshot_media_type = "image/png" if screenshot_source == "gmat_gui" else "image/svg+xml"
+    screenshot_caption = (
+        f"GMAT GUI (OrbitView/OpenFrames) trajectory render for case '{case.case_id}'."
+        if screenshot_source == "gmat_gui"
+        else f"Two-body inertial coast displacement plot for case '{case.case_id}'."
+    )
 
     def _finish(
         *, failure_mode, verified, verification_status, gmat_availability=None, gmat_run=None,
@@ -322,13 +378,15 @@ def _run_two_body_path(case: RendezvousCase, model_selection: ModelSelectionResu
             cw_final_state_si=final_state, gmat_final_state_si=gmat_final_state_si, comparison=comparison,
             units=(("position", "m"), ("velocity", "m/s"), ("time", "s"), ("gravitational_parameter", "m^3/s^2")),
             tolerances=tolerances,
-            screenshot_result=screenshot, screenshot_media_type="image/svg+xml",
-            screenshot_caption=f"Two-body inertial coast displacement plot for case '{case.case_id}'.",
+            screenshot_result=screenshot, screenshot_media_type=screenshot_media_type,
+            screenshot_caption=screenshot_caption,
             failure_mode=failure_mode, verified=verified, verification_status=verification_status,
         )
         artifacts = {
             "generated_script": str(script_path),
             "trajectory_screenshot": str(screenshot_path) if screenshot.ok else None,
+            "screenshot_source": screenshot_source,
+            "gui_screenshot_attempt": gui_screenshot_attempt,
             "report_files": {"final": str(final_report_path), "trajectory": str(trajectory_report_path)},
         }
         if verified:
@@ -434,6 +492,8 @@ def run_rendezvous_workflow(
     *,
     output_dir: Path,
     gmat_executable: str = "GmatConsole-R2026a",
+    gmat_gui_executable: str = "GMAT-R2026a",
+    attempt_gui_screenshot: bool = True,
 ) -> WorkflowResult:
     """Run the complete connected rendezvous workflow for one structured case.
 
@@ -446,6 +506,14 @@ def run_rendezvous_workflow(
     (AC3), and an UNSUPPORTED/NEEDS MORE INFORMATION selection returns an
     explicit non-authoritative result with no physics or GMAT execution at
     all (AC4).
+
+    ``attempt_gui_screenshot`` (default ``True``) genuinely attempts a real
+    GMAT GUI (OrbitView/OpenFrames) trajectory screenshot for both the CW and
+    two-body paths before falling back to the deterministic SVG plot, using
+    ``gmat_gui_executable`` (distinct from the console-mode
+    ``gmat_executable`` used for numeric verification). Pass ``False`` to
+    skip the GUI attempt entirely and go straight to the SVG fallback (e.g.
+    in environments with no reachable display at all).
     """
     if case.readiness == "NEEDS_CLARIFICATION":
         return _clarification_result(case)
@@ -458,7 +526,7 @@ def run_rendezvous_workflow(
     output_dir = Path(output_dir)
 
     if model_selection.selection == "CW rendezvous":
-        return _run_cw_path(case, model_selection, output_dir, gmat_executable)
+        return _run_cw_path(case, model_selection, output_dir, gmat_executable, gmat_gui_executable, attempt_gui_screenshot)
     if model_selection.selection == "bounded two-body fallback":
-        return _run_two_body_path(case, model_selection, output_dir, gmat_executable)
+        return _run_two_body_path(case, model_selection, output_dir, gmat_executable, gmat_gui_executable, attempt_gui_screenshot)
     return _unresolved_selection_result(case, model_selection)

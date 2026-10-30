@@ -207,7 +207,9 @@ def test_happy_path_cw_case_with_fake_gmat_run_is_verified(tmp_path, monkeypatch
         return gmat_verify.GMATRunResult(True, 0, "ok", "", False, "GMAT exited successfully.")
 
     monkeypatch.setattr(slice_runner, "run_gmat_script", fake_run)
-    result = run_rendezvous_workflow(_cw_ready_case(), output_dir=tmp_path, gmat_executable="definitely-not-gmat")
+    result = run_rendezvous_workflow(
+        _cw_ready_case(), output_dir=tmp_path, gmat_executable="definitely-not-gmat", attempt_gui_screenshot=False,
+    )
     assert result.verified is True
     assert result.outcome == "VERIFIED"
     assert result.verification_status == "VERIFIED"
@@ -216,6 +218,7 @@ def test_happy_path_cw_case_with_fake_gmat_run_is_verified(tmp_path, monkeypatch
     assert data["unified_verification_report"]["comparison"]["status"] == "PASS"
     assert data["artifacts"]["trajectory_screenshot"].endswith("trajectory.svg")
     assert Path(data["artifacts"]["trajectory_screenshot"]).is_file()
+    assert data["artifacts"]["screenshot_source"] == "svg_fallback"
 
 
 # ---------------------------------------------------------------------------
@@ -464,7 +467,9 @@ def test_screenshot_failure_is_distinct_outcome(tmp_path, monkeypatch):
 
     monkeypatch.setattr(slice_runner, "run_gmat_script", fake_run)
     monkeypatch.setattr(slice_runner, "write_svg", corrupt_svg_writer)
-    result = run_rendezvous_workflow(_cw_ready_case(), output_dir=tmp_path, gmat_executable="definitely-not-gmat")
+    result = run_rendezvous_workflow(
+        _cw_ready_case(), output_dir=tmp_path, gmat_executable="definitely-not-gmat", attempt_gui_screenshot=False,
+    )
     assert result.verified is False
     assert result.outcome == "SCREENSHOT_FAILURE"
 
@@ -527,3 +532,173 @@ def test_result_record_includes_all_ac5_required_fields(tmp_path):
     # Trust statement distinguishes solver success from independent GMAT verification.
     assert "GMAT" in result.trust_statement
     assert ("solver" in result.trust_statement.lower() or "deterministic solver" in result.trust_statement)
+
+
+# ---------------------------------------------------------------------------
+# TJC-9: attempt_gui_screenshot defaults to True for both the CW and
+# two-body paths, mirroring scripts/run_cw_gmat_slice.py's real GMAT GUI
+# screenshot attempt / SVG-fallback pattern. A failed/unavailable GUI
+# attempt never changes the overall verified/outcome logic, only
+# screenshot_source.
+# ---------------------------------------------------------------------------
+
+
+def _fake_cw_happy_path_run(executable, script_path, timeout_s=180.0):
+    """Stand-in ``run_gmat_script`` matching ``test_happy_path_cw_case_with_fake_gmat_run_is_verified``'s
+    fixture: the CW case's quarter-period benchmark happy path."""
+    output_dir = script_path.parent
+    for key in ("init", "postburn1"):
+        (output_dir / f"d_{key}.txt").write_text(
+            "ElapsedSecs LVLH.X LVLH.Y LVLH.Z LVLH.VX LVLH.VY LVLH.VZ\n0 0 0 0 0 0 0\n"
+        )
+    (output_dir / "d_trajectory.txt").write_text(
+        "ElapsedSecs LVLH.X LVLH.Y LVLH.Z LVLH.VX LVLH.VY LVLH.VZ\n"
+        "0 1.5e-05 -2e-04 0 -1.4e-04 0 0\n1373.0298005070088 0 0 0 0 0 0\n"
+    )
+    (output_dir / "d_final.txt").write_text(
+        "ElapsedSecs LVLH.X LVLH.Y LVLH.Z LVLH.VX LVLH.VY LVLH.VZ\n"
+        "1373.0298005070088 0 0 0 0 0 0\n"
+    )
+    return gmat_verify.GMATRunResult(True, 0, "ok", "", False, "GMAT exited successfully.")
+
+
+def _setup_cw_happy_path(monkeypatch) -> None:
+    monkeypatch.setattr(
+        slice_runner, "check_gmat_available",
+        lambda executable, timeout_s=30.0: gmat_verify.GMATAvailability(True, "/stand-in/gmat", "GMAT stand-in", "ok"),
+    )
+    monkeypatch.setattr(slice_runner, "run_gmat_script", _fake_cw_happy_path_run)
+
+
+def _setup_two_body_happy_path(monkeypatch, case) -> None:
+    """Stand-in GMAT availability/run matching
+    ``test_cw_invalid_case_two_body_fallback_verified_with_fake_gmat_run``'s fixture: a GMAT
+    run that reproduces the two-body propagation's own final state exactly."""
+    monkeypatch.setattr(
+        workflow, "check_gmat_available",
+        lambda executable, timeout_s=30.0: gmat_verify.GMATAvailability(True, "/stand-in/gmat", "GMAT stand-in", "ok"),
+    )
+    state0 = np.asarray(case.inertial_cartesian_state, dtype=float)
+    from src.twobody import propagate_cartesian_state
+
+    final_state = propagate_cartesian_state(state0, case.mu_m3_s2, case.coast_duration_s, steps=case.rk4_steps)
+
+    def fake_run(executable, script_path, timeout_s=180.0):
+        output_dir = script_path.parent
+        x_km, y_km, z_km = (final_state[:3] / 1000.0).tolist()
+        vx, vy, vz = (final_state[3:] / 1000.0).tolist()
+        header = "ElapsedSecs EarthMJ2000Eq.X EarthMJ2000Eq.Y EarthMJ2000Eq.Z EarthMJ2000Eq.VX EarthMJ2000Eq.VY EarthMJ2000Eq.VZ\n"
+        row = f"{case.coast_duration_s} {x_km} {y_km} {z_km} {vx} {vy} {vz}\n"
+        (output_dir / "d_final.txt").write_text(header + row)
+        (output_dir / "d_trajectory.txt").write_text(header + f"0 {x_km} {y_km} {z_km} {vx} {vy} {vz}\n" + row)
+        return gmat_verify.GMATRunResult(True, 0, "ok", "", False, "GMAT exited successfully.")
+
+    monkeypatch.setattr(workflow, "run_gmat_script", fake_run)
+
+
+def _fake_gui_capture(captured: bool, *, reason: str):
+    """A ``attempt_gmat_gui_screenshot`` stand-in recording that it was called and, when
+    ``captured`` is True, writing a minimal valid PNG byte sequence so ``validate_gui_screenshot``
+    passes -- the exact pattern ``tests/test_cw_gmat_slice.py``'s ``fake_gui_capture`` uses."""
+    calls = []
+
+    def _capture(gui_executable, script_path, output_path, **kwargs):
+        calls.append((gui_executable, script_path, output_path))
+        if captured:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 200)
+        return gmat_verify.GMATGUIScreenshotResult(True, captured, str(output_path) if captured else None, reason)
+
+    _capture.calls = calls
+    return _capture
+
+
+def test_default_attempt_gui_screenshot_invokes_gui_capture_for_both_paths(tmp_path, monkeypatch):
+    """(a) Leaving attempt_gui_screenshot at its default True actually invokes the real GMAT
+    GUI screenshot attempt for both the CW and two-body outcomes, and screenshot_source reflects
+    a successful capture."""
+    _setup_cw_happy_path(monkeypatch)
+    cw_capture = _fake_gui_capture(True, reason="captured a non-blank render.")
+    monkeypatch.setattr(slice_runner, "attempt_gmat_gui_screenshot", cw_capture)
+    cw_result = run_rendezvous_workflow(_cw_ready_case(), output_dir=tmp_path / "cw", gmat_executable="definitely-not-gmat")
+    assert len(cw_capture.calls) == 1
+    assert cw_result.verified is True
+    assert cw_result.artifacts["screenshot_source"] == "gmat_gui"
+    assert cw_result.artifacts["trajectory_screenshot"].endswith(".png")
+    assert cw_result.artifacts["gui_screenshot_attempt"] == {
+        "attempted": True, "captured": True, "reason": "captured a non-blank render.",
+    }
+
+    two_body_case = _two_body_ready_case()
+    _setup_two_body_happy_path(monkeypatch, two_body_case)
+    two_body_capture = _fake_gui_capture(True, reason="captured a non-blank render.")
+    monkeypatch.setattr(workflow, "attempt_gmat_gui_screenshot", two_body_capture)
+    two_body_result = run_rendezvous_workflow(
+        two_body_case, output_dir=tmp_path / "two_body", gmat_executable="definitely-not-gmat",
+    )
+    assert len(two_body_capture.calls) == 1
+    assert two_body_result.verified is True
+    assert two_body_result.artifacts["screenshot_source"] == "gmat_gui"
+    assert two_body_result.artifacts["trajectory_screenshot"].endswith(".png")
+    assert two_body_result.artifacts["gui_screenshot_attempt"] == {
+        "attempted": True, "captured": True, "reason": "captured a non-blank render.",
+    }
+
+
+@pytest.mark.parametrize(
+    "captured, reason",
+    [
+        (False, "blank capture"),
+        (False, "no display"),
+    ],
+)
+def test_gui_capture_unavailable_falls_back_to_svg_without_affecting_verified_outcome(
+    tmp_path, monkeypatch, captured, reason,
+):
+    """(b) When the real GMAT GUI stand-in reports not-captured/unavailable, both paths
+    gracefully fall back to the SVG plot and the overall verified/outcome logic is unaffected:
+    the same fake-GMAT-run happy-path setups still reach VERIFIED."""
+    _setup_cw_happy_path(monkeypatch)
+    monkeypatch.setattr(slice_runner, "attempt_gmat_gui_screenshot", _fake_gui_capture(captured, reason=reason))
+    cw_result = run_rendezvous_workflow(_cw_ready_case(), output_dir=tmp_path / "cw", gmat_executable="definitely-not-gmat")
+    assert cw_result.verified is True
+    assert cw_result.outcome == "VERIFIED"
+    assert cw_result.artifacts["screenshot_source"] == "svg_fallback"
+    assert cw_result.artifacts["trajectory_screenshot"].endswith("trajectory.svg")
+
+    two_body_case = _two_body_ready_case()
+    _setup_two_body_happy_path(monkeypatch, two_body_case)
+    monkeypatch.setattr(workflow, "attempt_gmat_gui_screenshot", _fake_gui_capture(captured, reason=reason))
+    two_body_result = run_rendezvous_workflow(
+        two_body_case, output_dir=tmp_path / "two_body", gmat_executable="definitely-not-gmat",
+    )
+    assert two_body_result.verified is True
+    assert two_body_result.outcome == "VERIFIED"
+    assert two_body_result.artifacts["screenshot_source"] == "svg_fallback"
+    assert two_body_result.artifacts["trajectory_screenshot"].endswith("trajectory.svg")
+
+
+def test_attempt_gui_screenshot_false_skips_gui_attempt_entirely_for_both_paths(tmp_path, monkeypatch):
+    """(c) Explicitly passing attempt_gui_screenshot=False skips the GUI attempt entirely for
+    both paths: the GUI stand-ins must never be called at all."""
+    def _fail(*args, **kwargs):
+        raise AssertionError("attempt_gmat_gui_screenshot must not be called when attempt_gui_screenshot=False")
+
+    _setup_cw_happy_path(monkeypatch)
+    monkeypatch.setattr(slice_runner, "attempt_gmat_gui_screenshot", _fail)
+    cw_result = run_rendezvous_workflow(
+        _cw_ready_case(), output_dir=tmp_path / "cw", gmat_executable="definitely-not-gmat", attempt_gui_screenshot=False,
+    )
+    assert cw_result.verified is True
+    assert cw_result.artifacts["screenshot_source"] == "svg_fallback"
+    assert cw_result.artifacts["gui_screenshot_attempt"] is None
+
+    two_body_case = _two_body_ready_case()
+    _setup_two_body_happy_path(monkeypatch, two_body_case)
+    monkeypatch.setattr(workflow, "attempt_gmat_gui_screenshot", _fail)
+    two_body_result = run_rendezvous_workflow(
+        two_body_case, output_dir=tmp_path / "two_body", gmat_executable="definitely-not-gmat", attempt_gui_screenshot=False,
+    )
+    assert two_body_result.verified is True
+    assert two_body_result.artifacts["screenshot_source"] == "svg_fallback"
+    assert two_body_result.artifacts["gui_screenshot_attempt"] is None
