@@ -1,0 +1,63 @@
+% Day 3 - ESOC Darmstadt Ground Station Contact Analysis
+Create Spacecraft Sat;
+Sat.DateFormat        = UTCGregorian;
+Sat.Epoch             = '01 Jan 2025 00:00:00.000';
+Sat.CoordinateSystem  = EarthMJ2000Eq;
+Sat.DisplayStateType  = Keplerian;
+Sat.SMA               = 6778;     % 400 km LEO
+Sat.ECC               = 0.001;
+Sat.INC               = 51.6;
+Sat.RAAN              = 0;
+Sat.AOP               = 0;
+Sat.TA                = 0;
+Sat.DryMass           = 850;
+Sat.Cd                = 2.2;
+Sat.DragArea          = 15;
+
+Create ForceModel EarthFM;
+EarthFM.CentralBody                = Earth;
+EarthFM.PrimaryBodies              = {Earth};
+EarthFM.PointMasses                = {Luna, Sun};
+EarthFM.SRP                        = On;
+EarthFM.GravityField.Earth.Degree  = 4;
+EarthFM.GravityField.Earth.Order   = 4;
+
+Create Propagator EarthProp;
+EarthProp.FM              = EarthFM;
+EarthProp.Type            = RungeKutta89;
+EarthProp.InitialStepSize = 60;
+
+% --- GROUND STATION: ESOC Darmstadt ---
+Create GroundStation ESOC;
+ESOC.CentralBody           = Earth;
+ESOC.StateType             = Spherical;
+ESOC.HorizonReference      = Ellipsoid;
+ESOC.Location1             = 49.8728;   % Latitude
+ESOC.Location2             = 8.6512;    % Longitude
+ESOC.Location3             = 0.144;     % Altitude in km
+ESOC.MinimumElevationAngle = 5;         % degrees above horizon
+
+Create OrbitView MyView;
+MyView.Add             = {Sat, Earth};
+MyView.ShowLabels      = true;
+
+Create GroundTrackPlot MyTrack;
+MyTrack.Add            = {Sat};
+MyTrack.CentralBody    = Earth;
+
+Create ReportFile rf;
+rf.Filename     = 'D:\Space Softwares\GMAT Project\ESOC Ground Station Coverage\Output\ESOC_orbit_data.txt';
+rf.Add          = {Sat.ElapsedSecs, Sat.Earth.Latitude, Sat.Earth.Longitude};
+rf.WriteHeaders = true;
+
+% --- CONTACT LOCATOR: when can Sat see ESOC? ---
+Create ContactLocator cl;
+cl.Target           = Sat;
+cl.Observers        = {ESOC};
+cl.Filename         = 'D:\Space Softwares\GMAT Project\ESOC Ground Station Coverage\Output\ESOC_contacts.txt';
+cl.RunMode          = Automatic;
+cl.UseLightTimeDelay = false;
+cl.UseStellarAberration = false;
+
+BeginMissionSequence;
+Propagate EarthProp(Sat) {Sat.ElapsedDays = 3};

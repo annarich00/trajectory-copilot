@@ -1,0 +1,49 @@
+% Day 2 - Elliptical Orbit - Kepler Dynamics
+Create Spacecraft Sat;
+Sat.DateFormat        = UTCGregorian;
+Sat.Epoch             = '01 Jan 2025 00:00:00.000';
+Sat.CoordinateSystem  = EarthMJ2000Eq;
+Sat.DisplayStateType  = Keplerian;
+Sat.SMA               = 13556;    % km
+Sat.ECC               = 0.5;      % highly elliptical
+Sat.INC               = 28.5;
+Sat.RAAN              = 0;
+Sat.AOP               = 0;
+Sat.TA                = 0;        % start AT periapsis
+Sat.DryMass           = 850;
+Sat.Cd                = 2.2;
+Sat.DragArea          = 15;
+
+Create ForceModel EarthFM;
+EarthFM.CentralBody                = Earth;
+EarthFM.PrimaryBodies              = {Earth};
+EarthFM.PointMasses                = {Luna, Sun};
+EarthFM.SRP                        = On;
+EarthFM.GravityField.Earth.Degree  = 4;
+EarthFM.GravityField.Earth.Order   = 4;
+
+Create Propagator EarthProp;
+EarthProp.FM              = EarthFM;
+EarthProp.Type            = RungeKutta89;
+EarthProp.InitialStepSize = 60;
+
+%--- ORBIT VIEW ---
+Create OrbitView MyOrbitView;
+MyOrbitView.Add               = {Sat, Earth};
+MyOrbitView.CoordinateSystem  = EarthMJ2000Eq;
+MyOrbitView.ViewPointVector   = [ 20000 0 0 ];
+MyOrbitView.ShowLabels        = true;
+MyOrbitView.EnableStars       = On;
+
+%--- GROUND TRACK ---
+Create GroundTrackPlot MyGroundTrack;
+MyGroundTrack.Add             = {Sat};
+MyGroundTrack.CentralBody     = Earth;
+
+Create ReportFile rf;
+rf.Filename     = 'D:\Space Softwares\GMAT Project\Elliptical Orbit + SSO Analysis\Elliptical_data.txt';
+rf.Add          = {Sat.ElapsedSecs, Sat.Earth.RMAG, Sat.Earth.Latitude, Sat.Earth.Longitude, Sat.VX, Sat.VY, Sat.VZ};
+rf.WriteHeaders = true;
+
+BeginMissionSequence;
+Propagate EarthProp(Sat) {Sat.ElapsedSecs = 32000};   % ~1 orbital period

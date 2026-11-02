@@ -1,0 +1,59 @@
+% =========================================
+% Day 1 - LEO Propagation (ISS Parameters)
+% GMAT Mission Portfolio  Tridibesh Chattoraj
+% =========================================
+
+%--- SPACECRAFT ---
+Create Spacecraft Sat;
+Sat.DateFormat = UTCGregorian;
+Sat.Epoch             = '22 Jan 2025 00:00:00.000';
+Sat.CoordinateSystem  = EarthMJ2000Eq;
+Sat.DisplayStateType  = Keplerian;
+Sat.SMA               = 6778;     % 400 km altitude
+Sat.ECC               = 0.001;    % Near-circular
+Sat.INC               = 98;     % ISS inclination
+Sat.RAAN              = 0;
+Sat.AOP               = 0;
+Sat.TA                = 0;
+Sat.DryMass           = 850;   % ISS mass in kg
+Sat.Cd                = 2.2;
+Sat.DragArea          = 15;     % ISS cross-section approx
+
+%--- FORCE MODEL ---
+Create ForceModel EarthFM;
+EarthFM.CentralBody   = Earth;
+EarthFM.PrimaryBodies = {Earth};
+EarthFM.PointMasses   = {Luna, Sun};
+EarthFM.SRP           = On;
+EarthFM.GravityField.Earth.Degree = 4;
+EarthFM.GravityField.Earth.Order  = 4;
+
+%--- PROPAGATOR ---
+Create Propagator EarthProp;
+EarthProp.FM              = EarthFM;
+EarthProp.Type            = RungeKutta89;
+EarthProp.InitialStepSize = 60;
+
+%--- ORBIT VIEW ---
+Create OrbitView MyOrbitView;
+MyOrbitView.Add               = {Sat, Earth};
+MyOrbitView.CoordinateSystem  = EarthMJ2000Eq;
+MyOrbitView.ViewPointVector   = [ 20000 0 0 ];
+MyOrbitView.ShowLabels        = true;
+MyOrbitView.EnableStars       = On;
+
+%--- GROUND TRACK ---
+Create GroundTrackPlot MyGroundTrack;
+MyGroundTrack.Add             = {Sat};
+MyGroundTrack.CentralBody     = Earth;
+
+Create ReportFile rf;
+rf.Filename = 'D:\Space Softwares\GMAT Project\Inclination Study\output\Inclination_098_data.txt';
+rf.Add      = {Sat.UTCGregorian, Sat.Earth.Latitude, Sat.Earth.Longitude};
+
+%--- MISSION SEQUENCE ---
+BeginMissionSequence;
+
+Propagate EarthProp(Sat) {Sat.ElapsedDays = 1};
+% Propagates for exactly 1 day  clean and predictable
+
