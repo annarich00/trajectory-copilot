@@ -16,12 +16,27 @@ in this exact order, and do not skip, reorder, or silently combine any step:
    Do not solve anything or call any Python in this step.
 3. Construct the matching `src/workflow.py::RendezvousCase` object from the
    exact values recorded in steps 1-2 (do not re-derive or re-guess any
-   value already produced above), and call
-   `src/workflow.py::run_rendezvous_workflow(...)` directly with
-   `gmat_executable="GmatConsole-R2026a"`. Do not call `src/cw.py` or
-   `src/twobody.py` directly outside of that function, and do not report any
-   numeric burn, delta-v, or final state as a result until this real,
-   GMAT-verified call has actually run.
+   value already produced above). Do not call `src/cw.py` or `src/twobody.py`
+   directly outside the paths below, and do not report any numeric burn,
+   delta-v, or final state as a result until a real, GMAT-verified call has
+   actually run:
+   - If step 2 selected `CW rendezvous`: perform the GMAT-verification step
+     by explicitly calling the `run_gmat_verification` pi tool (registered
+     by the project-local `.pi/extensions/gmat-verification-tool/` extension)
+     with the structured `case_id`/`mu_m3_s2`/`reference_radius_m`/
+     `initial_relative_state`/`final_relative_state`/`transfer_time_s`/
+     `pos_tol_m`/`vel_tol_mps`/`dv_tol_mps` fields from the `RendezvousCase`
+     object above, and `gmat_executable="GmatConsole-R2026a"`. Call this
+     tool explicitly -- as its own visible, auditable step in the
+     transcript -- rather than only letting GMAT execution happen invisibly
+     inside `run_rendezvous_workflow`. Treat the tool's returned
+     `verified`/`verification_status`/`failure_mode` and embedded
+     `unified_verification_report` as the authoritative GMAT verification
+     result for this case.
+   - If step 2 selected `bounded two-body fallback` (not covered by the
+     `run_gmat_verification` tool, which wraps only the CW path): call
+     `src/workflow.py::run_rendezvous_workflow(...)` directly with
+     `gmat_executable="GmatConsole-R2026a"`, exactly as before.
 4. Report the final `outcome`, `verified`, `verification_status`, and
    `trust_statement` from that real call, plus the artifact paths. State
    plainly whether this is `VERIFIED` (solver succeeded AND GMAT
