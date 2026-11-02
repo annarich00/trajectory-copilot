@@ -30,3 +30,30 @@ Follow [`docs/task-commit-policy.md`](docs/task-commit-policy.md) for the requir
 ## Test-first (TDD) evidence
 
 Follow [`docs/testing-policy.md`](docs/testing-policy.md) for the required red-then-green pytest evidence for any new test added going forward.
+
+## Rendezvous request routing (standing rule)
+
+This rule is always active for this project, not only when a session explicitly
+invokes the `/rendezvous` prompt template. If a user makes a rendezvous-shaped
+request in ordinary conversation -- two spacecraft, a chief/chaser or
+target/chaser relative-motion ask, a maneuver/delta-v/transfer request between
+orbiting bodies -- route it through the same required pipeline that
+`/rendezvous` enforces, in the same order, with no step skipped or
+shortcut straight to a solver module:
+
+orbital-problem-formalizer -> orbital-model-selector ->
+`src/workflow.py::run_rendezvous_workflow` -> GMAT verification.
+
+`.pi/prompts/rendezvous.md` is the single source of truth for the exact,
+detailed steps and wording of this pipeline; read it rather than relying on
+this summary, and do not duplicate or fork its step text here. This section
+only exists to make the same ordering binding even when `/rendezvous` itself
+was not typed.
+
+Stop condition (mirrors `.pi/prompts/rendezvous.md` step 1): if the
+`orbital-problem-formalizer` result is `NEEDS CLARIFICATION` or genuinely
+`OUT OF SCOPE` (not `READY TO SOLVE`), halt there -- report that result and do
+not proceed to model selection or to any solver call.
+
+A documented before/after example for this rule is recorded in Backlog task
+TJC-13's implementation notes (`backlog task view TJC-13 --plain`).
