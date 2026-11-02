@@ -678,6 +678,31 @@ def _launch_managed_xvfb(*, width: int = 1920, height: int = 1080, start_display
     return None
 
 
+def _launch_managed_xvfb_with_retry(
+    *, attempts: int = 2, retry_delay_s: float = 1.0, **launch_kwargs
+) -> _ManagedXvfbDisplay | None:
+    """Retry ``_launch_managed_xvfb`` once before giving up (AC2).
+
+    A real manual run recorded ``_launch_managed_xvfb`` returning ``None`` (every display
+    number in its internal loop failed to confirm a live TCP listener within the deadline) while
+    an otherwise-identical standalone call moments later succeeded cleanly and captured a real
+    non-blank render -- confirming that failure mode is transient/racy (e.g. a momentarily slow
+    ``Xvfb`` startup under load), not a structural absence of Xvfb in this sandbox. A whole-launch
+    retry (rather than, say, widening the internal per-display polling deadline) closes that gap
+    without masking a genuine, persistent absence of Xvfb: if ``Xvfb`` is not installed at all,
+    every attempt fails immediately and this still correctly returns ``None`` after ``attempts``
+    tries.
+    """
+    result: _ManagedXvfbDisplay | None = None
+    for attempt in range(attempts):
+        result = _launch_managed_xvfb(**launch_kwargs)
+        if result is not None:
+            return result
+        if attempt + 1 < attempts:
+            time.sleep(retry_delay_s)
+    return None
+
+
 def _find_window_by_title(xlib_display, title_substring: str):
     """Walk the X window tree from the root to find the first window whose
     WM name contains ``title_substring`` (AC3's window-tree walk, used to
@@ -838,20 +863,46 @@ def attempt_gmat_gui_screenshot(
         # display"): no Xvfb is launched, matching the original behavior.
         pass
     elif use_own_xvfb:
-        # Default enhancement (AC1): manage our own self-contained Xvfb
-        # display rather than relying on any inherited DISPLAY.
-        managed_xvfb = _launch_managed_xvfb()
-        display = managed_xvfb.display if managed_xvfb is not None else os.environ.get("DISPLAY")
+        # Default enhancement (AC1/AC2): manage our own self-contained Xvfb
+        # display rather than relying on any inherited DISPLAY, retrying once
+        # (see ``_launch_managed_xvfb_with_retry``'s docstring) since a real
+        # manual run observed the underlying launch fail transiently.
+        managed_xvfb = _launch_managed_xvfb_with_retry()
+        if managed_xvfb is None:
+            # AC3 (option a): when a managed Xvfb display was requested (the
+            # default) and genuinely could not be started even after a
+            # retry, this is treated the same as "no display at all" --
+            # NEVER silently fall back to capturing against the real,
+            # inherited DISPLAY, which in this sandbox is confirmed broken
+            # (see this function's docstring) and would otherwise produce a
+            # misleading blank-capture result indistinguishable from a
+            # genuine managed-Xvfb success.
+            return GMATGUIScreenshotResult(
+                False, False, None,
+                "self-managed Xvfb virtual display launch failed (even after one retry); "
+                "use_own_xvfb=True was requested, so the real/inherited DISPLAY environment "
+                "variable was deliberately NOT used as a fallback (it is not a reliable proxy "
+                "for a working render target in this sandbox) -- a real GMAT GUI render "
+                "requires a confirmed-live X display and none could be started.",
+            )
+        display = managed_xvfb.display
     else:
         display = os.environ.get("DISPLAY")
     if not display:
         return GMATGUIScreenshotResult(
             False, False, None,
-            "no DISPLAY environment variable is configured and no self-contained Xvfb virtual "
-            "display could be started; a real GMAT GUI render requires a reachable X display "
-            "(e.g. a managed Xvfb virtual framebuffer, or an inherited X11/XWayland display) and "
-            "none was found.",
+            "no DISPLAY environment variable is configured and use_own_xvfb was False (no "
+            "self-contained Xvfb virtual display was requested); a real GMAT GUI render requires "
+            "a reachable X display (e.g. a managed Xvfb virtual framebuffer, or an inherited "
+            "X11/XWayland display) and none was found.",
         )
+    # Provenance of the resolved display (AC1): distinguish a self-managed Xvfb display (never
+    # the real/inherited DISPLAY) from a caller-provided or inherited one in the eventual result's
+    # reason string, so an operator can tell "no Xvfb available at all" apart from "Xvfb genuinely
+    # wasn't requested" apart from "an explicit display override was given".
+    display_description = (
+        f"self-managed Xvfb display ({display})" if managed_xvfb is not None else f"configured DISPLAY ({display})"
+    )
     resolved = (
         gui_executable
         if "/" in gui_executable and Path(gui_executable).is_file()
@@ -910,18 +961,19 @@ def attempt_gmat_gui_screenshot(
         if pixels.size == 0 or len(np.unique(pixels)) <= 1:
             return GMATGUIScreenshotResult(
                 True, False, None,
-                "GMAT GUI process launched under the configured "
-                f"DISPLAY ({display}), but the captured screen image was uniformly blank (every "
-                "pixel identical): either the real GMAT main window could not be located via the "
-                "X window-tree walk, or the display's compositor does not expose the rendered "
-                "OpenFrames/OrbitView buffer to external screen capture.",
+                f"GMAT GUI process launched under the {display_description}, but the captured "
+                "screen image was uniformly blank (every pixel identical): either the real GMAT "
+                "main window could not be located via the X window-tree walk, or the display's "
+                "compositor does not expose the rendered OpenFrames/OrbitView buffer to external "
+                "screen capture.",
             )
         output_path.parent.mkdir(parents=True, exist_ok=True)
         mss.tools.to_png(grabbed.rgb, grabbed.size, output=str(output_path))
         located = "the real GMAT application window" if window_region is not None else "the full virtual display (window not located)"
         return GMATGUIScreenshotResult(
             True, True, str(output_path),
-            f"captured a non-blank {grabbed.size[0]}x{grabbed.size[1]} GMAT GUI render of {located}.",
+            f"captured a non-blank {grabbed.size[0]}x{grabbed.size[1]} GMAT GUI render of {located} "
+            f"under the {display_description}.",
         )
     finally:
         process.terminate()

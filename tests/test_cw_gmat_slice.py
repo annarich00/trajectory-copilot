@@ -451,6 +451,58 @@ def test_attempt_gmat_gui_screenshot_explicit_display_override_skips_own_xvfb(mo
     assert "was not found" in result.reason
 
 
+def test_attempt_gmat_gui_screenshot_never_falls_back_to_real_display_when_managed_xvfb_fails(monkeypatch):
+    """TJC-17 regression (AC3): when ``use_own_xvfb=True`` (the default) and the managed Xvfb
+    launch (including its retry) ultimately fails, the function must NOT silently fall back to
+    capturing against the real/inherited ``DISPLAY`` -- a bug confirmed by a real manual run that
+    recorded ``gui_screenshot_attempt.reason`` describing a blank capture under ``DISPLAY=:0``
+    even though ``_launch_managed_xvfb`` had actually failed for that run. Instead this must
+    report a distinct, explicit "managed Xvfb launch failed" reason and never attempt a capture
+    at all.
+    """
+    monkeypatch.setenv("DISPLAY", ":0")  # A real-looking inherited DISPLAY that must NOT be used.
+    monkeypatch.setattr(gmat_verify, "_launch_managed_xvfb", lambda **kwargs: None)
+    result = gmat_verify.attempt_gmat_gui_screenshot(
+        "definitely-not-a-real-gmat-gui-binary", Path("/tmp/does-not-matter.script"),
+        Path("/tmp/does-not-matter.png"), use_own_xvfb=True,
+    )
+    assert result.attempted is False
+    assert result.captured is False
+    assert "managed Xvfb" in result.reason or "Xvfb virtual display launch failed" in result.reason
+    assert "was not found" not in result.reason, (
+        "a managed-Xvfb failure must be reported before ever reaching the executable-resolution "
+        "step that would imply a capture against the real DISPLAY was attempted"
+    )
+    assert ":0" not in result.reason, "the real inherited DISPLAY must never appear as if it were used"
+
+
+def test_launch_managed_xvfb_with_retry_retries_once_after_a_transient_failure(monkeypatch):
+    """TJC-17 regression (AC2): a real manual run observed ``_launch_managed_xvfb`` fail once
+    (returning ``None``) while an otherwise-identical standalone call moments later succeeded --
+    confirming the failure mode is transient/racy. ``_launch_managed_xvfb_with_retry`` must
+    actually call ``_launch_managed_xvfb`` more than once and proceed with whichever call
+    eventually succeeds, rather than giving up after a single failed attempt.
+    """
+    calls = []
+
+    def fake_launch(**kwargs):
+        calls.append(kwargs)
+        if len(calls) == 1:
+            return None
+        return gmat_verify._ManagedXvfbDisplay(":95", subprocess.Popen(["sleep", "5"]))
+
+    monkeypatch.setattr(gmat_verify, "_launch_managed_xvfb", fake_launch)
+    result = gmat_verify._launch_managed_xvfb_with_retry(retry_delay_s=0.0)
+    try:
+        assert len(calls) == 2, "the retry helper must call _launch_managed_xvfb more than once"
+        assert result is not None
+        assert result.display == ":95"
+    finally:
+        if result is not None:
+            result.process.terminate()
+            result.process.wait(timeout=5)
+
+
 @pytest.mark.skipif(
     not shutil.which("Xvfb") or not shutil.which("GMAT-R2026a"),
     reason="Xvfb or the real GMAT-R2026a GUI binary is not available in this environment. Note: "
