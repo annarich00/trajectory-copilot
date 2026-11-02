@@ -25,6 +25,8 @@ On Windows, replace `.venv/bin/python` with `.venv\\Scripts\\python.exe`.
 
 The recovered baseline was originally exercised with Python 3.12.14, NumPy 2.5.3, and pytest 9.1.1. See `docs/baseline-provenance.md` for origin and baseline results.
 
+This project intentionally uses plain `venv`/`pip` (not `uv`) for the core environment; see `docs/uv-adoption-decision.md` for the recorded decision and rationale, including why `uv` is used elsewhere in this repo for the isolated Poliastro verification environment only.
+
 ## CW-to-GMAT early vertical slice
 
 One reproducible circular-LEO quarter-orbit CW rendezvous is specified in
