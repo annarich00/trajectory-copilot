@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-28 13:33'
+updated_date: '2026-11-02 02:12'
 labels: []
 dependencies:
   - TJC-10
@@ -28,3 +29,8 @@ Follow-up to TJC-10 (research/collection). TJC-10 collects raw open-source GMAT 
 - [ ] #4 The corpus file lives in a location the planned GMAT example subagent's definition can reference directly (coordinate the exact path with that task so the two do not drift)
 - [ ] #5 A short README alongside the corpus file documents how to regenerate/update it when TJC-10's collection is refreshed, and records the schema version
 <!-- AC:END -->
+
+## Definition of Done
+<!-- DOD:BEGIN -->
+- [ ] #1 A single atomic Git commit (subject prefixed 'TJC-11:') contains this task's implementation, tests, and finalized Backlog metadata, per docs/task-commit-policy.md
+<!-- DOD:END -->

@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-28 13:33'
+updated_date: '2026-11-02 02:12'
 labels: []
 dependencies: []
 priority: low
@@ -28,3 +29,8 @@ A classmate brainstorming session proposed four workflow additions; this is the 
 - [ ] #5 .pi/prompts/rendezvous.md is updated to reference the new tool explicitly in its step 3 so a session following that prompt actually uses it
 - [ ] #6 A test (or documented manual verification) confirms the tool is discoverable and callable in a pi session, and that calling it reaches a real or stand-in GMAT result consistent with the existing test patterns in tests/test_cw_gmat_slice.py / tests/test_workflow.py
 <!-- AC:END -->
+
+## Definition of Done
+<!-- DOD:BEGIN -->
+- [ ] #1 A single atomic Git commit (subject prefixed 'TJC-12:') contains this task's implementation, tests, and finalized Backlog metadata, per docs/task-commit-policy.md
+<!-- DOD:END -->

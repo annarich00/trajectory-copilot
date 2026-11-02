@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-28 13:34'
+updated_date: '2026-11-02 02:12'
 labels: []
 dependencies:
   - TJC-11
@@ -28,3 +29,8 @@ Third of the four classmate-brainstormed workflow additions. Define a project-lo
 - [ ] #4 The agent's output format is a short structured verdict (satisfactory / divergent, with the specific divergences named and the corpus entries referenced) usable as text in the main agent's own output or report
 - [ ] #5 A documented example run (real or recorded) shows the subagent reviewing at least one of this project's own already-generated GMAT scripts (e.g. examples/cw_gmat_slice_example/generated_cw_rendezvous.script) against the corpus
 <!-- AC:END -->
+
+## Definition of Done
+<!-- DOD:BEGIN -->
+- [ ] #1 A single atomic Git commit (subject prefixed 'TJC-14:') contains this task's implementation, tests, and finalized Backlog metadata, per docs/task-commit-policy.md
+<!-- DOD:END -->

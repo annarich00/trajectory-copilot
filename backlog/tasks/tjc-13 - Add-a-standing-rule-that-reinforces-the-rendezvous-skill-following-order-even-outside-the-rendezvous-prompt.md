@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-28 13:34'
+updated_date: '2026-11-02 02:12'
 labels: []
 dependencies: []
 priority: low
@@ -27,3 +28,8 @@ Second of the four classmate-brainstormed workflow additions. .pi/prompts/rendez
 - [ ] #4 A documented before/after example shows a plain-conversation rendezvous request (no /rendezvous invocation) that previously could skip steps now visibly following the formalizer -> model-selector -> workflow order
 - [ ] #5 The rule does not change .pi/prompts/rendezvous.md's own content or any src/ module -- it is additive reinforcement, not a parallel or conflicting instruction set
 <!-- AC:END -->
+
+## Definition of Done
+<!-- DOD:BEGIN -->
+- [ ] #1 A single atomic Git commit (subject prefixed 'TJC-13:') contains this task's implementation, tests, and finalized Backlog metadata, per docs/task-commit-policy.md
+<!-- DOD:END -->

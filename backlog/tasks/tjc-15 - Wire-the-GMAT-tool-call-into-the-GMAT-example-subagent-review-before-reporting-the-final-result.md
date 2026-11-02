@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-28 13:34'
+updated_date: '2026-11-02 02:13'
 labels: []
 dependencies:
   - TJC-12
@@ -29,3 +30,8 @@ Fourth of the four classmate-brainstormed workflow additions, and the piece that
 - [ ] #4 A worked end-to-end example (one real or recorded run) shows the full chain: natural-language request -> formalizer -> model selector -> GMAT execution tool call -> GMAT-example subagent review -> final combined report
 - [ ] #5 No change is made to the numerical PASS/WARNING/FAIL/INCOMPLETE logic already defined in src/gmat_verify.py or src/verification_report.py
 <!-- AC:END -->
+
+## Definition of Done
+<!-- DOD:BEGIN -->
+- [ ] #1 A single atomic Git commit (subject prefixed 'TJC-15:') contains this task's implementation, tests, and finalized Backlog metadata, per docs/task-commit-policy.md
+<!-- DOD:END -->

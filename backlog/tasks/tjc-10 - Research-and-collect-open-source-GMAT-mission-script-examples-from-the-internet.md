@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-28 13:33'
+updated_date: '2026-11-02 02:12'
 labels: []
 dependencies: []
 priority: low
@@ -27,3 +28,8 @@ A classmate brainstorming session proposed a future GMAT-example subagent (see t
 - [ ] #4 Sources with no discoverable license or an incompatible license are flagged explicitly rather than silently included, so the next task can decide what is safe to redistribute inside this repository
 - [ ] #5 No existing src/, scripts/, tests/, or examples/ file is modified by this task
 <!-- AC:END -->
+
+## Definition of Done
+<!-- DOD:BEGIN -->
+- [ ] #1 A single atomic Git commit (subject prefixed 'TJC-10:') contains this task's implementation, tests, and finalized Backlog metadata, per docs/task-commit-policy.md
+<!-- DOD:END -->
