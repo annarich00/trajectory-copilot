@@ -337,6 +337,51 @@ def test_validate_screenshot_distinguishes_missing_empty_and_well_formed(tmp_pat
     assert gmat_verify.validate_screenshot(good).ok is True
 
 
+def test_generate_gmat_gui_preview_script_has_two_orbit_views_colors_and_burn_markers():
+    """TJC-18 AC1/AC2/AC3: the CW GUI preview script contains a global Earth-centered
+    OrbitView and a Chief-centered close-up OrbitView (both in the same script), distinct
+    OrbitColor assignments for Chief/Deputy, and MarkPoint burn markers plus a documented
+    burn-epoch/delta-v comment block for both maneuvers.
+    """
+    script = gmat_verify.generate_gmat_gui_preview_script(
+        radius_m=6728000.0,
+        deputy_state0_si=np.array([15.0, -200.0, 0.0, -0.14, 0.0, 0.0]),
+        dv0_mps=np.array([0.0, 0.01, 0.0]),
+        dv1_mps=np.array([0.0, -0.01, 0.0]),
+        transfer_s=1373.0,
+    )
+    assert script.count("Create OrbitView") == 2
+    assert "Create OrbitView GlobalView;" in script
+    assert "Create OrbitView CloseUpView;" in script
+    assert "CloseUpView.CoordinateSystem = ChiefCentered;" in script
+    assert "Chief.OrbitColor = [0 255 255];" in script
+    assert "Deputy.OrbitColor = [255 0 0];" in script
+    assert script.count("MarkPoint BurnMarkers;") == 2
+    assert "Create XYPlot BurnMarkers;" in script
+    assert "Burn 1 -- spacecraft: Deputy; epoch: t = 0.000000000 s" in script
+    assert "Burn 2 -- spacecraft: Deputy; epoch: t = 1373.000000000 s" in script
+    assert "magnitude:" in script
+
+
+def test_generate_two_body_gui_preview_script_has_two_orbit_views_and_color():
+    """TJC-18 AC1/AC2: the two-body GUI preview script contains a global Earth-centered
+    OrbitView and a Sat-centered close-up OrbitView (both in the same script), plus an
+    OrbitColor assignment for the lone spacecraft. There are no maneuvers in this scenario
+    (bounded two-body coast), so no MarkPoint/burn comment content applies here.
+    """
+    script = gmat_verify.generate_two_body_gui_preview_script(
+        state0_si=np.array([7_000_000.0, 0.0, 0.0, 0.0, 7000.0, 0.0]),
+        mu_m3_s2=3.986004418e14,
+        duration_s=5400.0,
+    )
+    assert script.count("Create OrbitView") == 2
+    assert "Create OrbitView GlobalView;" in script
+    assert "Create OrbitView CloseUpView;" in script
+    assert "CloseUpView.CoordinateSystem = SatCentered;" in script
+    assert "Sat.OrbitColor = [0 255 255];" in script
+    assert "MarkPoint" not in script
+
+
 def test_validate_gui_screenshot_distinguishes_missing_small_and_well_formed_png(tmp_path):
     missing = gmat_verify.validate_gui_screenshot(tmp_path / "missing.png")
     assert missing.ok is False and "does not exist" in missing.reason
