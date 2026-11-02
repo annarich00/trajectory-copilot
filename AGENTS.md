@@ -26,3 +26,7 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
 ## Git task commits
 
 Follow [`docs/task-commit-policy.md`](docs/task-commit-policy.md) for the required one-task, one-commit workflow, including exact task-ID subject prefixes, Backlog finalization by amend, and branch/worktree isolation for parallel work.
+
+## Test-first (TDD) evidence
+
+Follow [`docs/testing-policy.md`](docs/testing-policy.md) for the required red-then-green pytest evidence for any new test added going forward.

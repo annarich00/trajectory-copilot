@@ -13,6 +13,10 @@ Every Backlog task must finish as one discoverable, independently reviewable, an
 7. **Amend, never add bookkeeping commits.** If task-finalization metadata is written after the initial task commit, stage it and use `git commit --amend` so it becomes part of the same task commit. Do not create a separate metadata or bookkeeping commit.
 8. **Finish clean.** Confirm the final commit contains no unrelated files, generated process artifacts, credentials, or secrets; rerun applicable checks if the amend affected them; then confirm `git status --short` is empty.
 
+## Related policy
+
+See [`docs/testing-policy.md`](docs/testing-policy.md) for the red-then-green TDD evidence requirement for new tests; it does not change the one-task-one-atomic-commit workflow above.
+
 ## Initial checkpoint
 
 TJC-1.26 is the repository's initial pre-site checkpoint. It includes the recovered baseline and represents TJC-1.1, which predates Git history and is not rewritten retroactively. The educational site is intentionally absent from this checkpoint. TJC-1.25 must backfill the TJC-1.26 task/commit entry when the living progress page is established.
