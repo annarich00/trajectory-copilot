@@ -4,3 +4,5 @@ mss==10.2.0
 python-xlib==0.33
 hypothesis==6.145.1
 scipy==1.17.0
+matplotlib==3.11.2
+plotly==7.1.0
