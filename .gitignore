@@ -17,6 +17,13 @@ htmlcov/
 artifacts/cw_gmat_slice/*
 !artifacts/cw_gmat_slice/README.md
 
+# TJC-16.2: artifacts/visualization/ is the persistent, discoverable default
+# output location for src/visualization.py::plot_relative_position_3d (see
+# artifacts/visualization/README.md for the full convention). Regenerated
+# rendered HTML output is ignored; only the README itself stays tracked.
+artifacts/visualization/*
+!artifacts/visualization/README.md
+
 # TJC-1.22: evaluations/baseline_comparison/workflow_artifacts/ is the
 # per-run working directory run_workflow_cases.py writes generated GMAT
 # scripts/ReportFile logs/trajectory plots into; only the parsed
