@@ -6,9 +6,17 @@ A rendezvous request follows. Run it through the complete required pipeline,
 in this exact order, and do not skip, reorder, or silently combine any step:
 
 1. Apply the `orbital-problem-formalizer` skill. Produce its full required
-   Markdown output (Scope through Readiness). Stop here and report
-   `NEEDS CLARIFICATION` or `OUT OF SCOPE` if the case is not
-   `READY TO SOLVE` -- do not proceed to step 2 in that case.
+   Markdown output (Scope through Readiness). The formalizer itself is
+   scoped only to two-spacecraft LVLH-relative rendezvous requests, so a
+   single-spacecraft inertial-Cartesian coast request (no second
+   spacecraft, no relative frame, no targeting objective) correctly comes
+   back `OUT OF SCOPE` *for the formalizer* -- in that specific case,
+   proceed anyway, directly to the `orbital-two-body-rendezvous` skill via
+   step 2's model selection, per `reference/SOURCE.md` §C and
+   `evaluations/benchmark/case_c_two_body.json`'s own committed precedent.
+   For every other `NEEDS CLARIFICATION` or genuinely out-of-scope case
+   (not a single-spacecraft coast), stop here and report that status --
+   do not proceed to step 2.
 2. Apply the `orbital-model-selector` skill against the formalizer's output.
    Show the full six-item assessment table and the resulting selection
    (`CW rendezvous`, `bounded two-body fallback`, `UNSUPPORTED`, or
