@@ -44,7 +44,7 @@ import math
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, Optional, Sequence
+from typing import Callable, Literal, Optional, Sequence
 
 import numpy as np
 
@@ -62,9 +62,20 @@ from .gmat_verify import (
 )
 from .model_selector import ModelSelectionCase, ModelSelectionResult, select_model
 from .twobody import propagate_cartesian_state
+from .workflow_visualization import (
+    comparison_stage,
+    scene_stage,
+    trajectory_stage,
+    two_body_comparison_stage,
+    two_body_trajectory_stage,
+)
 from .verification_report import UnifiedVerificationReport, assemble_verification_report
 
 Readiness = Literal["READY_TO_SOLVE", "NEEDS_CLARIFICATION", "OUT_OF_SCOPE"]
+
+# Called with each visualization record (see src/workflow_visualization.py) the
+# moment its pipeline stage produces it, so a caller can show it live.
+ArtifactCallback = Callable[[dict], None]
 
 # Two-body fallback tolerances mirror scripts/generate_benchmark_gmat_evidence.py's
 # benchmark case (c): the same scoped point-mass coast GMAT already independently
@@ -222,9 +233,16 @@ def _unresolved_selection_result(case: RendezvousCase, model_selection: ModelSel
 
 def _run_cw_path(
     case: RendezvousCase, model_selection: ModelSelectionResult, output_dir: Path, gmat_executable: str,
-    gmat_gui_executable: str, attempt_gui_screenshot: bool,
+    gmat_gui_executable: str, attempt_gui_screenshot: bool, on_artifact: Optional[ArtifactCallback] = None,
 ) -> WorkflowResult:
-    """CW rendezvous selection: solve, then reuse the hardened CW/GMAT slice pipeline."""
+    """CW rendezvous selection: solve, then reuse the hardened CW/GMAT slice pipeline.
+
+    Visualization artifacts are generated at their own stage boundaries (TJC-16.5):
+    the 3D scene before the solve, the trajectory/burns plot as soon as the solve
+    returns (before any GMAT script is generated or run), and the comparison plot
+    after GMAT execution and parsing. Each is reported through ``on_artifact`` the
+    moment it is produced.
+    """
     import scripts.run_cw_gmat_slice as slice_runner  # local import: avoids a module-load-time dependency cycle
 
     n = math.sqrt(case.mu_m3_s2 / case.reference_radius_m**3)
@@ -240,13 +258,37 @@ def _run_cw_path(
         "vel_tol": case.vel_tol_mps,
         "dv_tol": case.dv_tol_mps,
     }
+    visualization_artifacts: list = []
+
+    def _emit(record: dict) -> None:
+        visualization_artifacts.append(record)
+        if on_artifact is not None:
+            on_artifact(record)
+
+    _emit(scene_stage(case.initial_relative_state, case.reference_radius_m, output_dir))
+    solved: dict = {}
+
+    def _on_solution(solution) -> None:
+        solved["solution"] = solution
+        _emit(trajectory_stage(solution, output_dir))
+
     result, returncode = slice_runner.run_cw_rendezvous_gmat_verification(
         cw_case, output_dir,
         gmat_executable=gmat_executable, gmat_gui_executable=gmat_gui_executable,
-        skip_gui_screenshot=not attempt_gui_screenshot, timeout_s=180.0,
+        skip_gui_screenshot=not attempt_gui_screenshot, timeout_s=180.0, on_solution=_on_solution,
     )
     verified = bool(result["verified"])
     report_dict = result["unified_verification_report"]
+    comparison_record = comparison_stage(
+        case_id=case.case_id, solution=solved.get("solution"),
+        initial_relative_state=case.initial_relative_state,
+        comparison_status=report_dict["comparison"]["status"],
+        pos_tol_m=case.pos_tol_m, vel_tol_mps=case.vel_tol_mps,
+        gmat_trajectory_report=output_dir / "d_trajectory.txt", output_dir=output_dir,
+    )
+    _emit(comparison_record)
+    if comparison_record["status"] == "generated":
+        report_dict["comparison_plot_path"] = comparison_record["paths"][1]
     artifacts = {
         "generated_script": str(output_dir / "generated_cw_rendezvous.script"),
         "trajectory_screenshot": result.get("trajectory_artifact"),
@@ -255,6 +297,7 @@ def _run_cw_path(
         "report_files": {
             key: str((output_dir / f"d_{key}.txt")) for key in ("init", "postburn1", "final", "trajectory")
         },
+        "visualization_artifacts": visualization_artifacts,
     }
     solver_name = report_dict["solver"]["name"]
     comparison_status = report_dict["comparison"]["status"]
@@ -287,7 +330,7 @@ def _run_cw_path(
 
 def _run_two_body_path(
     case: RendezvousCase, model_selection: ModelSelectionResult, output_dir: Path, gmat_executable: str,
-    gmat_gui_executable: str, attempt_gui_screenshot: bool,
+    gmat_gui_executable: str, attempt_gui_screenshot: bool, on_artifact: Optional[ArtifactCallback] = None,
 ) -> WorkflowResult:
     """Bounded two-body fallback selection: propagate, then still run GMAT verification.
 
@@ -306,11 +349,23 @@ def _run_two_body_path(
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    # The three TJC-16 plots all need inputs this path does not have (a relative
+    # state, burns, a solver state history), so each stage boundary records an
+    # explicit ``not_generated`` entry with its reason instead of a plot.
+    visualization_artifacts: list = []
+
+    def _emit(record: dict) -> None:
+        visualization_artifacts.append(record)
+        if on_artifact is not None:
+            on_artifact(record)
+
+    _emit(scene_stage(None, None, output_dir))
     tolerances = dict(TWO_BODY_DEFAULT_TOLERANCES)
     run_id = f"{case.case_id}-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
 
     state0 = np.asarray(case.inertial_cartesian_state, dtype=float)
     final_state = propagate_cartesian_state(state0, case.mu_m3_s2, case.coast_duration_s, steps=case.rk4_steps)
+    _emit(two_body_trajectory_stage())
 
     final_report_path = (output_dir / "d_final.txt").resolve()
     trajectory_report_path = (output_dir / "d_trajectory.txt").resolve()
@@ -369,6 +424,7 @@ def _run_two_body_path(
         *, failure_mode, verified, verification_status, gmat_availability=None, gmat_run=None,
         gmat_final_state_si=None, comparison=None,
     ) -> WorkflowResult:
+        _emit(two_body_comparison_stage())
         report = assemble_verification_report(
             case_id=case.case_id, run_id=run_id,
             solver_name="point-mass-two-body-fixed-step-rk4-coast",
@@ -388,6 +444,7 @@ def _run_two_body_path(
             "screenshot_source": screenshot_source,
             "gui_screenshot_attempt": gui_screenshot_attempt,
             "report_files": {"final": str(final_report_path), "trajectory": str(trajectory_report_path)},
+            "visualization_artifacts": visualization_artifacts,
         }
         if verified:
             trust_statement = (
@@ -494,6 +551,7 @@ def run_rendezvous_workflow(
     gmat_executable: str = "GmatConsole-R2026a",
     gmat_gui_executable: str = "GMAT-R2026a",
     attempt_gui_screenshot: bool = True,
+    on_artifact: Optional[ArtifactCallback] = None,
 ) -> WorkflowResult:
     """Run the complete connected rendezvous workflow for one structured case.
 
@@ -514,6 +572,15 @@ def run_rendezvous_workflow(
     ``gmat_executable`` used for numeric verification). Pass ``False`` to
     skip the GUI attempt entirely and go straight to the SVG fallback (e.g.
     in environments with no reachable display at all).
+
+    Visualization artifacts (TJC-16.5) are generated at their own stage
+    boundaries and recorded in ``artifacts["visualization_artifacts"]``, in
+    pipeline order: the 3D relative-position scene after model selection and
+    before the solve, the trajectory/burns plot after the solve and before
+    GMAT, and the CW-vs-GMAT comparison plot after GMAT execution and parsing.
+    ``on_artifact``, if given, is called with each record as it is produced.
+    Stages without the inputs for a plot are recorded as ``not_generated``
+    with a reason. The GMAT execution and screenshot handoff is unchanged.
     """
     if case.readiness == "NEEDS_CLARIFICATION":
         return _clarification_result(case)
@@ -526,7 +593,7 @@ def run_rendezvous_workflow(
     output_dir = Path(output_dir)
 
     if model_selection.selection == "CW rendezvous":
-        return _run_cw_path(case, model_selection, output_dir, gmat_executable, gmat_gui_executable, attempt_gui_screenshot)
+        return _run_cw_path(case, model_selection, output_dir, gmat_executable, gmat_gui_executable, attempt_gui_screenshot, on_artifact)
     if model_selection.selection == "bounded two-body fallback":
-        return _run_two_body_path(case, model_selection, output_dir, gmat_executable, gmat_gui_executable, attempt_gui_screenshot)
+        return _run_two_body_path(case, model_selection, output_dir, gmat_executable, gmat_gui_executable, attempt_gui_screenshot, on_artifact)
     return _unresolved_selection_result(case, model_selection)

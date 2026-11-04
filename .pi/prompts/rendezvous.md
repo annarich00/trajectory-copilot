@@ -22,13 +22,31 @@ in this exact order, and do not skip, reorder, or silently combine any step:
    (`CW rendezvous`, `bounded two-body fallback`, `UNSUPPORTED`, or
    `NEEDS MORE INFORMATION`) and the named deterministic tool handoff.
    Do not solve anything or call any Python in this step.
+   Visualization artifacts (TJC-16.5) are produced and reported live, one per
+   pipeline stage, in this order: (a) the 3D relative-position scene right
+   after this step and before the GMAT-verification step, (b) the
+   trajectory/burns plot right after the deterministic solve and before GMAT
+   execution, (c) the verification comparison plot right after GMAT
+   execution and parsing, and finally (d) the existing GMAT screenshot. State
+   each artifact's path to the operator in your reply the moment it is
+   produced (see step 3), do not hold them for the step-4 summary.
 3. Construct the matching `src/workflow.py::RendezvousCase` object from the
    exact values recorded in steps 1-2 (do not re-derive or re-guess any
    value already produced above). Do not call `src/cw.py` or `src/twobody.py`
    directly outside the paths below, and do not report any numeric burn,
    delta-v, or final state as a result until a real, GMAT-verified call has
    actually run:
-   - If step 2 selected `CW rendezvous`: perform the GMAT-verification step
+   - If step 2 selected `CW rendezvous`:
+     1. Before any GMAT call, run the 3D scene stage and report its
+        `paths` to the operator immediately:
+        `.venv/bin/python scripts/rendezvous_visualization_stage.py scene --case-json '<the same structured case fields used for the tool call below>' --output-dir <output_dir>`
+        then, still before GMAT, the trajectory/burns stage (it re-runs the
+        same deterministic `solve_cw_rendezvous` on the same inputs and plots
+        it) and report its `paths` immediately too:
+        `.venv/bin/python scripts/rendezvous_visualization_stage.py trajectory --case-json '<same fields>' --output-dir <output_dir>`.
+        Report only the artifact path/status here -- still no numeric burn,
+        delta-v, or final state until the GMAT-verified call below has run.
+     2. Perform the GMAT-verification step
      by explicitly calling the `run_gmat_verification` pi tool (registered
      by the project-local `.pi/extensions/gmat-verification-tool/` extension)
      with the structured `case_id`/`mu_m3_s2`/`reference_radius_m`/
@@ -40,13 +58,32 @@ in this exact order, and do not skip, reorder, or silently combine any step:
      inside `run_rendezvous_workflow`. Treat the tool's returned
      `verified`/`verification_status`/`failure_mode` and embedded
      `unified_verification_report` as the authoritative GMAT verification
-     result for this case.
+     result for this case. Pass the same `<output_dir>` as the tool's
+     `output_dir` so the plot stages and GMAT share one directory.
+     3. Immediately after that tool call returns, run the comparison stage
+        and report its `paths` at once, before the step-4 summary:
+        `.venv/bin/python scripts/rendezvous_visualization_stage.py comparison --case-json '<same fields>' --output-dir <output_dir> --comparison-status <unified_verification_report.comparison.status>`.
+        Then report the existing GMAT screenshot path
+        (`trajectory_screenshot` from the tool result), unchanged.
    - If step 2 selected `bounded two-body fallback` (not covered by the
      `run_gmat_verification` tool, which wraps only the CW path): call
      `src/workflow.py::run_rendezvous_workflow(...)` directly with
-     `gmat_executable="GmatConsole-R2026a"`, exactly as before.
+     `gmat_executable="GmatConsole-R2026a"`, exactly as before. That call
+     also records the same three stages in
+     `artifacts["visualization_artifacts"]` (and via its `on_artifact`
+     callback), and for this path each is `not_generated` with a concrete
+     `reason` (no relative state, no burns, no solver state history). Report
+     each of those `not_generated` stages and its `reason` as it is
+     produced; never substitute an approximate plot.
+   - A stage whose record has `status` `"not_generated"` (e.g. CW targeting
+     infeasible, GMAT never ran so the comparison is `INCOMPLETE`) must be
+     reported to the operator as `not_generated` together with its `reason`,
+     in pipeline order, never silently skipped and never replaced with a
+     fabricated plot.
 4. Report the final `outcome`, `verified`, `verification_status`, and
-   `trust_statement` from that real call, plus the artifact paths. State
+   `trust_statement` from that real call, plus the artifact paths (including
+   a recap, in pipeline order, of the visualization artifacts already
+   reported above). State
    plainly whether this is `VERIFIED` (solver succeeded AND GMAT
    independently confirmed it) or merely a solver-only result.
 5. If the user separately asks to "pull up," "open," "see," or "visualize"

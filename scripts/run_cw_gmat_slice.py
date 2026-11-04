@@ -146,6 +146,7 @@ def run_cw_rendezvous_gmat_verification(
     gmat_gui_executable: str,
     skip_gui_screenshot: bool,
     timeout_s: float = 180.0,
+    on_solution=None,
 ) -> tuple[dict, int]:
     """Run one complete CW-to-GMAT verification and return ``(result, returncode)``.
 
@@ -188,6 +189,12 @@ def run_cw_rendezvous_gmat_verification(
         straight to the deterministic SVG fallback.
     timeout_s:
         GMAT execution timeout in seconds.
+    on_solution:
+        Optional callable invoked with the ``CWRendezvousSolution`` (feasible
+        or not) immediately after the deterministic solve and before any
+        GMAT script is generated or executed. ``src/workflow.py`` uses it to
+        generate the trajectory/burns plot at that stage boundary (TJC-16.5);
+        it does not change the solve, GMAT execution, or screenshot handoff.
 
     Returns
     -------
@@ -209,6 +216,8 @@ def run_cw_rendezvous_gmat_verification(
     target = np.array(case["target"])
 
     solution = solve_cw_rendezvous(case["mu"], case["radius_m"], state0, transfer_s, target)
+    if on_solution is not None:
+        on_solution(solution)
     cw_summary = {
         "mean_motion_radps": solution.mean_motion_radps,
         "transfer_time_s": solution.transfer_time_s,

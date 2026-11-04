@@ -402,7 +402,9 @@ def test_singular_infeasible_cw_targeting_is_distinct_outcome_before_any_gmat_ca
     assert report["gmat"]["attempted"] is False
     assert report["screenshot"]["ok"] is False
     assert data["artifacts"]["trajectory_screenshot"] is None
-    assert not any(tmp_path.iterdir())  # no GMAT script or screenshot file was ever written
+    # TJC-16.5: the 3D scene is generated before the solve (so it exists even here); no GMAT
+    # script, ReportFile output, trajectory plot, or screenshot file was ever written.
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["relative_position_3d.html"]
 
 
 def test_gmat_execution_error_is_distinct_outcome(tmp_path, monkeypatch):
