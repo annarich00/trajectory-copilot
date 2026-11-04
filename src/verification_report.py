@@ -104,6 +104,18 @@ class UnifiedVerificationReport:
     verified: bool
     verification_status: str
 
+    # Path to the TJC-16.4 CW/two-body-vs-GMAT comparison plot artifact
+    # (``src/visualization_comparison.py::plot_cw_vs_gmat_comparison``'s
+    # ``error_history_plot_path``, or an equivalent combined-comparison
+    # figure path), alongside this report's existing numeric comparison
+    # fields above. Optional/default-``None`` (last field, after every
+    # pre-existing positional field) so no existing caller that does not
+    # pass it breaks: that plot is not produced for every failure mode
+    # (e.g. ``comparison_status == "INCOMPLETE"`` -- see that function's own
+    # explicit-rejection contract), so this is genuinely optional, not
+    # merely defaulted for convenience.
+    comparison_plot_path: str | None = None
+
     def to_human_readable(self) -> str:
         """Render the AC4 operator-facing narrative.
 
@@ -251,6 +263,7 @@ class UnifiedVerificationReport:
             "failure_mode": self.failure_mode,
             "verified": self.verified,
             "verification_status": self.verification_status,
+            "comparison_plot_path": self.comparison_plot_path,
             "human_readable_report": self.to_human_readable(),
         }
 
@@ -276,6 +289,7 @@ def assemble_verification_report(
     failure_mode: str | None,
     verified: bool,
     verification_status: str,
+    comparison_plot_path: str | None = None,
 ) -> UnifiedVerificationReport:
     """Assemble one ``UnifiedVerificationReport`` from already-computed evidence.
 
@@ -359,4 +373,5 @@ def assemble_verification_report(
         failure_mode=failure_mode,
         verified=verified,
         verification_status=verification_status,
+        comparison_plot_path=comparison_plot_path,
     )
