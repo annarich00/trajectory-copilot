@@ -59,3 +59,11 @@ This directory is distinct from `artifacts/cw_gmat_slice/` (see that
 directory's own `README.md`): that one is the *live, regenerated-every-run*
 default output location (mostly gitignored); this one is a *fixed,
 unchanging, committed snapshot* for discoverability.
+
+## `generated_cw_rendezvous.script` (TJC-14)
+
+The GMAT script `src/gmat_verify.py::generate_gmat_script` produced for this
+case (from a fresh run of the same command above, `--output-dir /tmp/tjc14_run`,
+so its `ReportFile` paths name that scratch directory). It is the script
+reviewed in `docs/gmat-example-reviewer-example-run.md` by the
+`.pi/agents/gmat-example-reviewer.md` subagent.
