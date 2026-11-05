@@ -1,0 +1,469 @@
+{
+  "schema_version": "1.0.0",
+  "entries": [
+    {
+      "id": "nasa-ex_hohmanntransfer",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_HohmannTransfer.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "orbit_transfer",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "burn_vnb_axes",
+        "target_vary_achieve_differential_corrector",
+        "propagate_with_stop_condition"
+      ],
+      "description": "Classic two-burn Hohmann transfer between circular orbits, targeting both impulsive burns with a differential corrector.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_HohmannTransfer.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_HohmannTransfer.script",
+      "content_sha256": "c7f060256b4d0d329c17b576a424d0386569956dbe778e19cc7b20f72a17b56f"
+    },
+    {
+      "id": "nasa-tut_simpleorbittransfer",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Tut_SimpleOrbitTransfer.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "orbit_transfer",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "burn_vnb_axes",
+        "target_vary_achieve_differential_corrector",
+        "propagate_with_stop_condition",
+        "groundtrackplot_output"
+      ],
+      "description": "GMAT Users Guide 'Simple Orbit Transfer' tutorial: introductory orbit-raising maneuver targeting.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Tut_SimpleOrbitTransfer.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Tut_SimpleOrbitTransfer.script",
+      "content_sha256": "c12811942255832ce30a5e6224067760c59a86695969f71f692d281db835c485"
+    },
+    {
+      "id": "nasa-ex_lunartransfer",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_LunarTransfer.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "lunar_transfer",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "burn_vnb_axes",
+        "target_vary_achieve_differential_corrector",
+        "propagate_with_stop_condition",
+        "custom_coordinate_systems",
+        "xyplot_output"
+      ],
+      "description": "Trans-lunar injection and transfer mission set up with targeting sequences.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_LunarTransfer.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_LunarTransfer.script",
+      "content_sha256": "abdddc5aedcb10b561e545fb0d92035ebdde6264e525018f3c582445555bc365"
+    },
+    {
+      "id": "nasa-ex_givenepochgotothemoon",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_GivenEpochGoToTheMoon.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "lunar_transfer",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "burn_vnb_axes",
+        "target_vary_achieve_differential_corrector",
+        "propagate_with_stop_condition",
+        "custom_coordinate_systems"
+      ],
+      "description": "From a fixed separation epoch, target a trajectory that captures into lunar orbit.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_GivenEpochGoToTheMoon.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_GivenEpochGoToTheMoon.script",
+      "content_sha256": "9caae1962aa210540d96556041de4038161877253f6b596080953f2c3aba558d"
+    },
+    {
+      "id": "nasa-ex_lcrosstrajectory",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_LCROSSTrajectory.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "lunar_impactor",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "burn_vnb_axes",
+        "propagate_with_stop_condition",
+        "custom_coordinate_systems"
+      ],
+      "description": "Reproduction of the LCROSS mission trajectory to lunar impact.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_LCROSSTrajectory.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_LCROSSTrajectory.script",
+      "content_sha256": "44d1e3acd63319853c90aa0ca9e3bdb2b733913a3ddfdf5e3bb2a85aadedc7aa"
+    },
+    {
+      "id": "nasa-ex_mmssinglelunarswingby",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_MMSSingleLunarSwingby.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "lunar_swingby",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "burn_vnb_axes",
+        "target_vary_achieve_differential_corrector",
+        "propagate_with_stop_condition",
+        "custom_coordinate_systems"
+      ],
+      "description": "Single lunar swingby with multiple targeting sequences, modeled on the MMS mission family.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_MMSSingleLunarSwingby.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_MMSSingleLunarSwingby.script",
+      "content_sha256": "7f64ba953e372c675b0e8fe95be5e2c18db6d709bd9f1b36eb086b0d689c1566"
+    },
+    {
+      "id": "nasa-ex_finiteburn",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_FiniteBurn.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "finite_burn_propulsion",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "burn_vnb_axes",
+        "finite_burn_begin_end",
+        "propagate_with_stop_condition",
+        "xyplot_output"
+      ],
+      "description": "Fuel tank and thruster setup used in a finite (non-impulsive) maneuver sequence.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_FiniteBurn.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_FiniteBurn.script",
+      "content_sha256": "606c9ae47d5d9a4ed360f40b24ce01885874a2cfcdba85079324ab4876ded210"
+    },
+    {
+      "id": "nasa-ex_electricpropulsion",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_ElectricPropulsion.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "electric_propulsion",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "burn_vnb_axes",
+        "finite_burn_begin_end",
+        "propagate_with_stop_condition",
+        "custom_coordinate_systems"
+      ],
+      "description": "Long-duration low-thrust burn using an electric thruster.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_ElectricPropulsion.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_ElectricPropulsion.script",
+      "content_sha256": "409e3d87c5573d1e2ff5d21e025bde61b672d152634860c0e2dd44f6671390e3"
+    },
+    {
+      "id": "nasa-ex_attitude_nadirpointing",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_Attitude_NadirPointing.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "attitude_pointing",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "propagate_with_stop_condition",
+        "custom_coordinate_systems"
+      ],
+      "description": "Attitude coordinate system defining a nadir-pointing attitude model.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_Attitude_NadirPointing.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_Attitude_NadirPointing.script",
+      "content_sha256": "d41fd9bf2ba41539664e3b7eb791e1e02a5d3e374cfd4c7eaf796e973fa56048"
+    },
+    {
+      "id": "nasa-ex_attitude_spinner",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_Attitude_Spinner.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "attitude_pointing",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "propagate_with_stop_condition",
+        "custom_coordinate_systems"
+      ],
+      "description": "Spinning (spinner) attitude model.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_Attitude_Spinner.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_Attitude_Spinner.script",
+      "content_sha256": "b197fb8b4551433f6e22cc2b2f23385e7e136fbe563adf203f67f188a79327fa"
+    },
+    {
+      "id": "nasa-ex_marsorbit",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_MarsOrbit.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "mars_orbit_constellation",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "burn_vnb_axes",
+        "propagate_with_stop_condition",
+        "custom_coordinate_systems"
+      ],
+      "description": "Propagation of a constellation of satellites in orbit around Mars.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_MarsOrbit.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_MarsOrbit.script",
+      "content_sha256": "9cac20ecebef483d6d5ce101543cd94e72e9541d6bf0df6b0b1a399e9255f40b"
+    },
+    {
+      "id": "nasa-ex_leostationkeeping",
+      "source_url": "https://raw.githubusercontent.com/nasa/GMAT/main/application/samples/Ex_LEOStationKeeping.script",
+      "source_repo": "nasa/GMAT",
+      "source_commit": "c9b78bd1c8499845cb78fde315e1f761b6b06f1c",
+      "license": {
+        "status": "clear",
+        "spdx_id": "Apache-2.0",
+        "attribution": "Copyright (c) United States Government as represented by the Administrator of NASA (nasa/GMAT, Apache License 2.0)",
+        "evidence": "nasa/GMAT License.txt; GET /repos/nasa/GMAT/license -> apache-2.0 (TJC-10 log, source A)"
+      },
+      "redistributable": true,
+      "mission_type": "station_keeping",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "burn_vnb_axes",
+        "target_vary_achieve_differential_corrector",
+        "xyplot_output",
+        "conditional_or_loop_logic"
+      ],
+      "description": "Altitude-box stationkeeping maneuver sequence for a LEO spacecraft.",
+      "raw_source_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_LEOStationKeeping.script",
+      "content_path": "research/gmat_examples_raw/nasa_gmat_official_samples/Ex_LEOStationKeeping.script",
+      "content_sha256": "369fccea440fa29802eae9e86ead64c5d6f27800b4db8e70280b30e80418784f"
+    },
+    {
+      "id": "tridibeshchattoraj-leo_v1_orbit_visualisation_iss",
+      "source_url": "https://raw.githubusercontent.com/TridibeshChattoraj/GMAT_Mission_Portfolio/main/Leo_V1_orbit_Visualisation_ISS.script",
+      "source_repo": "TridibeshChattoraj/GMAT_Mission_Portfolio",
+      "source_commit": "29dbf52751115abe7dd03b90dbf275af75f13fc9",
+      "license": {
+        "status": "unknown",
+        "spdx_id": null,
+        "attribution": "TridibeshChattoraj/GMAT_Mission_Portfolio (no license; all rights presumed reserved by the author)",
+        "evidence": "No LICENSE file; GitHub API license: null (TJC-10 log, source B). Metadata only; script text is not redistributable."
+      },
+      "redistributable": false,
+      "mission_type": "leo_propagation",
+      "convention_tags": [
+        "create_objects_before_begin_mission_sequence",
+        "propagate_with_stop_condition",
+        "orbitview_output",
+        "groundtrackplot_output",
+        "reportfile_output"
+      ],
+      "description": "LEO orbit propagation and visualization using ISS-like orbital parameters.",
+      "raw_source_path": "research/gmat_examples_raw/other_sources/TridibeshChattoraj_GMAT_Mission_Portfolio/Leo_V1_orbit_Visualisation_ISS.script",
+      "content_path": null,
+      "content_sha256": "bdb56fcf38258589135d95372f97f07e2582518136c5862a8fa042c06511972a"
+    },
+    {
+      "id": "tridibeshchattoraj-esoc_ground_contact_one_satellite",
+      "source_url": "https://raw.githubusercontent.com/TridibeshChattoraj/GMAT_Mission_Portfolio/main/ESOC%20Ground%20Station%20Coverage/ESOC%20ground%20Contact%20one%20satellite.script",
+      "source_repo": "TridibeshChattoraj/GMAT_Mission_Portfolio",
+      "source_commit": "29dbf52751115abe7dd03b90dbf275af75f13fc9",
+      "license": {
+        "status": "unknown",
+        "spdx_id": null,
+        "attribution": "TridibeshChattoraj/GMAT_Mission_Portfolio (no license; all rights presumed reserved by the author)",
+        "evidence": "No LICENSE file; GitHub API license: null (TJC-10 log, source B). Metadata only; script text is not redistributable."
+      },
+      "redistributable": false,
+      "mission_type": "ground_station_contact",
+      "convention_tags": [
+        "create_objects_before_begin_mission_sequence",
+        "propagate_with_stop_condition",
+        "orbitview_output",
+        "groundtrackplot_output",
+        "reportfile_output"
+      ],
+      "description": "Ground-station contact/coverage analysis for one satellite against an ESOC (Darmstadt) station.",
+      "raw_source_path": "research/gmat_examples_raw/other_sources/TridibeshChattoraj_GMAT_Mission_Portfolio/ESOC_ground_Contact_one_satellite.script",
+      "content_path": null,
+      "content_sha256": "7003a8be67f1af8d28d22aea6fa0a30f45c95d8586d6ccba0481503e610e88e4"
+    },
+    {
+      "id": "tridibeshchattoraj-elliptical_orbit",
+      "source_url": "https://raw.githubusercontent.com/TridibeshChattoraj/GMAT_Mission_Portfolio/main/Elliptical%20Orbit%20%2B%20SSO%20Analysis/Elliptical%20Orbit.script",
+      "source_repo": "TridibeshChattoraj/GMAT_Mission_Portfolio",
+      "source_commit": "29dbf52751115abe7dd03b90dbf275af75f13fc9",
+      "license": {
+        "status": "unknown",
+        "spdx_id": null,
+        "attribution": "TridibeshChattoraj/GMAT_Mission_Portfolio (no license; all rights presumed reserved by the author)",
+        "evidence": "No LICENSE file; GitHub API license: null (TJC-10 log, source B). Metadata only; script text is not redistributable."
+      },
+      "redistributable": false,
+      "mission_type": "elliptical_orbit_propagation",
+      "convention_tags": [
+        "create_objects_before_begin_mission_sequence",
+        "propagate_with_stop_condition",
+        "orbitview_output",
+        "groundtrackplot_output",
+        "reportfile_output"
+      ],
+      "description": "Keplerian-dynamics propagation of an elliptical orbit.",
+      "raw_source_path": "research/gmat_examples_raw/other_sources/TridibeshChattoraj_GMAT_Mission_Portfolio/Elliptical_Orbit.script",
+      "content_path": null,
+      "content_sha256": "e690414740e24eb1548ea8c01033655a40b62102dc64f7139d138c2dbe2baa83"
+    },
+    {
+      "id": "tridibeshchattoraj-inclination_098_sso",
+      "source_url": "https://raw.githubusercontent.com/TridibeshChattoraj/GMAT_Mission_Portfolio/main/Inclination%20Study/Inclination_098_SSO.script",
+      "source_repo": "TridibeshChattoraj/GMAT_Mission_Portfolio",
+      "source_commit": "29dbf52751115abe7dd03b90dbf275af75f13fc9",
+      "license": {
+        "status": "unknown",
+        "spdx_id": null,
+        "attribution": "TridibeshChattoraj/GMAT_Mission_Portfolio (no license; all rights presumed reserved by the author)",
+        "evidence": "No LICENSE file; GitHub API license: null (TJC-10 log, source B). Metadata only; script text is not redistributable."
+      },
+      "redistributable": false,
+      "mission_type": "sso_inclination_study",
+      "convention_tags": [
+        "create_objects_before_begin_mission_sequence",
+        "propagate_with_stop_condition",
+        "orbitview_output",
+        "groundtrackplot_output",
+        "reportfile_output"
+      ],
+      "description": "Propagation of a ~98 degree inclination Sun-synchronous orbit as part of an inclination study.",
+      "raw_source_path": "research/gmat_examples_raw/other_sources/TridibeshChattoraj_GMAT_Mission_Portfolio/Inclination_098_SSO.script",
+      "content_path": null,
+      "content_sha256": "5fa02344630a8250a774880760f29ba1b988e84508ea403bd31ce36e257200ec"
+    },
+    {
+      "id": "hannxmarie-impulsive_trajectory_w001",
+      "source_url": "https://raw.githubusercontent.com/hannxmarie/impulsive_manoeuvres_interplanetary/main/impulsive_trajectory_w001.script",
+      "source_repo": "hannxmarie/impulsive_manoeuvres_interplanetary",
+      "source_commit": "b5e530c1c5873771e169a7e549adf55286c3dd7b",
+      "license": {
+        "status": "unknown",
+        "spdx_id": null,
+        "attribution": "hannxmarie/impulsive_manoeuvres_interplanetary (no license; all rights presumed reserved by the author)",
+        "evidence": "No LICENSE file; GitHub API license: null (TJC-10 log, source C). Metadata only; script text is not redistributable."
+      },
+      "redistributable": false,
+      "mission_type": "interplanetary_transfer",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "gmat_prefixed_property_assignment",
+        "burn_vnb_axes",
+        "target_vary_achieve_differential_corrector",
+        "propagate_with_stop_condition",
+        "custom_coordinate_systems",
+        "orbitview_output"
+      ],
+      "description": "Earth-to-Mars transfer for a 'Human Mars Lander' using impulsive maneuvers and B-plane (BdotT/BdotR) targeting in VNB-frame burns.",
+      "raw_source_path": "research/gmat_examples_raw/other_sources/hannxmarie_impulsive_manoeuvres_interplanetary/impulsive_trajectory_w001.script",
+      "content_path": null,
+      "content_sha256": "33eb638d6f6c10ed4043854ecb30579c7ffa4603a35cabc2b9292d3528ac13e4"
+    },
+    {
+      "id": "iamxanadu-toenceledus",
+      "source_url": "https://raw.githubusercontent.com/iamxanadu/GMAT-SaturnIcyMoonExplorer/master/ToEnceledus.script",
+      "source_repo": "iamxanadu/GMAT-SaturnIcyMoonExplorer",
+      "source_commit": "c47aacb968a4b92aa1833338999c15c94c33d92b",
+      "license": {
+        "status": "unknown",
+        "spdx_id": null,
+        "attribution": "iamxanadu/GMAT-SaturnIcyMoonExplorer (no license; all rights presumed reserved by the author)",
+        "evidence": "No LICENSE file; GitHub API license: null (TJC-10 log, source D). Metadata only; script text is not redistributable."
+      },
+      "redistributable": false,
+      "mission_type": "outer_planet_moon_exploration",
+      "convention_tags": [
+        "percent_comment_section_banners",
+        "create_objects_before_begin_mission_sequence",
+        "gmat_prefixed_property_assignment",
+        "burn_vnb_axes",
+        "target_vary_achieve_differential_corrector",
+        "finite_burn_begin_end",
+        "propagate_with_stop_condition",
+        "custom_coordinate_systems",
+        "orbitview_output",
+        "reportfile_output"
+      ],
+      "description": "Mission to Saturn's moon Enceladus with user-defined celestial bodies (e.g. Titan) using SPICE kernels and NAIF IDs.",
+      "raw_source_path": "research/gmat_examples_raw/other_sources/iamxanadu_GMAT-SaturnIcyMoonExplorer/ToEnceledus.script",
+      "content_path": null,
+      "content_sha256": "a4cd0f68e4a040b38bea8c76efa01eac72d6791b190a6fb6c996f315c6707f55"
+    }
+  ]
+}
