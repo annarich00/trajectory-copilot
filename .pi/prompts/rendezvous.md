@@ -29,7 +29,7 @@ in this exact order, and do not skip, reorder, or silently combine any step:
    execution, (c) the verification comparison plot right after GMAT
    execution and parsing, and finally (d) the existing GMAT screenshot. State
    each artifact's path to the operator in your reply the moment it is
-   produced (see step 3), do not hold them for the step-4 summary.
+   produced (see step 3), do not hold them for the step-5 summary.
 3. Construct the matching `src/workflow.py::RendezvousCase` object from the
    exact values recorded in steps 1-2 (do not re-derive or re-guess any
    value already produced above). Do not call `src/cw.py` or `src/twobody.py`
@@ -61,7 +61,7 @@ in this exact order, and do not skip, reorder, or silently combine any step:
      result for this case. Pass the same `<output_dir>` as the tool's
      `output_dir` so the plot stages and GMAT share one directory.
      3. Immediately after that tool call returns, run the comparison stage
-        and report its `paths` at once, before the step-4 summary:
+        and report its `paths` at once, before the step-5 summary:
         `.venv/bin/python scripts/rendezvous_visualization_stage.py comparison --case-json '<same fields>' --output-dir <output_dir> --comparison-status <unified_verification_report.comparison.status>`.
         Then report the existing GMAT screenshot path
         (`trajectory_screenshot` from the tool result), unchanged.
@@ -80,15 +80,61 @@ in this exact order, and do not skip, reorder, or silently combine any step:
      reported to the operator as `not_generated` together with its `reason`,
      in pipeline order, never silently skipped and never replaced with a
      fabricated plot.
-4. Report the final `outcome`, `verified`, `verification_status`, and
+4. GMAT-example review (TJC-15). Right after the real GMAT call in step 3
+   has returned -- and before the final report in step 5 -- hand the script
+   that call generated to the project-local `gmat-example-reviewer` subagent
+   (`.pi/agents/gmat-example-reviewer.md`) by calling the `subagent` tool, for
+   example `subagent({ agent: "gmat-example-reviewer", task: "<task text>",
+   async: false, options: { agentScope: "project" } })`. The task text must give
+   the subagent both of its required inputs: (a) the generated GMAT script
+   path -- `<output_dir>/generated_cw_rendezvous.script` on the CW path (the
+   `output_dir` passed to the `run_gmat_verification` tool and returned in its
+   result), or `artifacts["generated_script"]` from
+   `run_rendezvous_workflow(...)` on the bounded two-body fallback path -- and
+   (b) the mission type of the original request, stated in plain words.
+   Mission type to pass: the real one, not a flattering neighbour. For a CW
+   rendezvous that is "two-spacecraft Clohessy-Wiltshire (CW) LVLH-relative
+   rendezvous between a chief and a deputy". The corpus
+   `research/gmat_example_corpus/corpus.json` has no rendezvous/relative-motion
+   entry (recorded in `docs/gmat-example-reviewer-example-run.md`), so
+   `NO CORPUS ENTRY` is the expected, honest verdict for CW rendezvous: report
+   it as-is. Do not substitute a different corpus mission type (for example
+   `orbit_transfer`) to obtain a SATISFACTORY/DIVERGENT verdict, and do not
+   fabricate a comparison. For the single-spacecraft coast exception in step 1
+   pass "single-spacecraft two-body coast / orbit propagation" and let the
+   reviewer map it to a corpus mission type only if unambiguous; relay
+   whatever verdict it returns, including `NO CORPUS ENTRY`.
+   Skip this step, noting "no script generated" in the report, when step 3
+   produced no GMAT script (for example `CW_TARGETING_INFEASIBLE`).
+   The subagent's verdict is advisory and stylistic only (script format,
+   structure and convention). It is reported alongside, not instead of, the
+   numerical outcome, and it must never change `FAIL` to `VERIFIED` or
+   `VERIFIED` to `FAIL` (or alter `verified`, `verification_status`, or the
+   `unified_verification_report`) on its own: the PASS/WARNING/FAIL/INCOMPLETE
+   numerical contract in `src/gmat_verify.py` and `src/verification_report.py`
+   is the only source of `VERIFIED`/`FAIL`. If the `subagent` tool is
+   unavailable, the `gmat-example-reviewer` agent cannot be discovered, or the
+   subagent errors or returns nothing usable, do not block or retry
+   indefinitely and do not withhold the result: still complete the workflow, still
+   report the numerical result in step 5, and state explicitly "GMAT-example
+   review skipped/unavailable" with the one-line reason. Never write, echo,
+   paraphrase, or imitate a review verdict yourself (for example by
+   printing text from a shell command): a verdict may be reported only if it
+   was actually returned by a real `gmat-example-reviewer` subagent call.
+5. Report the final `outcome`, `verified`, `verification_status`, and
    `trust_statement` from that real call, plus the artifact paths (including
    a recap, in pipeline order, of the visualization artifacts already
    reported above). State
    plainly whether this is `VERIFIED` (solver succeeded AND GMAT
-   independently confirmed it) or merely a solver-only result.
-5. If the user separately asks to "pull up," "open," "see," or "visualize"
+   independently confirmed it) or merely a solver-only result. Then add the
+   step-4 review as a separate, clearly labelled item -- "GMAT-example review
+   (advisory, stylistic; does not affect VERIFIED/FAIL)" -- containing the
+   subagent's verdict block verbatim, or the skipped/unavailable (or "no
+   script generated") note from step 4. The numerical result comes first and
+   is stated independently of the review.
+6. If the user separately asks to "pull up," "open," "see," or "visualize"
    the GMAT GUI interactively (as opposed to asking for the screenshot
-   artifact already produced in step 3-4), do NOT attempt to launch
+   artifact already produced in step 3 and reported in step 5), do NOT attempt to launch
    `GMAT-R2026a` or any GUI process yourself. This is a confirmed,
    non-retry-able sandbox limitation (see `src/gmat_verify.py::
    attempt_gmat_gui_screenshot`'s docstring for the full diagnosis: no GPU

@@ -9,8 +9,10 @@ against the open-source example corpus
 remains the sole source of PASS/FAIL numerical truth. It is read-only
 (`tools: read, grep, find, ls`), must cite corpus entry ids, must answer
 `NO CORPUS ENTRY` instead of fabricating a comparison, and returns a short
-`SATISFACTORY | DIVERGENT | NO CORPUS ENTRY` verdict block. It is deliberately
-**not** wired into the rendezvous workflow yet (that is TJC-15).
+`SATISFACTORY | DIVERGENT | NO CORPUS ENTRY` verdict block. It is
+wired into the rendezvous workflow by TJC-15 as an advisory, non-blocking step
+(`.pi/prompts/rendezvous.md` step 4; worked example in
+`docs/rendezvous-gmat-example-review-worked-example.md`).
 
 Static guard: `tests/test_gmat_example_reviewer_agent.py` checks the agent file
 (frontmatter, read-only tools, scope and non-verification statements, corpus
