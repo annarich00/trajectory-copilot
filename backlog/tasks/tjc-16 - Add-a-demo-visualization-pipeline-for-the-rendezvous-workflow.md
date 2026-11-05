@@ -1,10 +1,10 @@
 ---
 id: TJC-16
 title: Add a demo visualization pipeline for the rendezvous workflow
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-30 16:37'
-updated_date: '2026-11-02 02:06'
+updated_date: '2026-11-05 14:38'
 labels: []
 dependencies: []
 priority: medium
@@ -20,11 +20,23 @@ The operator needs to demo a solved rendezvous case to their advisor live, and t
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 All subtasks are completed and linked under this parent
-- [ ] #2 No subtask introduces a new optimization, trade-study, or Pareto-front capability; each one only visualizes existing deterministic solver/GMAT output
+- [x] #1 All subtasks are completed and linked under this parent
+- [x] #2 No subtask introduces a new optimization, trade-study, or Pareto-front capability; each one only visualizes existing deterministic solver/GMAT output
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 A single atomic Git commit (subject prefixed 'TJC-16:') contains this task's implementation, tests, and finalized Backlog metadata, per docs/task-commit-policy.md
+- [x] #1 A single atomic Git commit (subject prefixed 'TJC-16:') contains this task's implementation, tests, and finalized Backlog metadata, per docs/task-commit-policy.md
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Parent closure only; no new code. AC1: TJC-16.1-16.5 all Done (backlog task view), commits 6480e43, 9b5be4e, b59775f, 396e711, 12549cc on master. AC2: grep of added lines in src/ and scripts/ since 6480e43 for pareto/optimi*/minimi*/scipy.optimize/trade study found only a docstring stating that no optimization logic exists; each plot consumes solve_cw_rendezvous / propagate_cartesian_state / GMAT output. Full suite on the rebased tree (identical tracked content to master 12549cc): 206 passed in 132 s with real GMAT on PATH (a first run had one failure in tests/test_cw_gmat_slice.py::test_attempt_gmat_gui_screenshot_self_contained_xvfb_captures_real_window, a PNG-size comparison of two real Xvfb captures, 70946 vs 71168 bytes; it passed on isolated rerun and on the next full run, and the diff does not touch that code path). Known gaps: two-body path reports not_generated for its plot stages (TJC-16.5); /rendezvous not yet exercised in a live interactive pi session.
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Closed the TJC-16 visualization parent: all five subtasks (plot dependencies, 3D scene, trajectory/burns plot, CW-vs-two-body-vs-GMAT comparison plot, live per-stage artifact reporting) are merged on master and add no optimization or Pareto capability. Verified by subtask status, a diff search for optimization code, and a 206-test full-suite pass with real GMAT.
+<!-- SECTION:FINAL_SUMMARY:END -->
