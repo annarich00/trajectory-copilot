@@ -1,0 +1,54 @@
+# TJC-19 trial results (aggregated from each run's .summary.txt)
+#
+# Each row is one bounded run of ./run_variant.sh. exit_code 139 = SIGSEGV during
+# GMAT's GUI teardown; 0 = clean exit. 'mission_s' is GMAT's own '===> Total Run
+# Time' from its log file. 'preload' is the 1-minute load average from the idle
+# check recorded immediately before that run started.
+#
+# Retention: this table is the complete per-run record. Full stdout/GMAT-log/ps
+# captures are kept only for the named one-off runs (variant_*_idle, inherit_*,
+# ldpath_*, ac3_probe.log); the repeated trial_* and readme_check runs produced
+# ~800KB of near-identical per-window font-error spam, so only their aggregated
+# rows below are retained.
+#
+label                              exit_code  wall_s    mission_s  fonterr  display  preload
+inherit_a_single_orbitview         139        1.2125    0.540      105      inherit  0.14
+inherit_c_full_tjc18               139        1.9211    0.942      210      inherit  0.13
+ldpath_a_single_orbitview          139        1.7187    0.940      101      xvfb     0.16
+ldpath_c_full_tjc18                139        2.7558    2.041      202      xvfb     0.16
+readme_check                       139        2.2225    1.171      210      xvfb     0.03
+trial_a_single_orbitview_1         0          1.2198    0.418      105      xvfb     0.06
+trial_a_single_orbitview_10        139        1.1204    0.382      105      xvfb     0.64
+trial_a_single_orbitview_2         139        1.2229    0.426      105      xvfb     0.06
+trial_a_single_orbitview_3         0          1.3242    0.419      105      xvfb     0.14
+trial_a_single_orbitview_4         0          1.1158    0.423      105      xvfb     0.46
+trial_a_single_orbitview_5         139        1.2203    0.418      105      xvfb     0.46
+trial_a_single_orbitview_6         0          1.7163    0.619      105      xvfb     0.58
+trial_a_single_orbitview_7         0          1.2329    0.378      105      xvfb     0.58
+trial_a_single_orbitview_8         139        1.1131    0.373      105      xvfb     0.61
+trial_a_single_orbitview_9         139        1.3140    0.475      105      xvfb     0.61
+trial_b_two_orbitviews_1           0          2.2215    0.950      210      xvfb     0.14
+trial_b_two_orbitviews_2           139        1.9266    0.672      210      xvfb     0.20
+trial_b_two_orbitviews_3           139        1.5237    0.771      210      xvfb     0.27
+trial_c_full_tjc18_1               139        2.1461    1.181      210      xvfb     0.27
+trial_c_full_tjc18_10              139        1.5226    0.644      210      xvfb     0.60
+trial_c_full_tjc18_2               139        1.7223    0.817      210      xvfb     0.33
+trial_c_full_tjc18_3               139        2.1149    0.986      210      xvfb     0.30
+trial_c_full_tjc18_4               139        1.4145    0.663      210      xvfb     0.64
+trial_c_full_tjc18_5               0          1.6169    0.680      210      xvfb     0.67
+trial_c_full_tjc18_6               139        1.4191    0.641      210      xvfb     0.62
+trial_c_full_tjc18_7               139        1.4171    0.674      210      xvfb     0.62
+trial_c_full_tjc18_8               139        1.4231    0.682      210      xvfb     0.57
+trial_c_full_tjc18_9               139        1.5164    0.716      210      xvfb     0.57
+trial_d_xyplot_no_markpoint_1      139        1.4142    0.637      210      xvfb     0.30
+trial_d_xyplot_no_markpoint_2      0          1.4177    0.634      210      xvfb     0.60
+trial_d_xyplot_no_markpoint_3      139        1.4274    0.674      210      xvfb     0.60
+trial_e_one_orbitview_xyplot_1     139        1.2151    0.419      105      xvfb     0.63
+trial_e_one_orbitview_xyplot_2     139        1.2173    0.433      105      xvfb     0.63
+trial_e_one_orbitview_xyplot_3     139        1.2188    0.404      105      xvfb     0.82
+trial_f_full_showplot_false_1      0          .92662    0.130      0        xvfb     0.07
+trial_f_full_showplot_false_2      0          .80968    0.119      0        xvfb     0.07
+trial_f_full_showplot_false_3      0          .92458    0.118      0        xvfb     0.14
+variant_a_idle                     0          1.4156    0.518      105      xvfb     0.12
+variant_b_idle                     0          1.7259    0.800      210      xvfb     0.12
+variant_c_idle                     139        2.0320    1.086      210      xvfb     0.07

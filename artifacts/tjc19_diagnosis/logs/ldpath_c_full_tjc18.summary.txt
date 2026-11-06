@@ -1,0 +1,37 @@
+label=ldpath_c_full_tjc18
+script=/home/anna_ford/projects/class_example_traj_copilot/artifacts/tjc19_diagnosis/variants/variant_c_full_tjc18.script
+timeout_s=240
+ld_library_path_mode=with
+display_mode=xvfb
+--- pre-run idle check ---
+ 08:08:39 up  8:27,  1 user,  load average: 0.16, 0.59, 0.36
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+anna_fo+   37895  0.9  2.6 22395676 209404 pts/0 Sl+  03:46   2:30 pi
+anna_fo+   54974  0.9  1.8 11874512 150288 ?     Ssl  07:48   0:10 /home/anna_ford/.local/share/pi-node/node-v22.23.2-linux-x64/bin/node --import file:///home/anna_ford/.pi/agent/npm/node_modules/pi-subagents/runner-peer-preload.mjs /home/anna_ford/.pi/agent/npm/node_modules/pi-subagents/src/runs/background/subagent-runner-bootstrap.js /tmp/pi-subagents-uid-1000/async-cfg-27e8e24a-2eba-4ac2-9fd9-9a6ea663353e.json
+anna_fo+   37348  0.6  2.6 22462256 206680 pts/2 Sl+  02:48   2:01 pi
+root           6  0.2  0.0   4484  2860 hvc0     Sl+  Nov05   1:29 plan9 --control-socket 7 --log-level 4 --server-fd 8 --pipe-fd 10 --log-truncate
+root          86  0.1  0.1  35304 12356 ?        Ss   Nov05   0:47 /usr/lib/systemd/systemd-udevd
+root          46  0.0  0.2  50420 17616 ?        S<s  Nov05   0:15 /usr/lib/systemd/systemd-journald
+root         312  0.0  0.0   3200  1248 ?        S    Nov05   0:12 /init
+root           1  0.0  0.1  24552 15588 ?        Ss   Nov05   0:09 /sbin/init
+anna_fo+     357  0.0  0.1  22752 13508 ?        Ss   Nov05   0:09 /usr/lib/systemd/systemd --user
+--- pre-run leftover GMAT processes ---
+(none)
+               total        used        free      shared  buff/cache   available
+Mem:           7.6Gi       1.5Gi       5.2Gi       476Mi       1.5Gi       6.0Gi
+Swap:          2.0Gi          0B       2.0Gi
+xvfb_display=:90 xvfb_pid=69264
+--- result ---
+exit_code=139   (0=clean exit, 124=timeout/stuck, 139=SIGSEGV, 134=SIGABRT)
+wall_seconds=2.755830116
+stdout_lines=204
+font_error_lines=202
+--- GMAT log run-time / completion markers ---
+Mission run completed.
+===> Total Run Time: 2.041 seconds
+--- stdout segfault/abort markers ---
+(none)
+--- peak RSS observed in snapshots (MB) ---
+0
+--- post-run leftover GMAT processes ---
+(none)

@@ -1,0 +1,5 @@
+=== t=07:59:01 ===
+    PID ELAPSED %CPU   RSS    VSZ STAT COMMAND
+(no GMAT process)
+               total        used        free      shared  buff/cache   available
+Mem:            7735        1491        5505         475        1404        6244

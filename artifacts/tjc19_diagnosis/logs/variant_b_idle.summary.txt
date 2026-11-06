@@ -1,0 +1,36 @@
+label=variant_b_idle
+script=/home/anna_ford/projects/class_example_traj_copilot/artifacts/tjc19_diagnosis/variants/variant_b_two_orbitviews.script
+timeout_s=120
+ld_library_path_mode=without
+--- pre-run idle check ---
+ 07:59:01 up  8:18,  1 user,  load average: 0.12, 0.06, 0.04
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+anna_fo+   56034 25.0  0.0   4952  3824 ?        S    07:59   0:00 bash ./artifacts/tjc19_diagnosis/run_variant.sh variant_b_idle artifacts/tjc19_diagnosis/variants/variant_b_two_orbitviews.script 120 without
+anna_fo+   54974  1.1  1.8 11809664 149400 ?     Ssl  07:48   0:06 /home/anna_ford/.local/share/pi-node/node-v22.23.2-linux-x64/bin/node --import file:///home/anna_ford/.pi/agent/npm/node_modules/pi-subagents/runner-peer-preload.mjs /home/anna_ford/.pi/agent/npm/node_modules/pi-subagents/src/runs/background/subagent-runner-bootstrap.js /tmp/pi-subagents-uid-1000/async-cfg-27e8e24a-2eba-4ac2-9fd9-9a6ea663353e.json
+anna_fo+   37895  0.8  2.4 22375964 190444 pts/0 Sl+  03:46   2:14 pi
+anna_fo+   37348  0.6  2.6 22462256 206680 pts/2 Sl+  02:48   2:01 pi
+root       55717  0.3  0.1 1792300 14740 ?       Ssl  07:58   0:00 /usr/libexec/wsl-pro-service
+root           6  0.2  0.0   4624  2880 hvc0     Sl+  Nov05   1:29 plan9 --control-socket 7 --log-level 4 --server-fd 8 --pipe-fd 10 --log-truncate
+root          86  0.1  0.1  35304 12356 ?        Ss   Nov05   0:47 /usr/lib/systemd/systemd-udevd
+root          46  0.0  0.2  50420 17288 ?        S<s  Nov05   0:15 /usr/lib/systemd/systemd-journald
+root         312  0.0  0.0   3200  1248 ?        S    Nov05   0:12 /init
+--- pre-run leftover GMAT processes ---
+(none)
+               total        used        free      shared  buff/cache   available
+Mem:           7.6Gi       1.4Gi       5.4Gi       475Mi       1.4Gi       6.1Gi
+Swap:          2.0Gi          0B       2.0Gi
+xvfb_display=:90 xvfb_pid=56048
+--- result ---
+exit_code=0   (0=clean exit, 124=timeout/stuck, 139=SIGSEGV, 134=SIGABRT)
+wall_seconds=1.725924072
+stdout_lines=281
+font_error_lines=210
+--- GMAT log run-time / completion markers ---
+Mission run completed.
+===> Total Run Time: 0.800 seconds
+--- stdout segfault/abort markers ---
+(none)
+--- peak RSS observed in snapshots (MB) ---
+0
+--- post-run leftover GMAT processes ---
+(none)

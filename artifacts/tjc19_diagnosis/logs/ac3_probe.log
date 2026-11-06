@@ -1,0 +1,46 @@
+idle check before timing: 08:04:24 up  8:23,  1 user,  load average: 1.68, 0.75, 0.30
+
+=== variant_a_single_orbitview.script ===
+  elapsed_s      = 6.49
+  attempted      = True
+  captured       = True
+  png_bytes      = 201565
+  gmat_returncode= [-15] (-15=SIGTERM from terminate(), -9=SIGKILL, -11=SIGSEGV)
+  reason         = captured a non-blank 1024x768 GMAT GUI render of the real GMAT application window under the self-managed Xvfb display (:90).
+  leftover_procs = PID STAT COMMAND
+
+=== variant_b_two_orbitviews.script ===
+  elapsed_s      = 6.50
+  attempted      = True
+  captured       = True
+  png_bytes      = 114317
+  gmat_returncode= [-15] (-15=SIGTERM from terminate(), -9=SIGKILL, -11=SIGSEGV)
+  reason         = captured a non-blank 1024x768 GMAT GUI render of the real GMAT application window under the self-managed Xvfb display (:90).
+  leftover_procs = PID STAT COMMAND
+
+=== variant_c_full_tjc18.script ===
+  elapsed_s      = 6.36
+  attempted      = True
+  captured       = True
+  png_bytes      = 72397
+  gmat_returncode= [-15] (-15=SIGTERM from terminate(), -9=SIGKILL, -11=SIGSEGV)
+  reason         = captured a non-blank 1024x768 GMAT GUI render of the real GMAT application window under the self-managed Xvfb display (:90).
+  leftover_procs = PID STAT COMMAND
+
+=== variant_d_xyplot_no_markpoint.script ===
+  elapsed_s      = 6.43
+  attempted      = True
+  captured       = True
+  png_bytes      = 72304
+  gmat_returncode= [-15] (-15=SIGTERM from terminate(), -9=SIGKILL, -11=SIGSEGV)
+  reason         = captured a non-blank 1024x768 GMAT GUI render of the real GMAT application window under the self-managed Xvfb display (:90).
+  leftover_procs = PID STAT COMMAND
+
+=== variant_e_one_orbitview_xyplot.script ===
+  elapsed_s      = 6.36
+  attempted      = True
+  captured       = True
+  png_bytes      = 71865
+  gmat_returncode= [-15] (-15=SIGTERM from terminate(), -9=SIGKILL, -11=SIGSEGV)
+  reason         = captured a non-blank 1024x768 GMAT GUI render of the real GMAT application window under the self-managed Xvfb display (:90).
+  leftover_procs = PID STAT COMMAND

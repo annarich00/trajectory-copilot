@@ -29,3 +29,8 @@ artifacts/visualization/*
 # scripts/ReportFile logs/trajectory plots into; only the parsed
 # case_*_workflow_result.json files (committed) are the durable evidence.
 evaluations/baseline_comparison/workflow_artifacts/
+
+# TJC-19: the AC3 probe regenerates these PNG captures on demand
+# (artifacts/tjc19_diagnosis/ac3_screenshot_probe.py); the committed evidence is
+# the diagnosis README, the variant scripts, and the logs/trial_results.txt table.
+artifacts/tjc19_diagnosis/ac3_captures/
