@@ -102,7 +102,7 @@ def test_rendezvous_prompt_reports_artifacts_in_pipeline_order_and_keeps_existin
     assert "not_generated" in PROMPT and "`reason`" in PROMPT
     # Pre-existing constraints, unchanged.
     for kept in (
-        "Apply the `orbital-problem-formalizer` skill.",
+        "then call the\n   `formalize_rendezvous_problem` pi tool",
         "Do not solve anything or call any Python in this step.",
         "`src/workflow.py::run_rendezvous_workflow(...)` directly with",
         "./GMAT-R2026a -r <path to the generated GUI preview script>",

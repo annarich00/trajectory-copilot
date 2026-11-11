@@ -581,8 +581,9 @@ def unsupported_cw_rendezvous_request(request: str) -> UnsupportedCWRequest:
             "chief, CR3BP, n-body)."
         ),
         recommended_next_step=(
-            "Use the orbital-problem-formalizer and orbital-model-selector skills to restate "
-            "the request as a fixed-duration local CW case or route it to the bounded two-body "
-            "coast fallback (src/twobody.py); otherwise return it for human review as unsupported."
+            "Use the formalize_rendezvous_problem pi tool and the orbital-model-selector "
+            "skill to restate the request as a fixed-duration local CW case or route it "
+            "to the bounded two-body coast fallback (src/twobody.py); otherwise return it "
+            "for human review as unsupported."
         ),
     )

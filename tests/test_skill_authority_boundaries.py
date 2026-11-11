@@ -18,6 +18,17 @@ already enforce this invariant in code (see
 ``tests/test_verification_report.py``'s ``...raises`` tests); this module
 closes the remaining gap by checking the natural-language skill layer itself,
 which is not Python and so cannot be covered by those code-level tests.
+
+``orbital-problem-formalizer``'s SKILL.md was retired by TJC-23.2: its
+never-solve/never-invent authority boundary is no longer prose an LLM must
+follow voluntarily -- it is now structurally enforced by the registered
+``formalize_rendezvous_problem`` pi tool (``formalizer.ts``'s
+``validateFormalization``), which has no code path that computes a numeric
+orbital state or burn, only validation and Markdown rendering of a
+caller-supplied, already-reasoned specification. That tool is exercised
+directly by ``formalizer.test.ts`` (TJC-23.2's own red/green coverage, not
+duplicated here), so it is no longer part of this module's prose-only
+skill-layer coverage.
 """
 
 from pathlib import Path
@@ -26,10 +37,12 @@ import pytest
 
 SKILLS_DIR = Path(__file__).parents[1] / ".pi/skills"
 
-FORMALIZER = SKILLS_DIR / "orbital-problem-formalizer/SKILL.md"
 MODEL_SELECTOR = SKILLS_DIR / "orbital-model-selector/SKILL.md"
 TWO_BODY = SKILLS_DIR / "orbital-two-body-rendezvous/SKILL.md"
 
+# orbital-problem-formalizer's SKILL.md was retired by TJC-23.2: see the
+# module docstring above.
+#
 # orbital-targeting-planner's SKILL.md was retired by TJC-23.4: its
 # deterministic CW two-impulse targeting handoff is now the registered
 # solve_cw_rendezvous pi tool (.pi/extensions/cw-rendezvous-tool), not a
@@ -40,23 +53,13 @@ TWO_BODY = SKILLS_DIR / "orbital-two-body-rendezvous/SKILL.md"
 # verification is actually performed by the registered run_gmat_verification
 # pi tool (.pi/extensions/gmat-verification-tool), not by that unused skill,
 # so it too is no longer part of this module's coverage.
-ALL_SKILLS = (FORMALIZER, MODEL_SELECTOR, TWO_BODY)
+ALL_SKILLS = (MODEL_SELECTOR, TWO_BODY)
 
 
 def test_every_referenced_skill_file_exists():
     """Guard against a stale path if a skill is ever renamed or moved."""
     for skill in ALL_SKILLS:
         assert skill.is_file(), f"missing skill file: {skill}"
-
-
-def test_formalizer_never_solves_or_invents_a_numerical_result():
-    """The formalizer (the first LLM-facing stage) must restate the request as
-    structured data without ever producing a numeric orbital state or burn."""
-    text = FORMALIZER.read_text()
-    assert "Never solve, derive a numerical value, select a model, or prescribe burns." in text
-    assert "do not calculate a numerical result" in text
-    assert "do not solve or calculate values" in text
-    assert "Do not invent altitude, gravitational parameter, circularity, LVLH convention" in text
 
 
 def test_model_selector_only_selects_a_named_deterministic_tool_and_never_computes_physics():

@@ -5,7 +5,7 @@ rendezvous workflow, after the thin CW/GMAT vertical slice
 (``scripts/run_cw_gmat_slice.py``) proved out the CW-to-GMAT path on its own:
 
 1. ``RendezvousCase.readiness`` records whether the already-formalized
-   structured case (the ``orbital-problem-formalizer`` skill's output,
+   structured case (the ``formalize_rendezvous_problem`` pi tool's output,
    restated here as data rather than Markdown) is ``READY_TO_SOLVE``,
    ``NEEDS_CLARIFICATION``, or ``OUT_OF_SCOPE``. A non-``READY_TO_SOLVE``
    case short-circuits immediately: no model selection, no CW/two-body
@@ -87,12 +87,12 @@ TWO_BODY_DEFAULT_TOLERANCES = {"position_m": 1.0, "velocity_mps": 0.001}
 class RendezvousCase:
     """One already-formalized structured rendezvous request.
 
-    This is the Python-side restatement of the ``orbital-problem-formalizer``
-    skill's Markdown output (``.pi/skills/orbital-problem-formalizer/SKILL.md``):
-    the skill itself is prompt-driven, not Python code, so this dataclass is
-    the structured-case representation this module's deterministic workflow
+    This is the Python-side restatement of the ``formalize_rendezvous_problem``
+    pi tool's Markdown output (``.pi/extensions/orbital-problem-formalizer-tool/``):
+    that tool renders a validated specification rather than Python code, so this
+    dataclass is the structured-case representation this module's deterministic workflow
     actually consumes. ``readiness``/``clarification_questions`` mirror that
-    skill's ``### Readiness``/``### Clarification Questions`` sections;
+    tool's ``### Readiness``/``### Clarification Questions`` sections;
     ``model_selection_case`` carries the already-reviewed assumption items
     ``src/model_selector.py::select_model`` requires.
     """

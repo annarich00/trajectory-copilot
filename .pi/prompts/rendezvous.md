@@ -5,10 +5,14 @@ argument-hint: "<natural-language rendezvous request>"
 A rendezvous request follows. Run it through the complete required pipeline,
 in this exact order, and do not skip, reorder, or silently combine any step:
 
-1. Apply the `orbital-problem-formalizer` skill. Produce its full required
-   Markdown output (Scope through Readiness). The formalizer itself is
-   scoped only to two-spacecraft LVLH-relative rendezvous requests, so a
-   single-spacecraft inertial-Cartesian coast request (no second
+1. Reason over the request yourself to derive each formalization field's
+   value and provenance label (specified/derived/assumed/missing/ambiguous/
+   contradictory/unit-inconsistent/out of scope), then call the
+   `formalize_rendezvous_problem` pi tool (registered by
+   `.pi/extensions/orbital-problem-formalizer-tool/`) with those field
+   values to validate and render its full required output (Scope through
+   Readiness). The formalizer itself is scoped only to two-spacecraft
+   LVLH-relative rendezvous requests, so a single-spacecraft inertial-Cartesian coast request (no second
    spacecraft, no relative frame, no targeting objective) correctly comes
    back `OUT OF SCOPE` *for the formalizer* -- in that specific case,
    proceed anyway, directly to the `orbital-two-body-rendezvous` skill via

@@ -1,7 +1,21 @@
+"""Checks the formalizer's required output schema and provenance labels.
+
+``.pi/skills/orbital-problem-formalizer/SKILL.md`` was retired by TJC-23.2:
+the formalizer's required Markdown schema and provenance vocabulary are now
+enforced by the registered ``formalize_rendezvous_problem`` pi tool
+(``.pi/extensions/orbital-problem-formalizer-tool/``), specifically its
+deterministic core ``formalizer.ts``. This module checks that source file
+(not a model run) for the same required schema headings, field names, and
+provenance labels the retired skill documented, plus the evaluation fixtures
+that illustrate end-to-end formalizer behavior unchanged by this migration.
+"""
+
 from pathlib import Path
 
 
-SKILL = Path(__file__).parents[1] / ".pi/skills/orbital-problem-formalizer/SKILL.md"
+FORMALIZER_TS = (
+    Path(__file__).parents[1] / ".pi/extensions/orbital-problem-formalizer-tool/formalizer.ts"
+)
 EVALUATIONS = Path(__file__).parents[1] / "evaluations/formalizer"
 
 
@@ -20,10 +34,10 @@ REQUIRED_SCHEMA_HEADINGS = (
 
 
 def test_formalizer_schema_requires_scoped_inputs_and_provenance():
-    skill = SKILL.read_text()
+    formalizer_ts = FORMALIZER_TS.read_text()
 
     for heading in REQUIRED_SCHEMA_HEADINGS:
-        assert heading in skill
+        assert heading in formalizer_ts
     for field in (
         "Central body",
         "Altitude",
@@ -36,17 +50,17 @@ def test_formalizer_schema_requires_scoped_inputs_and_provenance():
         "Maneuver assumptions",
         "Requested outputs",
     ):
-        assert field in skill
+        assert field in formalizer_ts
     for label in (
-        "`specified`",
-        "`derived`",
-        "`assumed`",
-        "`missing`",
-        "`ambiguous`",
-        "`contradictory`",
-        "`unit-inconsistent`",
+        "specified",
+        "derived",
+        "assumed",
+        "missing",
+        "ambiguous",
+        "contradictory",
+        "unit-inconsistent",
     ):
-        assert label in skill
+        assert f'"{label}"' in formalizer_ts
 
 
 def test_complete_scoped_request_has_no_blocking_issue():
