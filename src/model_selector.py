@@ -1,7 +1,8 @@
 """Assumption-based CW-versus-two-body model selection.
 
 This module implements the deterministic *combination* step described in
-``reference/SOURCE.md`` §D and ``.pi/skills/orbital-model-selector/SKILL.md``:
+``reference/SOURCE.md`` §D and the retired ``.pi/skills/orbital-model-selector/SKILL.md``
+(now the ``select_rendezvous_model`` pi tool, ``.pi/extensions/orbital-model-selector-tool/``):
 once a structured rendezvous case has recorded its physical assumptions, this
 module decides which of the two scoped deterministic implementations
 (``src/cw.py`` or ``src/twobody.py``) applies, or whether the case needs more
@@ -132,7 +133,9 @@ class ModelSelectionResult:
     """Assumption-based model-selection outcome.
 
     ``selection`` is restricted to the four semester-scoped outcomes named in
-    ``.pi/skills/orbital-model-selector/SKILL.md``. ``qualified`` is ``True``
+    the retired ``.pi/skills/orbital-model-selector/SKILL.md`` (now the
+    ``select_rendezvous_model`` pi tool, ``.pi/extensions/orbital-model-selector-tool/``).
+    ``qualified`` is ``True``
     only for a boundary/ambiguous CW case: the selection is still "CW
     rendezvous", but at least one required or supporting assumption is
     marginal rather than clearly supported, so the result and its

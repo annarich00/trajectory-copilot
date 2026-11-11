@@ -3,7 +3,6 @@
 SHA-256 checksums for files copied from `/home/anna_ford/trajectory-copilot`. Paths are relative to that source directory.
 
 ```text
-82ce240388752a6c4cfc59511c53c597a837912e813cc3d6bdf1dff6db8e4667  .pi/skills/orbital-model-selector/SKILL.md
 b29327bab684808ac46049dcf3010230ae0cf41b37e7aefd8dfb56ac8ab04c7b  .pi/skills/orbital-problem-formalizer/SKILL.md
 f5b5e4c62fa5b35dfc492efb41318bc8709de599e4bfe49faa3fb9fdb0197b7b  evaluations/formalizer/test_01_underspecified.txt
 8f3c2ce177203eac8232b30c398f8bec0f47a5f2698a52c9a0171eca11ed1cba  evaluations/formalizer/test_02_cw_complete.txt
