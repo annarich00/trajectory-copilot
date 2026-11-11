@@ -44,13 +44,13 @@ shortcut straight to a solver module:
 orbital-problem-formalizer -> orbital-model-selector ->
 `src/workflow.py::run_rendezvous_workflow` -> GMAT verification.
 
-`.pi/prompts/rendezvous.md` is the single source of truth for the exact,
+`.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md` is the single source of truth for the exact,
 detailed steps and wording of this pipeline; read it rather than relying on
 this summary, and do not duplicate or fork its step text here. This section
 only exists to make the same ordering binding even when `/rendezvous` itself
 was not typed.
 
-Stop condition (mirrors `.pi/prompts/rendezvous.md` step 1): if the
+Stop condition (mirrors `.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md` step 1): if the
 `orbital-problem-formalizer` result is `NEEDS CLARIFICATION` or genuinely
 `OUT OF SCOPE` (not `READY TO SOLVE`), halt there -- report that result and do
 not proceed to model selection or to any solver call.

@@ -1,8 +1,10 @@
-"""Static guard for the GMAT-example review step in ``.pi/prompts/rendezvous.md`` (TJC-15).
+"""Static guard for the GMAT-example review step in the rendezvous orchestration
+skill ``.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md`` (TJC-15, re-expressed
+from the retired ``.pi/prompts/rendezvous.md`` by TJC-23.6).
 
-No model is run. These tests read the committed prompt and check that the new
-step sits after the GMAT tool call and before the final outcome report, that it
-hands the generated script and mission type to the ``gmat-example-reviewer``
+No model is run. These tests read the committed skill instructions and check that
+the new step sits after the GMAT tool call and before the final outcome report,
+that it hands the generated script and mission type to the ``gmat-example-reviewer``
 subagent, that its verdict is advisory/stylistic only (never changes
 FAIL/VERIFIED), that an unavailable/erroring subagent is reported as
 skipped/unavailable without blocking the numerical result, and that the
@@ -15,14 +17,14 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PROMPT = (ROOT / ".pi/prompts/rendezvous.md").read_text()
+PROMPT = (ROOT / ".pi/skills/rendezvous-pipeline-orchestrator/SKILL.md").read_text()
 
 
 def _step(number: int) -> str:
     """Return the text of top-level numbered step ``number`` (column-0 ``N. ``)."""
-    pattern = re.compile(rf"^{number}\. (.*?)(?=^\d+\. |^Request:)", re.DOTALL | re.MULTILINE)
+    pattern = re.compile(rf"^{number}\. (.*?)(?=^\d+\. |\Z)", re.DOTALL | re.MULTILINE)
     match = pattern.search(PROMPT)
-    assert match, f"step {number} not found in rendezvous prompt"
+    assert match, f"step {number} not found in rendezvous skill"
     return match.group(0)
 
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Generate one TJC-16 visualization artifact for a CW rendezvous pipeline stage (TJC-16.5).
 
-``.pi/prompts/rendezvous.md`` runs the CW GMAT step through the separate
+``.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md`` runs the CW GMAT step through the separate
 ``run_gmat_verification`` pi tool rather than ``run_rendezvous_workflow``, so
-that prompt calls this CLI between its visible steps to produce and report each
+that skill calls this CLI between its visible steps to produce and report each
 artifact as soon as its stage completes:
 
 - ``scene``: after model selection, BEFORE the GMAT-verification step;

@@ -1,7 +1,7 @@
 """Stage-boundary visualization artifacts for the rendezvous workflow (TJC-16.5).
 
 Thin glue between ``src/workflow.py`` (and ``scripts/rendezvous_visualization_stage.py``,
-used by ``.pi/prompts/rendezvous.md``) and the already-built plots:
+used by ``.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md``) and the already-built plots:
 
 - ``scene_stage``: TJC-16.2 interactive 3D relative-position scene
   (``src/visualization.py``), generated after formalization/model selection and

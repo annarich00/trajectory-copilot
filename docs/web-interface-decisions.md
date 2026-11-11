@@ -37,7 +37,8 @@ Backlog tasks for it; do not reopen TJC-16.5.
 - **TJC-16 (parent) and TJC-16.1 to 16.5 are Done and are the foundation.**
   TJC-16.2 (3D scene), TJC-16.3 (trajectory/burns plot) and TJC-16.4
   (comparison plot) produce the artifacts. TJC-16.5 wired them into
-  `src/workflow.py::run_rendezvous_workflow` and `.pi/prompts/rendezvous.md`
+  `src/workflow.py::run_rendezvous_workflow` and
+  `.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md`
   so each artifact path is reported live in the terminal as its stage
   finishes (`on_artifact` callback, `artifacts["visualization_artifacts"]`,
   `scripts/rendezvous_visualization_stage.py`).
@@ -60,7 +61,8 @@ Backlog tasks for it; do not reopen TJC-16.5.
 
 ## Fixed pipeline the interface must reflect
 
-Source of truth for step wording and order: `.pi/prompts/rendezvous.md`. Do not
+Source of truth for step wording and order:
+`.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md`. Do not
 duplicate or fork its step text. In order:
 
 1. `orbital-problem-formalizer` (stop if `NEEDS CLARIFICATION` or genuinely `OUT OF SCOPE`)
@@ -121,7 +123,7 @@ These may be mentioned as future work.
 - **Saved-run format** must hold: ordered steps, each step's status, artifact paths/metadata, structured results, raw agent events/tool calls (for developer mode), and an optional stop state with an optional continuation (for the clarification branch).
 - **Structured data for templates.** GMAT results (`verified`, `verification_status`, `failure_mode`, `unified_verification_report`) and artifact paths are already JSON. The formalizer and model-selector outputs are Markdown prose. Decide whether to parse that Markdown or have those skills also emit a structured block. Until decided, show their text verbatim next to the templated explanation. Any change to skill output must keep `evaluations/` behavior intact.
 - **Template honesty.** Templates must state limits the way the course page does (for example: the 3D target placement is illustrative; one case, run once; PASS means within the stated tolerances, not a proof). Do not write physics claims the code or reports do not support.
-- **Not-generated stages.** A stage with status `not_generated` must be displayed as such with its `reason`. Never substitute another plot (see `.pi/prompts/rendezvous.md`).
+- **Not-generated stages.** A stage with status `not_generated` must be displayed as such with its `reason`. Never substitute another plot (see `.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md`).
 - **Failure vocabulary.** Reuse the existing statuses and failure modes from `src/gmat_verify.py` and `src/verification_report.py` (PASS/WARNING/FAIL/INCOMPLETE; MISSING_GMAT, EXECUTION_ERROR, MALFORMED_OUTPUT, NUMERICAL_DISAGREEMENT, SCREENSHOT_FAILURE, CW_TARGETING_INFEASIBLE). Do not invent new ones.
 - **Live agent tools.** Even for a local demo, restrict the live agent to workflow tools (formalizer, selector, workflow scripts, `run_gmat_verification`). Do not expose general shell access through the web UI.
 - **Do not modify** `src/workflow.py::run_rendezvous_workflow` behavior to suit the UI; the UI consumes existing outputs.

@@ -1,7 +1,9 @@
 """Tests for scripts/rendezvous_visualization_stage.py (TJC-16.5).
 
-The thin CLI that ``.pi/prompts/rendezvous.md`` calls between its visible steps,
-so each visualization artifact path can be reported as soon as it exists even
+The thin CLI that ``.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md`` (the
+rendezvous orchestration skill TJC-23.6 re-expressed from the retired
+``.pi/prompts/rendezvous.md``) calls between its visible steps, so each
+visualization artifact path can be reported as soon as it exists even
 though the CW GMAT step runs through the separate ``run_gmat_verification`` pi
 tool rather than ``run_rendezvous_workflow``. It holds no plotting or physics
 logic; it forwards to ``src/workflow_visualization.py``.
@@ -86,11 +88,11 @@ def test_cli_entrypoint_runs_as_a_script(tmp_path):
     assert json.loads(completed.stdout)["status"] == "generated"
 
 
-PROMPT = (ROOT / ".pi/prompts/rendezvous.md").read_text()
+PROMPT = (ROOT / ".pi/skills/rendezvous-pipeline-orchestrator/SKILL.md").read_text()
 
 
 def test_rendezvous_prompt_reports_artifacts_in_pipeline_order_and_keeps_existing_constraints():
-    """TJC-16.5 AC4/AC5: the prompt names each stage CLI in pipeline order (scene, trajectory,
+    """TJC-16.5 AC4/AC5: the skill names each stage CLI in pipeline order (scene, trajectory,
     run_gmat_verification, comparison) and keeps its pre-existing step/handoff wording."""
     positions = [
         PROMPT.index("rendezvous_visualization_stage.py scene"),

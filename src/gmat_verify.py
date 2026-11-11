@@ -854,8 +854,9 @@ def attempt_gmat_gui_screenshot(
     environment should say so directly and give the user the exact command
     to run themselves, in their own terminal (outside the sandbox, where
     real GPU/display access exists), rather than attempting launches that
-    are already known not to work -- see ``.pi/prompts/rendezvous.md``'s
-    step 5 for the exact required response shape.
+    are already known not to work -- see
+    ``.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md``'s step 5 for the
+    exact required response shape.
     """
     explicit_display = display is not None
     managed_xvfb: _ManagedXvfbDisplay | None = None
