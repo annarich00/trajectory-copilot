@@ -15,8 +15,10 @@ in this exact order, and do not skip, reorder, or silently combine any step:
    LVLH-relative rendezvous requests, so a single-spacecraft inertial-Cartesian coast request (no second
    spacecraft, no relative frame, no targeting objective) correctly comes
    back `OUT OF SCOPE` *for the formalizer* -- in that specific case,
-   proceed anyway, directly to the `orbital-two-body-rendezvous` skill via
-   step 2's model selection, per `reference/SOURCE.md` §C and
+   proceed anyway, directly to step 2's model selection and, once it selects
+   `bounded two-body fallback`, the registered `propagate_two_body_coast`
+   pi tool (`.pi/extensions/two-body-rendezvous-tool/`), per
+   `reference/SOURCE.md` §C and
    `evaluations/benchmark/case_c_two_body.json`'s own committed precedent.
    For every other `NEEDS CLARIFICATION` or genuinely out-of-scope case
    (not a single-spacecraft coast), stop here and report that status --

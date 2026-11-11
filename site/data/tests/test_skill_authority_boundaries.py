@@ -29,16 +29,30 @@ caller-supplied, already-reasoned specification. That tool is exercised
 directly by ``formalizer.test.ts`` (TJC-23.2's own red/green coverage, not
 duplicated here), so it is no longer part of this module's prose-only
 skill-layer coverage.
+
+``orbital-two-body-rendezvous``'s SKILL.md was retired by TJC-23.5: its
+never-improvise-a-rejected-input and never-claim-burn-targeting/maneuver/
+optimization authority boundaries are no longer prose an LLM must follow
+voluntarily -- the input-rejection half is now structurally enforced by
+``scripts/two_body_tool_bridge.py``'s ``run_bridge`` propagating
+``propagate_cartesian_state``'s own ``ValueError`` unchanged (non-finite
+inputs, non-positive mu/steps, the zero-radius singularity), exercised
+directly by ``tests/test_two_body_tool_bridge.py``'s
+``test_run_bridge_rejects_invalid_inputs_without_improvising_a_result``
+(TJC-23.5's own red/green coverage, not duplicated here). The
+never-claim-unsupported-capabilities and GMAT-verification-handoff halves
+are now carried by the registered ``propagate_two_body_coast`` pi tool's
+own ``description``/``promptGuidelines`` strings
+(``.pi/extensions/two-body-rendezvous-tool/index.ts``) rather than a
+Markdown skill file, so they too are no longer part of this module's
+prose-only skill-layer coverage.
 """
 
 from pathlib import Path
 
-import pytest
-
 SKILLS_DIR = Path(__file__).parents[1] / ".pi/skills"
 
 MODEL_SELECTOR = SKILLS_DIR / "orbital-model-selector/SKILL.md"
-TWO_BODY = SKILLS_DIR / "orbital-two-body-rendezvous/SKILL.md"
 
 # orbital-problem-formalizer's SKILL.md was retired by TJC-23.2: see the
 # module docstring above.
@@ -53,7 +67,10 @@ TWO_BODY = SKILLS_DIR / "orbital-two-body-rendezvous/SKILL.md"
 # verification is actually performed by the registered run_gmat_verification
 # pi tool (.pi/extensions/gmat-verification-tool), not by that unused skill,
 # so it too is no longer part of this module's coverage.
-ALL_SKILLS = (MODEL_SELECTOR, TWO_BODY)
+#
+# orbital-two-body-rendezvous's SKILL.md was retired by TJC-23.5: see the
+# module docstring above.
+ALL_SKILLS = (MODEL_SELECTOR,)
 
 
 def test_every_referenced_skill_file_exists():
@@ -74,23 +91,9 @@ def test_model_selector_only_selects_a_named_deterministic_tool_and_never_comput
     assert "Do not declare CW valid from a single fixed percentage, orbit count, or\nlearned threshold." in text
 
 
-def test_two_body_skill_requires_the_deterministic_implementation_and_refuses_to_improvise():
-    """The bounded two-body fallback skill must call src/twobody.py's
-    deterministic implementation and must not improvise a result for rejected
-    inputs or claim unsupported capabilities (targeting, burns, optimization)."""
-    text = TWO_BODY.read_text()
-    assert "Use `src/twobody.py::TwoBodyCase` and\n   `propagate_cartesian_state`" in text
-    assert "do not improvise a result." in text
-    assert "Do not claim burn targeting, maneuver execution, optimization, thrust," in text
-
-
-@pytest.mark.parametrize("skill", (TWO_BODY,))
-def test_every_solver_skill_hands_off_to_gmat_verification_before_pass(skill):
-    """The remaining deterministic-solver-calling skill explicitly states
-    that a result is never PASS without the separate GMAT verification
-    handoff (the registered ``run_gmat_verification`` pi tool, TJC-23.1) --
-    a solver skill's own candidate output is never, by itself, an
-    authoritative/verified result."""
-    text = skill.read_text()
-    assert "run_gmat_verification" in text
-    assert "never" in text.lower() or "not PASS" in text or "not verified" in text.lower()
+# test_two_body_skill_requires_the_deterministic_implementation_and_refuses_to_improvise
+# and the two-body case of test_every_solver_skill_hands_off_to_gmat_verification_before_pass
+# were retired along with orbital-two-body-rendezvous/SKILL.md by TJC-23.5: see
+# the module docstring above for where their invariants now live. No skill
+# remains in this module's deterministic-solver-calling category, so this
+# module keeps no parametrized hands-off-to-GMAT test either.
