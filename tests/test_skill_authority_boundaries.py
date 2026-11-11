@@ -28,11 +28,15 @@ SKILLS_DIR = Path(__file__).parents[1] / ".pi/skills"
 
 FORMALIZER = SKILLS_DIR / "orbital-problem-formalizer/SKILL.md"
 MODEL_SELECTOR = SKILLS_DIR / "orbital-model-selector/SKILL.md"
-CW_TARGETING = SKILLS_DIR / "orbital-targeting-planner/SKILL.md"
 TWO_BODY = SKILLS_DIR / "orbital-two-body-rendezvous/SKILL.md"
 GMAT_VERIFICATION = SKILLS_DIR / "gmat-rendezvous-verification/SKILL.md"
 
-ALL_SKILLS = (FORMALIZER, MODEL_SELECTOR, CW_TARGETING, TWO_BODY, GMAT_VERIFICATION)
+# orbital-targeting-planner's SKILL.md was retired by TJC-23.4: its
+# deterministic CW two-impulse targeting handoff is now the registered
+# solve_cw_rendezvous pi tool (.pi/extensions/cw-rendezvous-tool), not a
+# prompt-driven skill, so it is no longer part of this module's LLM-facing
+# skill-layer authority-boundary coverage.
+ALL_SKILLS = (FORMALIZER, MODEL_SELECTOR, TWO_BODY, GMAT_VERIFICATION)
 
 
 def test_every_referenced_skill_file_exists():
@@ -63,20 +67,6 @@ def test_model_selector_only_selects_a_named_deterministic_tool_and_never_comput
     assert "Do not declare CW valid from a single fixed percentage, orbit count, or\nlearned threshold." in text
 
 
-def test_cw_targeting_skill_requires_the_deterministic_implementation_and_refuses_to_invent_inputs():
-    """The CW-targeting skill must call src/cw.py's deterministic implementation
-    for every numeric result and must not improvise inputs or substitute a
-    least-squares approximation for a rejected singular transfer time."""
-    text = CW_TARGETING.read_text()
-    assert "Use `src/cw.py::mean_motion` and `two_burn_targeting`" in text
-    assert "Do not invent any missing input or coordinate convention." in text
-    assert (
-        "Treat `CWSingularTransferError` as a rejected transfer time, not a reason\n"
-        "   to approximate with a least-squares solution."
-    ) in text
-    assert "Report the two impulses and final state only as a CW result under the\n   recorded assumptions." in text
-
-
 def test_two_body_skill_requires_the_deterministic_implementation_and_refuses_to_improvise():
     """The bounded two-body fallback skill must call src/twobody.py's
     deterministic implementation and must not improvise a result for rejected
@@ -87,7 +77,7 @@ def test_two_body_skill_requires_the_deterministic_implementation_and_refuses_to
     assert "Do not claim burn targeting, maneuver execution, optimization, thrust," in text
 
 
-@pytest.mark.parametrize("skill", (CW_TARGETING, TWO_BODY))
+@pytest.mark.parametrize("skill", (TWO_BODY,))
 def test_every_solver_skill_hands_off_to_gmat_verification_before_pass(skill):
     """Both deterministic-solver-calling skills explicitly state that a result
     is never PASS without the separate GMAT verification handoff -- a solver

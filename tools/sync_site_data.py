@@ -38,7 +38,6 @@ MAPPINGS = {
     "tests/test_skill_authority_boundaries.py": "site/data/tests/test_skill_authority_boundaries.py",
     ".pi/skills/orbital-problem-formalizer/SKILL.md": "site/data/skills/formalizer.SKILL.md",
     ".pi/skills/orbital-model-selector/SKILL.md": "site/data/skills/model-selector.SKILL.md",
-    ".pi/skills/orbital-targeting-planner/SKILL.md": "site/data/skills/targeting-planner.SKILL.md",
     ".pi/skills/orbital-two-body-rendezvous/SKILL.md": "site/data/skills/two-body-rendezvous.SKILL.md",
     ".pi/skills/gmat-rendezvous-verification/SKILL.md": "site/data/skills/gmat-verification.SKILL.md",
     "examples/geo_failure_case.yaml": "site/data/examples/geo_failure_case.yaml",
