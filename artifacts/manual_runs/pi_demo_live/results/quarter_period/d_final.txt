@@ -1,0 +1,2 @@
+Deputy.ElapsedSecs        Deputy.LVLH.X             Deputy.LVLH.Y             Deputy.LVLH.Z             Deputy.LVLH.VX            Deputy.LVLH.VY            Deputy.LVLH.VZ            
+1388.406068086624         0.0001467954689500873     -0.0001299726490612313    -3.528631354914475e-16    1.334024510430556e-07     -2.667655205648744e-07    -7.815946202750889e-19    

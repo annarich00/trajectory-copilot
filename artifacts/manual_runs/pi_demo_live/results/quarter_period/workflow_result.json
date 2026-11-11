@@ -1,0 +1,126 @@
+{
+  "case_id": "pi_demo_quarter_period_cw",
+  "readiness": "READY_TO_SOLVE",
+  "outcome": "VERIFIED",
+  "verified": true,
+  "verification_status": "VERIFIED",
+  "clarification_questions": [],
+  "model_selection": {
+    "selection": "CW rendezvous",
+    "qualified": false,
+    "reasons": [
+      "All required CW assumptions (circularity, locality, duration/regime, frame, other physics, maneuver assumptions) are supported."
+    ],
+    "assumptions": [
+      "circularity: supported",
+      "locality: supported",
+      "duration_regime: supported",
+      "frame: supported",
+      "other_physics: supported",
+      "maneuver_assumptions: supported"
+    ],
+    "concerns": [],
+    "deterministic_tool": "src.cw.two_burn_targeting",
+    "missing_items": []
+  },
+  "unified_verification_report": {
+    "case_id": "pi_demo_quarter_period_cw",
+    "run_id": "pi_demo_quarter_period_cw-20261030T230554Z",
+    "gmat": {
+      "executable": "/home/anna_ford/opt/GMAT/R2026a/bin/GmatConsole-R2026a",
+      "version_banner": "\n********************************************\n***  GMAT Console Application\n********************************************\n\nGeneral Mission Analysis Tool\nConsole Based Version\nBuild Date: Mar 30 2026  10:09:27\n\n\nGMAT working directory set to '/home/anna_ford/opt/GMAT/R2026a/bin/'\nModerator is updating data files...\nModerator is creating core engine...\n\nlibpython3.12.so.1.0: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libPythonInterface_py312\" did not open.\n\nlibmex.so: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libMatlabInterface\" did not open.\nSkipping \"../plugins/libOpenFramesInterface\": GUI plugins are skipped in console mode\n\nlibOpenFramesInterface.so.R2026a: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libOVtoOFI\" did not open.\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSetting nutation file to ../data/planetary_coeff/NUTATION.DAT\nSetting leap seconds file to ../data/time/tai-utc.dat\n2026-10-30 19:06:01 GMAT Moderator successfully created core engine\n\n\nBuild Date: Mar 30 2026  10:09:27\n\nModerator is deleting core engine...\n",
+      "attempted": true,
+      "exit_status": 0,
+      "reason": "GMAT exited successfully."
+    },
+    "solver": {
+      "name": "clohessy-wiltshire-linearized-fixed-duration-two-impulse",
+      "status": "unique",
+      "feasible": true,
+      "reason": "Phi_rv is well-conditioned; returned the unique inverse solution."
+    },
+    "comparison": {
+      "cw_final_state_m_mps": [
+        -2.914643875594934e-14,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gmat_final_state_m_mps": [
+        0.1467954689500873,
+        -0.12997264906123132,
+        -3.5286313549144746e-13,
+        0.0001334024510430556,
+        -0.00026676552056487443,
+        -7.815946202750889e-16
+      ],
+      "units": [
+        [
+          "position",
+          "m"
+        ],
+        [
+          "velocity",
+          "m/s"
+        ],
+        [
+          "time",
+          "s"
+        ],
+        [
+          "mean_motion",
+          "rad/s"
+        ],
+        [
+          "delta_v",
+          "m/s"
+        ],
+        [
+          "gravitational_parameter",
+          "m^3/s^2"
+        ]
+      ],
+      "tolerances": {
+        "position_m": 1.0,
+        "velocity_mps": 0.001,
+        "delta_v_mps": 0.001
+      },
+      "position_error_m": 0.19606580326073844,
+      "velocity_error_mps": 0.0002982617255139239,
+      "status": "PASS",
+      "reason": "GMAT final state matches the CW analytical final state within tolerance."
+    },
+    "screenshot": {
+      "media_type": "image/png",
+      "path": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/quarter_period/trajectory_gmat_gui.png",
+      "caption": "GMAT GUI (OrbitView/OpenFrames) trajectory render for case 'pi_demo_quarter_period_cw'.",
+      "case_id": "pi_demo_quarter_period_cw",
+      "run_id": "pi_demo_quarter_period_cw-20261030T230554Z",
+      "ok": true,
+      "reason": "GUI screenshot artifact is a non-empty, well-formed PNG (199296 bytes)."
+    },
+    "failure_mode": null,
+    "verified": true,
+    "verification_status": "VERIFIED",
+    "human_readable_report": "Verification report for case 'pi_demo_quarter_period_cw' (run 'pi_demo_quarter_period_cw-20261030T230554Z')\n\nSOLVER: The clohessy-wiltshire-linearized-fixed-duration-two-impulse solver SUCCEEDED at computing a candidate solution (status='unique'). Phi_rv is well-conditioned; returned the unique inverse solution.\n\nINDEPENDENT VERIFICATION: GMAT independently verified the candidate solution. Position error 1.961e-01 m and velocity error 2.983e-04 m/s are both within tolerance (position tolerance 1.0 m, velocity tolerance 0.001 m/s). A solver success alone does NOT by itself constitute this independent verification -- this GMAT comparison is what does.\n\nSCREENSHOT: a valid image/png trajectory artifact is available at '/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/quarter_period/trajectory_gmat_gui.png' (GMAT GUI (OrbitView/OpenFrames) trajectory render for case 'pi_demo_quarter_period_cw'.).\n\nOVERALL: VERIFIED"
+  },
+  "artifacts": {
+    "generated_script": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/quarter_period/generated_cw_rendezvous.script",
+    "trajectory_screenshot": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/quarter_period/trajectory_gmat_gui.png",
+    "screenshot_source": "gmat_gui",
+    "gui_screenshot_attempt": {
+      "attempted": true,
+      "captured": true,
+      "reason": "captured a non-blank 1024x768 GMAT GUI render of the real GMAT application window."
+    },
+    "report_files": {
+      "init": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/quarter_period/d_init.txt",
+      "postburn1": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/quarter_period/d_postburn1.txt",
+      "final": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/quarter_period/d_final.txt",
+      "trajectory": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/quarter_period/d_trajectory.txt"
+    }
+  },
+  "trust_statement": "The clohessy-wiltshire-linearized-fixed-duration-two-impulse solver succeeded AND GMAT independently verified its candidate solution (comparison status PASS): this is a genuine, independently checked VERIFIED result, not merely a solver success."
+}

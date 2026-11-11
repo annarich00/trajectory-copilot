@@ -1,0 +1,126 @@
+{
+  "case_id": "pi_demo_one_period_cw",
+  "readiness": "READY_TO_SOLVE",
+  "outcome": "NUMERICAL_DISAGREEMENT",
+  "verified": false,
+  "verification_status": "NOT VERIFIED: NUMERICAL_DISAGREEMENT (WARNING): GMAT final state exceeds strict tolerance but is within the warning margin (10.0x tolerance); treat as numerical disagreement, not a pass.",
+  "clarification_questions": [],
+  "model_selection": {
+    "selection": "CW rendezvous",
+    "qualified": false,
+    "reasons": [
+      "All required CW assumptions (circularity, locality, duration/regime, frame, other physics, maneuver assumptions) are supported."
+    ],
+    "assumptions": [
+      "circularity: supported",
+      "locality: supported",
+      "duration_regime: supported",
+      "frame: supported",
+      "other_physics: supported",
+      "maneuver_assumptions: supported"
+    ],
+    "concerns": [],
+    "deterministic_tool": "src.cw.two_burn_targeting",
+    "missing_items": []
+  },
+  "unified_verification_report": {
+    "case_id": "pi_demo_one_period_cw",
+    "run_id": "pi_demo_one_period_cw-20261030T230540Z",
+    "gmat": {
+      "executable": "/home/anna_ford/opt/GMAT/R2026a/bin/GmatConsole-R2026a",
+      "version_banner": "\n********************************************\n***  GMAT Console Application\n********************************************\n\nGeneral Mission Analysis Tool\nConsole Based Version\nBuild Date: Mar 30 2026  10:09:27\n\n\nGMAT working directory set to '/home/anna_ford/opt/GMAT/R2026a/bin/'\nModerator is updating data files...\nModerator is creating core engine...\n\nlibpython3.12.so.1.0: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libPythonInterface_py312\" did not open.\n\nlibmex.so: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libMatlabInterface\" did not open.\nSkipping \"../plugins/libOpenFramesInterface\": GUI plugins are skipped in console mode\n\nlibOpenFramesInterface.so.R2026a: cannot open shared object file: No such file or directory\n*** Library \"../plugins/libOVtoOFI\" did not open.\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSuccessfully set Planetary Source to use: DE405\nSetting nutation file to ../data/planetary_coeff/NUTATION.DAT\nSetting leap seconds file to ../data/time/tai-utc.dat\n2026-10-30 19:05:47 GMAT Moderator successfully created core engine\n\n\nBuild Date: Mar 30 2026  10:09:27\n\nModerator is deleting core engine...\n",
+      "attempted": true,
+      "exit_status": 0,
+      "reason": "GMAT exited successfully."
+    },
+    "solver": {
+      "name": "clohessy-wiltshire-linearized-fixed-duration-two-impulse",
+      "status": "singular-reachable",
+      "feasible": true,
+      "reason": "Phi_rv is singular or ill-conditioned; terminal position is reachable. Returned initial velocity is the SVD-pseudoinverse minimum-norm solution."
+    },
+    "comparison": {
+      "cw_final_state_m_mps": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gmat_final_state_m_mps": [
+        0.07376599139904352,
+        -2.812381375804017,
+        2.175045952581776e-13,
+        -8.91727244538433e-06,
+        -6.40435078889129e-10,
+        5.157417676127984e-16
+      ],
+      "units": [
+        [
+          "position",
+          "m"
+        ],
+        [
+          "velocity",
+          "m/s"
+        ],
+        [
+          "time",
+          "s"
+        ],
+        [
+          "mean_motion",
+          "rad/s"
+        ],
+        [
+          "delta_v",
+          "m/s"
+        ],
+        [
+          "gravitational_parameter",
+          "m^3/s^2"
+        ]
+      ],
+      "tolerances": {
+        "position_m": 1.0,
+        "velocity_mps": 0.001,
+        "delta_v_mps": 0.001
+      },
+      "position_error_m": 2.8133486140996427,
+      "velocity_error_mps": 8.91727246838223e-06,
+      "status": "WARNING",
+      "reason": "GMAT final state exceeds strict tolerance but is within the warning margin (10.0x tolerance); treat as numerical disagreement, not a pass."
+    },
+    "screenshot": {
+      "media_type": "image/png",
+      "path": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/one_period/trajectory_gmat_gui.png",
+      "caption": "GMAT GUI (OrbitView/OpenFrames) trajectory render for case 'pi_demo_one_period_cw'.",
+      "case_id": "pi_demo_one_period_cw",
+      "run_id": "pi_demo_one_period_cw-20261030T230540Z",
+      "ok": true,
+      "reason": "GUI screenshot artifact is a non-empty, well-formed PNG (201243 bytes)."
+    },
+    "failure_mode": "NUMERICAL_DISAGREEMENT",
+    "verified": false,
+    "verification_status": "NOT VERIFIED: NUMERICAL_DISAGREEMENT (WARNING): GMAT final state exceeds strict tolerance but is within the warning margin (10.0x tolerance); treat as numerical disagreement, not a pass.",
+    "human_readable_report": "Verification report for case 'pi_demo_one_period_cw' (run 'pi_demo_one_period_cw-20261030T230540Z')\n\nSOLVER: The clohessy-wiltshire-linearized-fixed-duration-two-impulse solver SUCCEEDED at computing a candidate solution (status='singular-reachable'). Phi_rv is singular or ill-conditioned; terminal position is reachable. Returned initial velocity is the SVD-pseudoinverse minimum-norm solution.\n\nINDEPENDENT VERIFICATION: GMAT ran and produced a comparable final state, but the comparison status is 'WARNING', not PASS. Position error 2.813e+00 m vs. tolerance 1.0 m; velocity error 8.917e-06 m/s vs. tolerance 0.001 m/s. GMAT final state exceeds strict tolerance but is within the warning margin (10.0x tolerance); treat as numerical disagreement, not a pass.\nLIKELY CAUSE: the discrepancy is a bounded, small-margin tolerance overrun (within the configured warning margin of tolerance), which is consistent with ordinary numerical/integrator precision limits rather than a frame, unit, or modeling error; it should still not be reported as verified.\n\nSCREENSHOT: a valid image/png trajectory artifact is available at '/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/one_period/trajectory_gmat_gui.png' (GMAT GUI (OrbitView/OpenFrames) trajectory render for case 'pi_demo_one_period_cw'.).\n\nOVERALL: NOT VERIFIED: NUMERICAL_DISAGREEMENT (WARNING): GMAT final state exceeds strict tolerance but is within the warning margin (10.0x tolerance); treat as numerical disagreement, not a pass.\nfailure_mode: NUMERICAL_DISAGREEMENT"
+  },
+  "artifacts": {
+    "generated_script": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/one_period/generated_cw_rendezvous.script",
+    "trajectory_screenshot": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/one_period/trajectory_gmat_gui.png",
+    "screenshot_source": "gmat_gui",
+    "gui_screenshot_attempt": {
+      "attempted": true,
+      "captured": true,
+      "reason": "captured a non-blank 1024x768 GMAT GUI render of the real GMAT application window."
+    },
+    "report_files": {
+      "init": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/one_period/d_init.txt",
+      "postburn1": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/one_period/d_postburn1.txt",
+      "final": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/one_period/d_final.txt",
+      "trajectory": "/home/anna_ford/projects/class_example_traj_copilot/artifacts/manual_runs/pi_demo_live/results/one_period/d_trajectory.txt"
+    }
+  },
+  "trust_statement": "The clohessy-wiltshire-linearized-fixed-duration-two-impulse solver succeeded at computing a candidate solution, but GMAT did NOT independently verify it (failure_mode='NUMERICAL_DISAGREEMENT', comparison status 'WARNING'). A solver success alone is never reported as VERIFIED."
+}

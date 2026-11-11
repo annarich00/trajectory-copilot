@@ -1,0 +1,31 @@
+{
+  "case_id": "circular_leo_400km_one_burn_free_velocity_rendezvous",
+  "readiness": "READY_TO_SOLVE",
+  "outcome": "UNSUPPORTED",
+  "verified": false,
+  "verification_status": "NOT VERIFIED: UNSUPPORTED",
+  "clarification_questions": [],
+  "model_selection": {
+    "selection": "UNSUPPORTED",
+    "qualified": false,
+    "reasons": [
+      "Violated CW assumption(s): maneuver_assumptions.",
+      "The case does not satisfy the bounded two-body coast contract (finite six-element inertial Cartesian state, positive mu, finite duration, positive RK4 step count, coast-only request) or requests an unsupported capability (targeting, maneuvers, optimization, thrust, or perturbations)."
+    ],
+    "assumptions": [
+      "circularity: supported",
+      "locality: supported",
+      "duration_regime: supported",
+      "frame: supported",
+      "other_physics: supported",
+      "maneuver_assumptions: violated",
+      "targeting_conditioning: unknown"
+    ],
+    "concerns": [],
+    "deterministic_tool": null,
+    "missing_items": []
+  },
+  "unified_verification_report": null,
+  "artifacts": {},
+  "trust_statement": "No deterministic solver or GMAT verification was attempted: model selection returned 'UNSUPPORTED', not a usable deterministic tool. Violated CW assumption(s): maneuver_assumptions. The case does not satisfy the bounded two-body coast contract (finite six-element inertial Cartesian state, positive mu, finite duration, positive RK4 step count, coast-only request) or requests an unsupported capability (targeting, maneuvers, optimization, thrust, or perturbations)."
+}

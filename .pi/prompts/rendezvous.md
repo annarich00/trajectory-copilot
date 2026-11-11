@@ -26,10 +26,8 @@ in this exact order, and do not skip, reorder, or silently combine any step:
    pipeline stage, in this order: (a) the 3D relative-position scene right
    after this step and before the GMAT-verification step, (b) the
    trajectory/burns plot right after the deterministic solve and before GMAT
-   execution, (c) the verification comparison plot right after GMAT
-   execution and parsing, and finally (d) the existing GMAT screenshot. State
-   each artifact's path to the operator in your reply the moment it is
-   produced (see step 3), do not hold them for the step-5 summary.
+   execution, and (c) the verification comparison plot right after GMAT
+   execution and parsing. State each artifact's path to the operator in the step-5 summary.
 3. Construct the matching `src/workflow.py::RendezvousCase` object from the
    exact values recorded in steps 1-2 (do not re-derive or re-guess any
    value already produced above). Do not call `src/cw.py` or `src/twobody.py`
@@ -38,7 +36,7 @@ in this exact order, and do not skip, reorder, or silently combine any step:
    actually run:
    - If step 2 selected `CW rendezvous`:
      1. Before any GMAT call, run the 3D scene stage and report its
-        `paths` to the operator immediately:
+        `paths` to the operator immediately and save for the final summary:
         `.venv/bin/python scripts/rendezvous_visualization_stage.py scene --case-json '<the same structured case fields used for the tool call below>' --output-dir <output_dir>`
         then, still before GMAT, the trajectory/burns stage (it re-runs the
         same deterministic `solve_cw_rendezvous` on the same inputs and plots
@@ -134,15 +132,8 @@ in this exact order, and do not skip, reorder, or silently combine any step:
    is stated independently of the review.
 6. If the user separately asks to "pull up," "open," "see," or "visualize"
    the GMAT GUI interactively (as opposed to asking for the screenshot
-   artifact already produced in step 3 and reported in step 5), do NOT attempt to launch
-   `GMAT-R2026a` or any GUI process yourself. This is a confirmed,
-   non-retry-able sandbox limitation (see `src/gmat_verify.py::
-   attempt_gmat_gui_screenshot`'s docstring for the full diagnosis: no GPU
-   render-node path, and WSLg/RDP never forwards a rendered buffer to the
-   user's real desktop even when a window registers). Instead, respond with
-   exactly this: state plainly that an interactive GMAT window cannot be
-   opened from inside this sandboxed session, and give the user this exact
-   command to run themselves in their own terminal (not through you):
+   artifact already produced in step 3 and reported in step 5), give the user this exact
+   command to run themselves in their own terminal:
 
    ```bash
    cd /home/anna_ford/opt/GMAT/R2026a/bin
@@ -153,6 +144,9 @@ in this exact order, and do not skip, reorder, or silently combine any step:
    script path from this run's `artifacts` (the GUI preview script, not the
    console-mode verification script), regenerating it first if it does not
    already exist for this case.
+
+   If the user requests you to run it, use subagents to attempt to launch
+   `GMAT-R2026a` with the GUI process yourself with a timeout of 30 seconds.
 
 Request:
 $ARGUMENTS

@@ -1,0 +1,2 @@
+Sat.ElapsedSecs           Sat.EarthMJ2000Eq.X       Sat.EarthMJ2000Eq.Y       Sat.EarthMJ2000Eq.Z       Sat.EarthMJ2000Eq.VX      Sat.EarthMJ2000Eq.VY      Sat.EarthMJ2000Eq.VZ      
+900.0000001047738         5258.694862968418         5730.917236157318         -4.833584760832874e-15    -5.274619254503344        4.839995425801466         -1.277015105712158e-17    

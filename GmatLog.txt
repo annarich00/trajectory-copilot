@@ -1,0 +1,28 @@
+GMAT Build Date: Mar 30 2026 10:09:27
+
+GMAT Log file set to GmatLog.txt
+*** Cannot find the script file ''
+Successfully set Planetary Source to use: DE405
+Successfully set Planetary Source to use: DE405
+The OrbitView "DefaultOrbitView" has been converted to an OpenFramesInterface object by the libOVtoOFI plugin.
+2026-10-30 12:39:35 GMAT GUI successfully launched.
+*** Error loading "../plugins/libPythonInterface_py312": GMAT could not load the Python interface. Please check that bin/gmat_startup_file.txt contains the PLUGIN line for "libPythonInterface_py3X" corresponding to an installed Python 3.X distribution. See the User Guide for instructions, or disable the appropriate PLUGIN line in bin/gmat_startup_file.txt to remove this error.
+*** Error loading "libMatlabInterface": GMAT could not load the MATLAB interface. Please check that MATLAB is installed and configured correctly.  See the User Guide for instructions, or disable the appropriate PLUGIN line in bin/gmat_startup_file.txt to remove this error.
+The option "/tmp/fresh_slice_test/generated_cw_rendezvous_gui_preview.script" is not valid.
+Usage: gmat [options] [scriptname]
+
+If no arguments are specified, GMAT opens with the full GUI and with the default
+mission loaded.  If a GMAT script name is provided for 'scriptname', GMAT will
+open with the specified script loaded.  GMAT is started whether or not any of the
+listed options are used.
+
+-h, 	--help                   			Display command line usage information in the Message Window
+-l, 	--logfile <filename>     		Specify log file name
+-s, 	--startup_file <filename>	Specify the startup file to read
+-m, 	--minimize               		Open GMAT with a minimized interface
+-r, 	--run <filename>         		Automatically run the specified script after loading
+    	                         			[has no effect if no script is specified]
+-v, 	--version                		Display version information in the Message Window
+-x, 	--exit                   			Exit GMAT after running the specified script
+    	                         			[if specified with only a script name (i.e. NO --run option), GMAT simply opens and closes]
+-ns, 	--no_splash             			Skip showing the GMAT splash screen upon startup
