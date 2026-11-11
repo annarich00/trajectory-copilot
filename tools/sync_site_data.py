@@ -36,7 +36,6 @@ MAPPINGS = {
     "tests/test_poliastro_verify.py": "site/data/tests/test_poliastro_verify.py",
     "tests/test_workflow.py": "site/data/tests/test_workflow.py",
     "tests/test_skill_authority_boundaries.py": "site/data/tests/test_skill_authority_boundaries.py",
-    ".pi/skills/orbital-model-selector/SKILL.md": "site/data/skills/model-selector.SKILL.md",
     ".pi/skills/orbital-two-body-rendezvous/SKILL.md": "site/data/skills/two-body-rendezvous.SKILL.md",
     "examples/geo_failure_case.yaml": "site/data/examples/geo_failure_case.yaml",
     "examples/rendezvous_case_01.yaml": "site/data/examples/rendezvous_case_01.yaml",

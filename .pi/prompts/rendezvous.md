@@ -21,10 +21,15 @@ in this exact order, and do not skip, reorder, or silently combine any step:
    For every other `NEEDS CLARIFICATION` or genuinely out-of-scope case
    (not a single-spacecraft coast), stop here and report that status --
    do not proceed to step 2.
-2. Apply the `orbital-model-selector` skill against the formalizer's output.
-   Show the full six-item assessment table and the resulting selection
-   (`CW rendezvous`, `bounded two-body fallback`, `UNSUPPORTED`, or
-   `NEEDS MORE INFORMATION`) and the named deterministic tool handoff.
+2. Reason over the formalizer's output yourself to assess each of the six
+   required items (circularity/locality/duration-regime/frame/other-physics/
+   maneuver-assumptions as supported/violated/boundary/unknown), then call
+   the `select_rendezvous_model` pi tool (registered by
+   `.pi/extensions/orbital-model-selector-tool/`) with those assessments to
+   combine them into the resulting selection (`CW rendezvous`,
+   `bounded two-body fallback`, `UNSUPPORTED`, or `NEEDS MORE INFORMATION`)
+   and the named deterministic tool handoff. Show the full six-item
+   assessment table and the resulting selection.
    Do not solve anything or call any Python in this step.
    Visualization artifacts (TJC-16.5) are produced and reported live, one per
    pipeline stage, in this order: (a) the 3D relative-position scene right

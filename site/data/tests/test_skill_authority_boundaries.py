@@ -29,6 +29,20 @@ caller-supplied, already-reasoned specification. That tool is exercised
 directly by ``formalizer.test.ts`` (TJC-23.2's own red/green coverage, not
 duplicated here), so it is no longer part of this module's prose-only
 skill-layer coverage.
+
+``orbital-model-selector``'s SKILL.md was retired by TJC-23.3: its
+never-invent-a-model/always-name-the-deterministic-handoff authority
+boundary is likewise no longer prose an LLM must follow voluntarily -- it
+is now structurally enforced by the registered ``select_rendezvous_model``
+pi tool, which shells out to ``src/model_selector.py::select_model``: that
+function has no code path that returns a selection without a
+``deterministic_tool`` name (or an explicit ``UNSUPPORTED``/``NEEDS MORE
+INFORMATION`` outcome with ``deterministic_tool=None``), and never computes
+an orbital state or delta-v itself. That logic is exercised directly by
+``tests/test_model_selector.py`` and the bridge-layer
+``tests/test_model_selector_tool_bridge.py`` (TJC-23.3's own red/green
+coverage, not duplicated here), so it is no longer part of this module's
+prose-only skill-layer coverage.
 """
 
 from pathlib import Path
@@ -37,11 +51,13 @@ import pytest
 
 SKILLS_DIR = Path(__file__).parents[1] / ".pi/skills"
 
-MODEL_SELECTOR = SKILLS_DIR / "orbital-model-selector/SKILL.md"
 TWO_BODY = SKILLS_DIR / "orbital-two-body-rendezvous/SKILL.md"
 
 # orbital-problem-formalizer's SKILL.md was retired by TJC-23.2: see the
 # module docstring above.
+#
+# orbital-model-selector's SKILL.md was retired by TJC-23.3: see the module
+# docstring above.
 #
 # orbital-targeting-planner's SKILL.md was retired by TJC-23.4: its
 # deterministic CW two-impulse targeting handoff is now the registered
@@ -53,25 +69,13 @@ TWO_BODY = SKILLS_DIR / "orbital-two-body-rendezvous/SKILL.md"
 # verification is actually performed by the registered run_gmat_verification
 # pi tool (.pi/extensions/gmat-verification-tool), not by that unused skill,
 # so it too is no longer part of this module's coverage.
-ALL_SKILLS = (MODEL_SELECTOR, TWO_BODY)
+ALL_SKILLS = (TWO_BODY,)
 
 
 def test_every_referenced_skill_file_exists():
     """Guard against a stale path if a skill is ever renamed or moved."""
     for skill in ALL_SKILLS:
         assert skill.is_file(), f"missing skill file: {skill}"
-
-
-def test_model_selector_only_selects_a_named_deterministic_tool_and_never_computes_physics():
-    """The model selector picks which deterministic implementation applies; it
-    does not itself compute a state or delta-v, and it names the exact
-    deterministic implementation handoff for every selection."""
-    text = MODEL_SELECTOR.read_text()
-    assert "`CW rendezvous`: deterministic, fixed-duration local two-impulse CW\n  targeting in `src/cw.py`" in text
-    assert "`bounded two-body fallback`: deterministic inertial Cartesian point-mass\n  **coast propagation** in `src/twobody.py`" in text
-    assert "without inventing a new model" in text
-    assert "deterministic implementation handoff" in text
-    assert "Do not declare CW valid from a single fixed percentage, orbit count, or\nlearned threshold." in text
 
 
 def test_two_body_skill_requires_the_deterministic_implementation_and_refuses_to_improvise():
