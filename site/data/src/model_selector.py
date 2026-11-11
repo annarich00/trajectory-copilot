@@ -345,8 +345,8 @@ def select_model(case: ModelSelectionCase) -> ModelSelectionResult:
             )
         concerns.append(
             "Qualified selection: verify this result against an independent "
-            "numerical propagation (gmat-rendezvous-verification) before treating "
-            "it as a clean pass."
+            "numerical propagation (the run_gmat_verification pi tool contract) "
+            "before treating it as a clean pass."
         )
         reasons.append(
             "All required assumptions are supported, but at least one required "

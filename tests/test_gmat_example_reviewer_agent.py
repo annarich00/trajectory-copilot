@@ -23,7 +23,10 @@ sys.path.insert(0, str(ROOT))
 from src.gmat_example_corpus import CORPUS_RELATIVE_PATH  # noqa: E402
 
 AGENT_PATH = ROOT / ".pi/agents/gmat-example-reviewer.md"
-SKILL_PATH = ".pi/skills/gmat-rendezvous-verification/SKILL.md"
+# gmat-rendezvous-verification's SKILL.md was retired by TJC-23.1: GMAT
+# verification is actually performed by the registered run_gmat_verification
+# pi tool, not by that unused skill, so the agent prompt now points there.
+VERIFICATION_TOOL_PATH = ".pi/extensions/gmat-verification-tool/"
 WRITE_TOOLS = {"bash", "edit", "write"}
 
 
@@ -73,7 +76,7 @@ def test_prompt_disclaims_numerical_and_screenshot_verification(agent):
     lowered = body.lower()
     assert "not a numerical" in lowered
     assert "screenshot" in lowered
-    assert SKILL_PATH in body
+    assert VERIFICATION_TOOL_PATH in body
     assert "sole source of pass/fail" in lowered
     assert re.search(r"never (report|emit|state)[^.]*\bpass\b", lowered)
 

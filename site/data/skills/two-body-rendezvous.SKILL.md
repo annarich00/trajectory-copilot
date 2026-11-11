@@ -51,7 +51,8 @@ boundary.
 
 ## Verification handoff
 
-Send every candidate to `gmat-rendezvous-verification`. The external evidence
-must include GMAT numerical comparison of the same declared case and an
-accessible trajectory screenshot. Without both, report the result as not
+Send every candidate through the `run_gmat_verification` pi tool contract
+(registered by `.pi/extensions/gmat-verification-tool/`). The external
+evidence must include GMAT numerical comparison of the same declared case and
+an accessible trajectory screenshot. Without both, report the result as not
 verified, never PASS.

@@ -77,6 +77,7 @@ Return a concise note containing:
 
 ## Verification handoff
 
-All numerical candidates go to `gmat-rendezvous-verification`. GMAT numerical
-comparison and an accessible trajectory screenshot are required before a
-result can be called PASS.
+All numerical candidates go through the `run_gmat_verification` pi tool
+contract (registered by `.pi/extensions/gmat-verification-tool/`). GMAT
+numerical comparison and an accessible trajectory screenshot are required
+before a result can be called PASS.

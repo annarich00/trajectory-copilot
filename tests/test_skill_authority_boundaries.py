@@ -29,14 +29,18 @@ SKILLS_DIR = Path(__file__).parents[1] / ".pi/skills"
 FORMALIZER = SKILLS_DIR / "orbital-problem-formalizer/SKILL.md"
 MODEL_SELECTOR = SKILLS_DIR / "orbital-model-selector/SKILL.md"
 TWO_BODY = SKILLS_DIR / "orbital-two-body-rendezvous/SKILL.md"
-GMAT_VERIFICATION = SKILLS_DIR / "gmat-rendezvous-verification/SKILL.md"
 
 # orbital-targeting-planner's SKILL.md was retired by TJC-23.4: its
 # deterministic CW two-impulse targeting handoff is now the registered
 # solve_cw_rendezvous pi tool (.pi/extensions/cw-rendezvous-tool), not a
 # prompt-driven skill, so it is no longer part of this module's LLM-facing
 # skill-layer authority-boundary coverage.
-ALL_SKILLS = (FORMALIZER, MODEL_SELECTOR, TWO_BODY, GMAT_VERIFICATION)
+#
+# gmat-rendezvous-verification's SKILL.md was retired by TJC-23.1: GMAT
+# verification is actually performed by the registered run_gmat_verification
+# pi tool (.pi/extensions/gmat-verification-tool), not by that unused skill,
+# so it too is no longer part of this module's coverage.
+ALL_SKILLS = (FORMALIZER, MODEL_SELECTOR, TWO_BODY)
 
 
 def test_every_referenced_skill_file_exists():
@@ -79,37 +83,11 @@ def test_two_body_skill_requires_the_deterministic_implementation_and_refuses_to
 
 @pytest.mark.parametrize("skill", (TWO_BODY,))
 def test_every_solver_skill_hands_off_to_gmat_verification_before_pass(skill):
-    """Both deterministic-solver-calling skills explicitly state that a result
-    is never PASS without the separate GMAT verification handoff -- a solver
-    skill's own candidate output is never, by itself, an authoritative/verified
-    result."""
+    """The remaining deterministic-solver-calling skill explicitly states
+    that a result is never PASS without the separate GMAT verification
+    handoff (the registered ``run_gmat_verification`` pi tool, TJC-23.1) --
+    a solver skill's own candidate output is never, by itself, an
+    authoritative/verified result."""
     text = skill.read_text()
-    assert "gmat-rendezvous-verification" in text
+    assert "run_gmat_verification" in text
     assert "never" in text.lower() or "not PASS" in text or "not verified" in text.lower()
-
-
-def test_gmat_verification_skill_requires_both_numerical_comparison_and_screenshot_for_pass():
-    """PASS requires GMAT numerical comparison AND an accessible screenshot
-    together; any single missing/failed piece of evidence must not produce
-    PASS (mirrors src/verification_report.py's assemble_verification_report
-    constructor invariant, tested directly in
-    tests/test_verification_report.py::test_verified_true_*_raises, for the
-    LLM-facing instruction layer that precedes that code path)."""
-    text = GMAT_VERIFICATION.read_text()
-    assert "**GMAT numerical comparison:**" in text
-    assert "**Accessible trajectory screenshot:**" in text
-    assert (
-        "GMAT execution failure, unavailable GMAT, missing/mismatched comparison data,\n"
-        "a tolerance exceedance, or a missing/inaccessible screenshot cannot be\n"
-        "reported as PASS."
-    ) in text
-    assert "`FAIL`, `UNAVAILABLE`,\nor `INCOMPLETE`" in text
-
-
-def test_gmat_verification_skill_does_not_claim_gmat_is_already_integrated():
-    """The verification skill is explicit that it defines the required
-    evidence contract rather than asserting GMAT execution is already wired
-    up -- it is not itself an authoritative claim of a verified result."""
-    text = GMAT_VERIFICATION.read_text()
-    assert "it does not claim that GMAT is integrated in the recovered\nrepository." in text
-    assert "The current repository has no GMAT execution integration" in text
