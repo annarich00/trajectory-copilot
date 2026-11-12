@@ -1,6 +1,6 @@
 ---
 name: rendezvous-pipeline-orchestrator
-description: Orchestrate a two-spacecraft rendezvous request (or a single-spacecraft coast request) through the complete formalizer -> model-selector -> deterministic-solver -> GMAT-verification pipeline, in exact order, with visualization-stage timing and the GMAT-example-reviewer subagent handoff. Use this skill whenever a user makes a rendezvous-shaped request: two spacecraft, a chief/chaser or target/chaser relative-motion ask, or a maneuver/delta-v/transfer request between orbiting bodies -- whether or not the request was typed as a `/rendezvous` command.
+description: "Orchestrate a two-spacecraft rendezvous request (or a single-spacecraft coast request) through the complete formalizer -> model-selector -> deterministic-solver -> GMAT-verification pipeline, in exact order, with visualization-stage timing and the GMAT-example-reviewer subagent handoff. Use this skill whenever a user makes a rendezvous-shaped request: two spacecraft, a chief/chaser or target/chaser relative-motion ask, or a maneuver/delta-v/transfer request between orbiting bodies -- whether or not the request was typed as a `/rendezvous` command."
 ---
 
 A rendezvous request is in context (from the user's message, a `/skill:rendezvous-pipeline-orchestrator` invocation, or AGENTS.md's standing rendezvous-routing rule). Run it through the complete required pipeline,
