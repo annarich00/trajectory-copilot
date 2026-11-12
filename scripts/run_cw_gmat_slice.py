@@ -18,8 +18,8 @@ For the fixed-duration, two-impulse CW rendezvous case in ``--case``
    cannot be captured, and writes/validates whichever artifact resulted.
 
 By default (no ``--output-dir``), every artifact above is written to the
-persistent, discoverable ``artifacts/cw_gmat_slice/`` directory at the repo
-root (see ``artifacts/cw_gmat_slice/README.md``), not only an ephemeral
+persistent, discoverable ``artifacts/runs/cw/`` directory at the repo
+root (see ``artifacts/README.md``), not only an ephemeral
 caller-supplied or temp directory.
 
 Every outcome is one of six mutually distinct, never-silently-passing
@@ -233,7 +233,7 @@ def run_cw_rendezvous_gmat_verification(
         "comparison": {"status": None, "position_error_m": None, "velocity_error_mps": None, "tolerances": tolerances},
         "trajectory_artifact": None, "trajectory_artifact_nonempty": False, "screenshot_source": None,
         "gui_screenshot_attempt": None,
-        "artifact_storage_convention": str(ROOT / "artifacts/cw_gmat_slice/README.md"),
+        "artifact_storage_convention": str(ROOT / "artifacts/README.md"),
         "verified": False, "failure_mode": None, "verification_status": None,
         "unified_verification_report": None, "verification_report_path": str(output_dir / "verification_report.txt"),
     }
@@ -431,7 +431,7 @@ def run_cw_rendezvous_gmat_verification(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--case", type=Path, default=ROOT / "examples/cw_gmat_vertical_slice.yaml")
-    parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/cw_gmat_slice")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/runs/cw")
     parser.add_argument("--gmat", default=os.environ.get("GMAT_EXECUTABLE", "GmatConsole-R2026a"))
     parser.add_argument("--gmat-gui", default=os.environ.get("GMAT_GUI_EXECUTABLE", "GMAT-R2026a"))
     parser.add_argument(

@@ -48,7 +48,7 @@ that, and must not substitute another plot.
 - Expected outcomes above are the owner's expectations. The stored runs must
   record what the pipeline actually returned. If an outcome differs, record
   the real result and flag the difference in the task notes.
-- Earlier runs exist under `artifacts/manual_runs/` (for example
+- Earlier runs exist under `artifacts/runs/manual/` (for example
   `pi_demo_live/` and `circular_leo_400km_one_period_rendezvous*`), but they
   use different inputs (for example a 1000 m offset). Check the inputs before
   reusing any of them; do not relabel an earlier run as a demo case.
