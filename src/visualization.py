@@ -46,10 +46,9 @@ from .verify import LVLHTransformationError, _lvlh_basis
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Mirrors artifacts/cw_gmat_slice/'s existing persistent-default-output-
-# directory convention (scripts/run_cw_gmat_slice.py): a discoverable,
-# gitignored-except-README directory under artifacts/ at the repo root.
-DEFAULT_OUTPUT_DIR = ROOT / "artifacts/visualization"
+# Mirrors the repo's persistent artifact convention: a discoverable
+# directory under artifacts/ at the repo root.
+DEFAULT_OUTPUT_DIR = ROOT / "artifacts/visualizations"
 DEFAULT_OUTPUT_FILENAME = "relative_position_3d.html"
 
 # WGS84-ish mean Earth radius, for a representative, intentionally
@@ -163,10 +162,8 @@ def plot_relative_position_3d(
         real ephemeris/epoch value.
     output_path:
         Where to write the standalone HTML artifact (``fig.write_html``).
-        Defaults to ``artifacts/visualization/relative_position_3d.html``
-        at the repo root (mirroring ``artifacts/cw_gmat_slice/``'s existing
-        persistent-default-output-directory convention), created if
-        missing.
+        Defaults to ``artifacts/visualizations/relative_position_3d.html``
+        at the repo root, created if missing.
 
     Returns
     -------

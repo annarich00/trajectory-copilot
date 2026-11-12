@@ -55,9 +55,9 @@ the deterministic SVG trajectory plot and `screenshot_source` records
 for this committed example too, not a bug if it is what you observe when
 regenerating this directory yourself.
 
-This directory is distinct from `artifacts/cw_gmat_slice/` (see that
-directory's own `README.md`): that one is the *live, regenerated-every-run*
-default output location (mostly gitignored); this one is a *fixed,
+This directory is distinct from `artifacts/runs/cw/` (see
+`artifacts/README.md` for the live run-output convention): that one is the
+*live, regenerated-every-run* default output location; this one is a *fixed,
 unchanging, committed snapshot* for discoverability.
 
 ## `generated_cw_rendezvous.script` (TJC-14)

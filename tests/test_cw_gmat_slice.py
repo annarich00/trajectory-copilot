@@ -629,12 +629,12 @@ def test_slice_distinguishes_screenshot_source_gmat_gui_from_svg_fallback(tmp_pa
 
 def test_slice_default_output_dir_is_the_persistent_artifacts_location():
     """AC3: the documented, persistent default output location (no --output-dir override) is
-    actually ``artifacts/cw_gmat_slice`` at the repo root, with a tracked README explaining the
+    actually ``artifacts/runs/cw`` at the repo root, with a tracked README explaining the
     convention."""
     import inspect as _inspect
 
     source = _inspect.getsource(slice_runner.main)
-    assert '"--output-dir", type=Path, default=ROOT / "artifacts/cw_gmat_slice"' in source
-    readme = ROOT / "artifacts" / "cw_gmat_slice" / "README.md"
-    assert readme.is_file(), "artifacts/cw_gmat_slice/README.md must document the persistent output convention"
+    assert '"--output-dir", type=Path, default=ROOT / "artifacts/runs/cw"' in source
+    readme = ROOT / "artifacts" / "README.md"
+    assert readme.is_file(), "artifacts/README.md must document the persistent output convention"
     assert "gitignore" in readme.read_text().lower()
