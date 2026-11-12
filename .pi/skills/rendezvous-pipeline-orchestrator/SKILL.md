@@ -39,7 +39,9 @@ in this exact order, and do not skip, reorder, or silently combine any step:
    after this step and before the GMAT-verification step, (b) the
    trajectory/burns plot right after the deterministic solve and before GMAT
    execution, and (c) the verification comparison plot right after GMAT
-   execution and parsing. State each artifact's path to the operator in the step-5 summary.
+   execution and parsing. Store all live-run outputs under
+   `artifacts/runs/` by default (or a run-specific subdirectory beneath it)
+   and state each artifact's path to the operator in the step-5 summary.
 3. Construct the matching `src/workflow.py::RendezvousCase` object from the
    exact values recorded in steps 1-2 (do not re-derive or re-guess any
    value already produced above). Do not call `src/cw.py` or `src/twobody.py`
