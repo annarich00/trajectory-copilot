@@ -34,7 +34,7 @@ shorter arc to pass GMAT's tolerance.
 ## Demo C: two-body coast, expect VERIFIED
 
 A single-spacecraft inertial coast. It exercises the step-1 exception in
-`.pi/prompts/rendezvous.md` (formalizer returns OUT OF SCOPE for this shape;
+`.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md` (formalizer returns OUT OF SCOPE for this shape;
 the pipeline proceeds to the two-body path). Per TJC-16.5, the three plot
 stages are `not_generated` on this path, each with a reason. The UI must show
 that, and must not substitute another plot.

@@ -65,8 +65,8 @@ Source of truth for step wording and order:
 `.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md`. Do not
 duplicate or fork its step text. In order:
 
-1. `orbital-problem-formalizer` (stop if `NEEDS CLARIFICATION` or genuinely `OUT OF SCOPE`)
-2. `orbital-model-selector`
+1. `formalize_rendezvous_problem` (stop if `NEEDS CLARIFICATION` or genuinely `OUT OF SCOPE`)
+2. `select_rendezvous_model`
 3. 3D relative-position scene (artifact, before GMAT)
 4. Trajectory/burns plot (artifact, after the deterministic solve, before GMAT)
 5. `run_gmat_verification` pi tool (`.pi/extensions/gmat-verification-tool/`)
