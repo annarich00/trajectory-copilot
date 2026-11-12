@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-10 13:52'
+updated_date: '2026-11-12 13:35'
 labels:
   - web-demo
 dependencies: []
@@ -26,14 +26,21 @@ Both the static Pages replay and the later live backend must render the same dat
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A documented schema covers ordered steps, per-step status, artifact paths and metadata, structured results, raw agent events and tool calls, and an optional stop state with an optional continuation
-- [ ] #2 The schema reuses the existing statuses and failure modes from src/gmat_verify.py and src/verification_report.py and adds no new vocabulary
-- [ ] #3 A not_generated stage is representable with its reason
-- [ ] #4 A redaction step removes API keys and absolute machine paths from stored runs, with a test that fails if either appears
-- [ ] #5 Demo A, B and C are each captured as a stored run from a real pipeline run using the exact request text in docs/web-demo-cases.md; the stored outcome is what the pipeline actually returned
-- [ ] #6 Demo A and B include the 3D scene, trajectory plot, comparison plots and GMAT screenshot; Demo C records its not_generated plot stages with their reasons
-- [ ] #7 Any difference between an expected outcome in docs/web-demo-cases.md and the actual result is recorded in the task notes
-- [ ] #8 Tests validate all three stored runs against the schema
+- [ ] #1 The schema reuses the existing statuses and failure modes from src/gmat_verify.py and src/verification_report.py and adds no new vocabulary
+- [ ] #2 A not_generated stage is representable with its reason
+- [ ] #3 A redaction step removes API keys and absolute machine paths from stored runs, with a test that fails if either appears
+- [ ] #4 Demo A, B and C are each captured as a stored run from a real pipeline run using the exact request text in docs/web-demo-cases.md; the stored outcome is what the pipeline actually returned
+- [ ] #5 Demo A and B include the 3D scene, trajectory plot, comparison plots and GMAT screenshot; Demo C records its not_generated plot stages with their reasons
+- [ ] #6 Any difference between an expected outcome in docs/web-demo-cases.md and the actual result is recorded in the task notes
+- [ ] #7 Tests validate all three stored runs against the schema
+- [ ] #8 A documented schema covers ordered steps, per-step status, artifact paths and metadata, structured results, raw agent events and tool calls, and an optional stop state with an optional continuation
+- [ ] #9 The schema reuses the existing statuses and failure modes from src/gmat_verify.py and src/verification_report.py and adds no new vocabulary
+- [ ] #10 A not_generated stage is representable with its reason
+- [ ] #11 A redaction step removes API keys and absolute machine paths from stored runs, with a test that fails if either appears
+- [ ] #12 Demo A, B and C are each captured as a stored run from a real pipeline run using the exact request text in docs/web-demo-cases.md; the stored outcome is what the pipeline actually returned
+- [ ] #13 Demo A and B include the 3D scene, trajectory plot, comparison plots and GMAT screenshot; Demo C records its not_generated plot stages with their reasons
+- [ ] #14 Any difference between an expected outcome in docs/web-demo-cases.md and the actual result is recorded in the task notes
+- [ ] #15 Tests validate all three stored runs against the schema
 <!-- AC:END -->
 
 ## Definition of Done

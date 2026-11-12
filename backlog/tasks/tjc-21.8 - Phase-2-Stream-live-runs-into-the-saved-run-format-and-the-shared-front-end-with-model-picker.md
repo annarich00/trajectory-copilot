@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-10 13:52'
+updated_date: '2026-11-12 13:35'
 labels:
   - web-demo
 dependencies:
@@ -28,12 +28,11 @@ The same page that replays the stored demo cases should show a live run as it ha
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Live events are converted into the Phase 1 saved-run format and rendered by the same front end in both modes
-- [ ] #2 A model picker lists models from pi --list-models and the chosen model is the one used for the run
-- [ ] #3 The user supplies their own API key for new problems, held only in server memory and never written to logs, stored runs or developer-mode output
-- [ ] #4 Stored cases still replay without a key
-- [ ] #5 A finished live run can be saved as a stored run after redaction
-- [ ] #6 The interface does not claim every model has been validated against the skills
+- [ ] #1 A model picker lists models from pi --list-models and the chosen model is the one used for the run
+- [ ] #2 The user supplies their own API key for new problems, held only in server memory and never written to logs, stored runs or developer-mode output
+- [ ] #3 Stored cases still replay without a key
+- [ ] #4 A finished live run can be saved as a stored run after redaction
+- [ ] #5 The interface does not claim every model has been validated against the skills
 <!-- AC:END -->
 
 ## Definition of Done

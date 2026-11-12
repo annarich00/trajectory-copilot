@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-10 13:52'
+updated_date: '2026-11-12 13:35'
 labels:
   - web-demo
 dependencies:
@@ -29,7 +29,7 @@ GMAT results and artifact paths are already JSON, but the orbital-problem-formal
 <!-- AC:BEGIN -->
 - [ ] #1 A recorded decision chooses between parsing the Markdown output and having the skills also emit a structured block, with the reason
 - [ ] #2 If skills change, the evaluations under evaluations/ still pass and the formalizer and selector output sections remain unchanged
-- [ ] #3 If extraction fails, the step falls back to showing the original text verbatim instead of guessing
+- [ ] #3 The chosen approach extracts the values operator templates need from Demo A, B and C and from at least one NEEDS CLARIFICATION result
 - [ ] #4 The chosen approach extracts the values operator templates need from Demo A, B and C and from at least one NEEDS CLARIFICATION result
 <!-- AC:END -->
 

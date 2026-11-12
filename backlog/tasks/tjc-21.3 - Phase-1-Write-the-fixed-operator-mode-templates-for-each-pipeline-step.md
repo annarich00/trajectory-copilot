@@ -4,7 +4,7 @@ title: 'Phase 1: Write the fixed operator-mode templates for each pipeline step'
 status: To Do
 assignee: []
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-10 13:52'
+updated_date: '2026-11-12 13:35'
 labels:
   - web-demo
 dependencies:
@@ -27,9 +27,9 @@ Operator mode must explain each step and each plot at a high level without any m
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 There is one template per step: formalizer, model selector, 3D scene, trajectory and burns plot, GMAT verification, comparison plots, GMAT screenshot, and final summary
-- [ ] #2 Limits are stated as on the course page: the 3D target placement is illustrative, one case run once, and PASS means within stated tolerances and is not a proof
-- [ ] #3 A not_generated stage and each GMAT failure mode have a template that shows the status and reason and does not substitute another plot
-- [ ] #4 Template wording is reviewed by the project owner before the task is closed
+- [ ] #2 A not_generated stage and each GMAT failure mode have a template that shows the status and reason and does not substitute another plot
+- [ ] #3 Template wording is reviewed by the project owner before the task is closed
+- [ ] #4 Tests render every template from Demo A, B and C and fail on any unfilled placeholder
 - [ ] #5 Templates take numbers and statuses only from stored-run data, with no hard-coded values from any one demo case
 - [ ] #6 Tests render every template from Demo A, B and C and fail on any unfilled placeholder
 <!-- AC:END -->

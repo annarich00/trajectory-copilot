@@ -4,7 +4,7 @@ title: 'Phase 1: Build the static demo page with operator and developer modes'
 status: To Do
 assignee: []
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-10 13:52'
+updated_date: '2026-11-12 13:35'
 labels:
   - web-demo
 dependencies:
@@ -26,14 +26,16 @@ This is the page the advisor will see on GitHub Pages and the front end that Pha
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A decision on extending site/ versus a new directory is recorded and applied
-- [ ] #2 A toggle switches between operator mode (templates) and developer mode (raw agent output and tool calls)
-- [ ] #3 The page is labelled as a recorded run, and works from static files with no server and no API key
-- [ ] #4 A not_generated stage and a failed verification display their status and reason
-- [ ] #5 The page was opened in a browser and each step checked against the stored run
-- [ ] #6 If an artifact file (for example the 3D scene) is missing, the page shows a clear message for that step instead of failing silently
-- [ ] #7 The page lets the user pick Demo A, B or C and replays it step by step, showing each step and its artifacts in pipeline order
-- [ ] #8 Demo A is shown as NOT VERIFIED with its NUMERICAL_DISAGREEMENT status, and Demo C shows its not_generated plot stages with reasons
+- [ ] #1 A toggle switches between operator mode (templates) and developer mode (raw agent output and tool calls)
+- [ ] #2 The page is labelled as a recorded run, and works from static files with no server and no API key
+- [ ] #3 A not_generated stage and a failed verification display their status and reason
+- [ ] #4 The page was opened in a browser and each step checked against the stored run
+- [ ] #5 If an artifact file (for example the 3D scene) is missing, the page shows a clear message for that step instead of failing silently
+- [ ] #6 The page lets the user pick Demo A, B or C and replays it step by step, showing each step and its artifacts in pipeline order
+- [ ] #7 Demo A is shown as NOT VERIFIED with its NUMERICAL_DISAGREEMENT status, and Demo C shows its not_generated plot stages with reasons
+- [ ] #8 A decision on extending site/ versus a new directory is recorded and applied
+- [ ] #9 The page lets the user pick Demo A, B or C and replays it step by step, showing each step and its artifacts in pipeline order
+- [ ] #10 Demo A is shown as NOT VERIFIED with its NUMERICAL_DISAGREEMENT status, and Demo C shows its not_generated plot stages with reasons
 <!-- AC:END -->
 
 ## Definition of Done
