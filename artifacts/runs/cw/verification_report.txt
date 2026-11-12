@@ -1,0 +1,9 @@
+Verification report for case 'circular_leo_quarter_orbit_rendezvous' (run 'circular_leo_quarter_orbit_rendezvous-20261014T140633Z')
+
+SOLVER: The clohessy-wiltshire-linearized-fixed-duration-two-impulse solver SUCCEEDED at computing a candidate solution (status='unique'). Phi_rv is well-conditioned; returned the unique inverse solution.
+
+INDEPENDENT VERIFICATION: GMAT independently verified the candidate solution. Position error 7.941e-03 m and velocity error 1.168e-05 m/s are both within tolerance (position tolerance 1.0 m, velocity tolerance 0.001 m/s). A solver success alone does NOT by itself constitute this independent verification -- this GMAT comparison is what does.
+
+SCREENSHOT: a valid image/png trajectory artifact is available at '/home/anna_ford/projects/class_example_traj_copilot/artifacts/cw_gmat_slice/trajectory_gmat_gui.png' (GMAT GUI (OrbitView/OpenFrames) trajectory render for case 'circular_leo_quarter_orbit_rendezvous'.).
+
+OVERALL: VERIFIED
