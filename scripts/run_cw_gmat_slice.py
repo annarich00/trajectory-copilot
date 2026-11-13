@@ -299,13 +299,15 @@ def run_cw_rendezvous_gmat_verification(
     screenshot_path = output_dir / "trajectory.svg"
     screenshot_source = "svg_fallback"
     gui_result = None
-    if not skip_gui_screenshot:
-        gui_preview_script_path.write_text(
-            generate_gmat_gui_preview_script(
-                radius_m=case["radius_m"], deputy_state0_si=state0,
-                dv0_mps=solution.dv0_mps, dv1_mps=solution.dv1_mps, transfer_s=transfer_s,
-            )
+    # The OrbitView GUI preview script is always written (it is a default,
+    # user-accessible artifact); only the screenshot attempt is optional.
+    gui_preview_script_path.write_text(
+        generate_gmat_gui_preview_script(
+            radius_m=case["radius_m"], deputy_state0_si=state0,
+            dv0_mps=solution.dv0_mps, dv1_mps=solution.dv1_mps, transfer_s=transfer_s,
         )
+    )
+    if not skip_gui_screenshot:
         gui_png_path = output_dir / "trajectory_gmat_gui.png"
         gui_result = attempt_gmat_gui_screenshot(gmat_gui_executable, gui_preview_script_path, gui_png_path)
         base_result["gui_screenshot_attempt"] = {

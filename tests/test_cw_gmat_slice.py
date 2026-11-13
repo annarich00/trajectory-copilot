@@ -638,3 +638,15 @@ def test_slice_default_output_dir_is_the_persistent_artifacts_location():
     readme = ROOT / "artifacts" / "README.md"
     assert readme.is_file(), "artifacts/README.md must document the persistent output convention"
     assert "gitignore" in readme.read_text().lower()
+
+
+def test_gui_preview_script_is_written_even_when_gui_screenshot_is_skipped(tmp_path):
+    """The OrbitView GUI preview script is a default workflow artifact: it must exist
+    (and be reported in the result) even when no GUI screenshot is attempted."""
+    returncode = _run(tmp_path, skip_gui_screenshot=True)
+    assert returncode == 1  # MISSING_GMAT, unrelated to this check
+    result = _result(tmp_path)
+    preview = tmp_path / "generated_cw_rendezvous_gui_preview.script"
+    assert preview.stat().st_size > 0
+    assert result["gui_preview_script"] == str(preview)
+    assert "Create OrbitView" in preview.read_text()
