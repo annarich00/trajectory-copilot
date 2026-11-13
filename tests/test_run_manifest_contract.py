@@ -8,6 +8,7 @@ site loader without depending on any particular artifact file existing.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -46,8 +47,17 @@ def test_run_manifest_schema_contract(demo_id: str):
 @pytest.mark.parametrize("name, run_id", [("demoA", "demo_a"), ("demoB", "demo_b"), ("demoC", "demo_c")])
 def test_site_demo_metadata_points_at_run_dirs(name: str, run_id: str):
     text = SITE_DATA.read_text()
-    assert f'runDir: "artifacts/runs/{run_id}/latest"' in text
-    assert f'runId: "{run_id}"' in text
+    block_match = re.search(rf'{name}:\s*\{{(.*?)\}},', text, re.DOTALL)
+    assert block_match, f"no {name} block found in {SITE_DATA}"
+    block = block_match.group(1)
+
+    run_dir_match = re.search(r'runDir:\s*"([^"]+)"', block)
+    assert run_dir_match, f"no runDir found for {name}"
+    assert run_dir_match.group(1).startswith("artifacts/runs/")
+
+    run_id_match = re.search(r'runId:\s*"([^"]+)"', block)
+    assert run_id_match, f"no runId found for {name}"
+    assert run_id_match.group(1) == run_id
 
 
 def test_site_loader_uses_run_manifest_primary_path():

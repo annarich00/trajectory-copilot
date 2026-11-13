@@ -10,7 +10,7 @@ window.TCDemoRuns = {
     id: "demoB",
     label: "Demo B",
     runId: "demo_b",
-    runDir: "artifacts/runs/demo_b/latest",
+    runDir: "artifacts/runs/earth-400km-quarter-period-rendezvous/bridge",
     recordedLabel: "Recorded run",
   },
   demoC: {

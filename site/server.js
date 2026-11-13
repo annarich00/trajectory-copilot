@@ -10,6 +10,12 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = __dirname;
+// The demo page reads saved runs from artifacts/runs/<case_id>/... at the
+// repo root, a sibling of site/, not a subdirectory of it. Serve that tree
+// too (read-only, same path-traversal guard) so ?case=<case_id>/?runDir=...
+// on the demo page can actually fetch run_manifest.json/run_summary.json
+// and their artifact files instead of 404ing against the site-only root.
+const REPO_ROOT = path.normalize(path.join(__dirname, '..'));
 const PORT = parseInt(process.argv[2] || process.env.PORT || '4173', 10);
 const HOST = '127.0.0.1';
 
@@ -38,8 +44,9 @@ const server = http.createServer((req, res) => {
     let urlPath = decodeURIComponent(req.url.split('?')[0]);
     if (urlPath === '/') urlPath = '/index.html';
 
-    const resolved = path.normalize(path.join(ROOT, urlPath));
-    if (!resolved.startsWith(ROOT)) {
+    const base = urlPath.startsWith('/artifacts/') ? REPO_ROOT : ROOT;
+    const resolved = path.normalize(path.join(base, urlPath));
+    if (!resolved.startsWith(base)) {
       return send(res, 403, 'Forbidden', { 'Content-Type': 'text/plain' });
     }
 
