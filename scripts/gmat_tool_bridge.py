@@ -62,7 +62,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -122,14 +121,10 @@ def run_bridge(structured_case: dict) -> dict:
 
     output_dir = structured_case.get("output_dir")
     if output_dir is None:
-        # mkdtemp (not TemporaryDirectory) deliberately leaves this directory
-        # on disk after the call returns: the result dict's artifact paths
-        # (generated script, ReportFile output, screenshot) must stay valid
-        # for the caller to inspect afterwards, exactly as
-        # run_cw_gmat_slice.py's own output_dir convention leaves its
-        # artifacts in place rather than deleting them on completion.
-        output_dir = tempfile.mkdtemp(prefix="gmat_tool_bridge_")
+        case_id = str(structured_case.get("case_id", "unnamed_case"))
+        output_dir = ROOT / "artifacts" / "runs" / case_id / "bridge"
     output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     gmat_executable = structured_case.get("gmat_executable", "GmatConsole-R2026a")
     gmat_gui_executable = structured_case.get("gmat_gui_executable", "GMAT-R2026a")

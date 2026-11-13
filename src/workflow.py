@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import math
 import time
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Literal, Optional, Sequence
@@ -142,6 +143,7 @@ class WorkflowResult:
     verification_report: Optional[UnifiedVerificationReport]
     artifacts: dict
     trust_statement: str
+    saved_run_path: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -289,6 +291,41 @@ def _run_cw_path(
     _emit(comparison_record)
     if comparison_record["status"] == "generated":
         report_dict["comparison_plot_path"] = comparison_record["paths"][1]
+    run_manifest = {
+        "demo_id": case.case_id,
+        "run_id": f"{case.case_id}-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}",
+        "case_id": case.case_id,
+        "mode": "cw",
+        "request": f"{case.case_id}",
+        "outcome": result["failure_mode"] or "VERIFIED",
+        "verified": verified,
+        "verification_status": result["verification_status"],
+        "steps": [
+            {"name": "formalize_rendezvous_problem", "status": "completed"},
+            {"name": "select_rendezvous_model", "status": "completed"},
+        ] + [
+            {"name": rec.get("name", rec.get("stage", "visualization")), "status": rec.get("status"), "reason": rec.get("reason")}
+            for rec in visualization_artifacts
+        ],
+        "artifacts": [
+            {"name": "generated_script", "path": str(output_dir / "generated_cw_rendezvous.script"), "media_type": "text/plain"},
+            {"name": "trajectory_screenshot", "path": result.get("trajectory_artifact"), "media_type": "image/png" if str(result.get("trajectory_artifact", "")).endswith(".png") else "image/svg+xml"},
+        ],
+        "not_generated": [
+            {"name": rec["name"], "reason": rec["reason"]}
+            for rec in visualization_artifacts if rec.get("status") == "not_generated"
+        ],
+    }
+    run_summary = {
+        **run_manifest,
+        "artifact_paths": {
+            "generated_script": str(output_dir / "generated_cw_rendezvous.script"),
+            "trajectory_screenshot": result.get("trajectory_artifact"),
+            "report_files": {key: str((output_dir / f"d_{key}.txt")) for key in ("init", "postburn1", "final", "trajectory")},
+        },
+    }
+    (output_dir / "run_manifest.json").write_text(json.dumps(run_manifest, indent=2) + "\n")
+    (output_dir / "run_summary.json").write_text(json.dumps(run_summary, indent=2) + "\n")
     artifacts = {
         "generated_script": str(output_dir / "generated_cw_rendezvous.script"),
         "trajectory_screenshot": result.get("trajectory_artifact"),
@@ -325,6 +362,7 @@ def _run_cw_path(
         verification_report=None,  # the dict form is already in artifacts/report_dict below
         artifacts={**artifacts, "unified_verification_report": report_dict},
         trust_statement=trust_statement,
+        saved_run_path=str(output_dir / "run_summary.json"),
     )
 
 

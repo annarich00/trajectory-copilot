@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<title>Trajectory CoPilot — Demo visualization pipeline for the rendezvous workflow</title>
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  :root {
+    --paper: #fcfcfa;
+    --ink: #242a30;
+    --muted: #535e68;
+    --rule: #d9dfe2;
+    --tint: #f0f3f4;
+    --link: #185a86;
+    --warning: #933a22;
+  }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.65 system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 28px 80px;
+  }
+  h1, h2, h3, h4 { line-height: 1.25; text-wrap: balance; }
+  h1 { font-size: 2.1rem; margin: 8px 0 18px; }
+  h2 { font-size: 1.45rem; margin: 36px 0 16px; }
+  h3 { font-size: 1.1rem; }
+  p { margin: 12px 0; white-space: pre-line; overflow-wrap: anywhere; }
+  a { color: var(--link); text-underline-offset: 3px; overflow-wrap: anywhere; }
+  a:hover { text-decoration-thickness: 2px; }
+  code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; background: var(--tint); padding: 1px 4px; border-radius: 3px; }
+  pre { background: var(--tint); padding: 14px; overflow: auto; max-height: 34rem; font-size: .82rem; line-height: 1.6; tab-size: 4; }
+  .mode { font-size: .8rem; letter-spacing: .04em; color: var(--muted); }
+  .lead { font-size: 1.08rem; }
+  .panel {
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 16px 18px;
+    background: #fff;
+    margin: 16px 0;
+  }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 16px 0 24px;
+  }
+  .toolbar label { font-size: .95rem; }
+  select, button {
+    font: inherit;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+    padding: 7px 12px;
+  }
+  button:hover { border-color: var(--link); color: var(--link); cursor: pointer; }
+  button.active { border-color: var(--link); color: var(--link); }
+  .demo-meta { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start; }
+  .eyebrow { color: var(--muted); font-size: .84rem; text-transform: uppercase; letter-spacing: .05em; }
+  .step {
+    border-left: 3px solid var(--rule);
+    padding-left: 16px;
+    margin: 14px 0;
+  }
+  .step h3 { margin: 0 0 6px; }
+  .status { font-size: .8rem; font-weight: 600; border: 1px solid var(--rule); padding: 2px 6px; border-radius: 4px; margin-right: 6px; white-space: nowrap; }
+  .warn { color: var(--warning); font-weight: 600; }
+  .muted { color: var(--muted); font-size: .9rem; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .sample-banner { border-left: 3px solid #ad7952; background: #fbf6f0; padding: 8px 14px; margin: 14px 0; font-size: .92rem; }
+  .spacer { flex: 1; }
+  .chat { display: flex; flex-direction: column; gap: 12px; margin: 8px 0 40px; }
+  .msg { max-width: 92%; border-radius: 14px; padding: 10px 14px; border: 1px solid var(--rule); background: #fff; animation: pop .25s ease-out; }
+  .msg.user { align-self: flex-end; background: #e8f1f8; border-color: #bcd5e8; }
+  .msg.agent { align-self: flex-start; }
+  .msg .who { font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .msg.step { cursor: pointer; }
+  .msg.step:focus-visible { outline: 3px solid #a65f00; outline-offset: 2px; }
+  .msg.step h3 { margin: 0 0 4px; font-size: 1rem; }
+  .msg.step p { margin: 6px 0; }
+  .msg.step .hint { font-size: .78rem; color: var(--muted); }
+  .msg.step .details { display: none; border-top: 1px dashed var(--rule); margin-top: 8px; padding-top: 8px; }
+  .msg.step.open .details { display: block; }
+  .msg.not_generated { border-style: dashed; }
+  .msg.final { background: var(--tint); }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .msg { animation: none; } }
+  @media (max-width: 700px) {
+    main { padding: 24px 18px 48px; }
+    h1 { font-size: 1.7rem; }
+    .demo-meta, .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="mode">Standalone walkthrough</p>
+  <h1>Demo visualization pipeline for the rendezvous workflow</h1>
+  <p class="lead">This standalone page mirrors the walkthrough style from the project’s evidence pages, but it focuses on the three stored demo runs: Demo A, Demo B and Demo C.</p>
+
+  <p class="sample-banner"><strong>Recorded run, sample data.</strong> This page replays saved data with no server and no API key. It reads each demo from the saved run contract under <code>artifacts/runs/&lt;demo_id&gt;/&lt;run_id&gt;/</code> when available, with the legacy saved-run data kept only as a compatibility fallback.</p>
+
+  <nav class="toolbar" aria-label="Demo selector, mode toggle and playback controls">
+    <label>
+      Demo
+      <select id="demo-select">
+        <option value="demoA">Demo A</option>
+        <option value="demoB">Demo B</option>
+        <option value="demoC">Demo C</option>
+      </select>
+    </label>
+    <button id="mode-operator" class="active" type="button">Operator mode</button>
+    <button id="mode-developer" type="button">Developer mode</button>
+    <span class="spacer"></span>
+    <button id="play-pause" type="button">Pause</button>
+    <button id="next-step" type="button">Next step</button>
+    <button id="show-all" type="button">Show all</button>
+    <button id="restart" type="button">Restart</button>
+  </nav>
+
+  <p class="muted" id="run-meta" aria-live="polite"></p>
+  <section class="chat" id="chat-log" aria-live="polite" aria-label="Replay of the recorded run">
+    <p>Loading demo data…</p>
+  </section>
+</main>
+
+<script src="data/demo-runs.js"></script>
+<script src="js/demo-visualization-pipeline.js"></script>
+</body>
+</html>
