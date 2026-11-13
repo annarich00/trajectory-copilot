@@ -108,6 +108,6 @@ def test_rendezvous_prompt_reports_artifacts_in_pipeline_order_and_keeps_existin
         "Do not solve anything or call any Python in this step.",
         "`src/workflow.py::run_rendezvous_workflow(...)` directly with",
         "./GMAT-R2026a -r <path to the generated GUI preview script>",
-        "exactly this: state plainly that an interactive GMAT window cannot be",
+        "the GMAT GUI interactively (as opposed to asking for the screenshot",
     ):
         assert kept in PROMPT
