@@ -233,6 +233,62 @@ def _unresolved_selection_result(case: RendezvousCase, model_selection: ModelSel
     )
 
 
+def build_cw_run_manifest(
+    case_id: str, output_dir: Path, result: dict, visualization_artifacts: Optional[list] = None,
+) -> tuple[dict, dict]:
+    """Build the ``run_manifest.json``/``run_summary.json`` payloads for one
+    completed CW/GMAT verification ``result`` dict (the same shape
+    ``scripts/run_cw_gmat_slice.py::run_cw_rendezvous_gmat_verification``
+    returns), and write both files into ``output_dir``.
+
+    Shared by both callers of that reusable core -- ``_run_cw_path`` below
+    (``src/workflow.py``'s own orchestration) and
+    ``scripts/gmat_tool_bridge.py`` (the ``run_gmat_verification`` pi tool's
+    Python half) -- so a run triggered through either path produces the
+    identical saved-run contract the static demo site reads.
+    """
+    output_dir = Path(output_dir)
+    visualization_artifacts = visualization_artifacts or []
+    verified = bool(result["verified"])
+    trajectory_artifact = result.get("trajectory_artifact")
+    run_manifest = {
+        "demo_id": case_id,
+        "run_id": f"{case_id}-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}",
+        "case_id": case_id,
+        "mode": "cw",
+        "request": f"{case_id}",
+        "outcome": result["failure_mode"] or "VERIFIED",
+        "verified": verified,
+        "verification_status": result["verification_status"],
+        "steps": [
+            {"name": "formalize_rendezvous_problem", "status": "completed"},
+            {"name": "select_rendezvous_model", "status": "completed"},
+        ] + [
+            {"name": rec.get("name", rec.get("stage", "visualization")), "status": rec.get("status"), "reason": rec.get("reason")}
+            for rec in visualization_artifacts
+        ],
+        "artifacts": [
+            {"name": "generated_script", "path": str(output_dir / "generated_cw_rendezvous.script"), "media_type": "text/plain"},
+            {"name": "trajectory_screenshot", "path": trajectory_artifact, "media_type": "image/png" if str(trajectory_artifact or "").endswith(".png") else "image/svg+xml"},
+        ],
+        "not_generated": [
+            {"name": rec.get("name", rec.get("stage", "visualization")), "reason": rec.get("reason")}
+            for rec in visualization_artifacts if rec.get("status") == "not_generated"
+        ],
+    }
+    run_summary = {
+        **run_manifest,
+        "artifact_paths": {
+            "generated_script": str(output_dir / "generated_cw_rendezvous.script"),
+            "trajectory_screenshot": trajectory_artifact,
+            "report_files": {key: str((output_dir / f"d_{key}.txt")) for key in ("init", "postburn1", "final", "trajectory")},
+        },
+    }
+    (output_dir / "run_manifest.json").write_text(json.dumps(run_manifest, indent=2) + "\n")
+    (output_dir / "run_summary.json").write_text(json.dumps(run_summary, indent=2) + "\n")
+    return run_manifest, run_summary
+
+
 def _run_cw_path(
     case: RendezvousCase, model_selection: ModelSelectionResult, output_dir: Path, gmat_executable: str,
     gmat_gui_executable: str, attempt_gui_screenshot: bool, on_artifact: Optional[ArtifactCallback] = None,
@@ -291,41 +347,8 @@ def _run_cw_path(
     _emit(comparison_record)
     if comparison_record["status"] == "generated":
         report_dict["comparison_plot_path"] = comparison_record["paths"][1]
-    run_manifest = {
-        "demo_id": case.case_id,
-        "run_id": f"{case.case_id}-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}",
-        "case_id": case.case_id,
-        "mode": "cw",
-        "request": f"{case.case_id}",
-        "outcome": result["failure_mode"] or "VERIFIED",
-        "verified": verified,
-        "verification_status": result["verification_status"],
-        "steps": [
-            {"name": "formalize_rendezvous_problem", "status": "completed"},
-            {"name": "select_rendezvous_model", "status": "completed"},
-        ] + [
-            {"name": rec.get("name", rec.get("stage", "visualization")), "status": rec.get("status"), "reason": rec.get("reason")}
-            for rec in visualization_artifacts
-        ],
-        "artifacts": [
-            {"name": "generated_script", "path": str(output_dir / "generated_cw_rendezvous.script"), "media_type": "text/plain"},
-            {"name": "trajectory_screenshot", "path": result.get("trajectory_artifact"), "media_type": "image/png" if str(result.get("trajectory_artifact", "")).endswith(".png") else "image/svg+xml"},
-        ],
-        "not_generated": [
-            {"name": rec["name"], "reason": rec["reason"]}
-            for rec in visualization_artifacts if rec.get("status") == "not_generated"
-        ],
-    }
-    run_summary = {
-        **run_manifest,
-        "artifact_paths": {
-            "generated_script": str(output_dir / "generated_cw_rendezvous.script"),
-            "trajectory_screenshot": result.get("trajectory_artifact"),
-            "report_files": {key: str((output_dir / f"d_{key}.txt")) for key in ("init", "postburn1", "final", "trajectory")},
-        },
-    }
-    (output_dir / "run_manifest.json").write_text(json.dumps(run_manifest, indent=2) + "\n")
-    (output_dir / "run_summary.json").write_text(json.dumps(run_summary, indent=2) + "\n")
+    if report_dict["solver"]["feasible"]:
+        build_cw_run_manifest(case.case_id, output_dir, result, visualization_artifacts)
     artifacts = {
         "generated_script": str(output_dir / "generated_cw_rendezvous.script"),
         "trajectory_screenshot": result.get("trajectory_artifact"),

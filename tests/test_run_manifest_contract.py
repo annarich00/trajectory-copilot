@@ -43,13 +43,11 @@ def test_run_manifest_schema_contract(demo_id: str):
     assert manifest["not_generated"][0]["reason"]
 
 
-@pytest.mark.parametrize("name", ["demoA", "demoB", "demoC"])
-def test_site_demo_metadata_points_at_run_dirs(name: str):
-    data = json.loads(SITE_DATA.read_text().split("=", 1)[1].rstrip().rstrip(";").strip())
-    demo = data[name]
-
-    assert demo["runDir"].startswith("artifacts/runs/")
-    assert demo["runId"].startswith("demo_")
+@pytest.mark.parametrize("name, run_id", [("demoA", "demo_a"), ("demoB", "demo_b"), ("demoC", "demo_c")])
+def test_site_demo_metadata_points_at_run_dirs(name: str, run_id: str):
+    text = SITE_DATA.read_text()
+    assert f'runDir: "artifacts/runs/{run_id}/latest"' in text
+    assert f'runId: "{run_id}"' in text
 
 
 def test_site_loader_uses_run_manifest_primary_path():

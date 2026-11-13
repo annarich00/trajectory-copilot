@@ -68,6 +68,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 import scripts.run_cw_gmat_slice as slice_runner  # noqa: E402
+from src.workflow import build_cw_run_manifest  # noqa: E402
 
 REQUIRED_FIELDS = ("case_id", "mu_m3_s2", "reference_radius_m", "initial_relative_state", "transfer_time_s")
 
@@ -139,6 +140,7 @@ def run_bridge(structured_case: dict) -> dict:
         timeout_s=float(structured_case.get("timeout_s", 180.0)),
     )
     result["output_dir"] = str(output_dir)
+    build_cw_run_manifest(structured_case["case_id"], output_dir, result)
     return result
 
 
