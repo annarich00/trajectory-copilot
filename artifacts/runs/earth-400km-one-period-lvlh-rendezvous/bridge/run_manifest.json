@@ -1,0 +1,75 @@
+{
+  "demo_id": "earth-400km-one-period-lvlh-rendezvous",
+  "run_id": "earth-400km-one-period-lvlh-rendezvous-20261113T184148Z",
+  "case_id": "earth-400km-one-period-lvlh-rendezvous",
+  "mode": "cw",
+  "request": "earth-400km-one-period-lvlh-rendezvous",
+  "outcome": "NUMERICAL_DISAGREEMENT",
+  "verified": false,
+  "verification_status": "NOT VERIFIED: NUMERICAL_DISAGREEMENT (FAIL): GMAT final state exceeds 10.0x tolerance; gross numerical disagreement.",
+  "steps": [
+    {
+      "name": "formalize_rendezvous_problem",
+      "status": "completed"
+    },
+    {
+      "name": "select_rendezvous_model",
+      "status": "completed"
+    },
+    {
+      "name": "relative_position_3d_scene",
+      "status": "generated",
+      "reason": null,
+      "artifact": {
+        "name": "relative_position_3d_scene",
+        "path": "artifacts/runs/earth-400km-one-period-lvlh-rendezvous/bridge/relative_position_3d.html",
+        "media_type": "text/html"
+      }
+    },
+    {
+      "name": "trajectory_burns_plot",
+      "status": "generated",
+      "reason": null,
+      "artifact": {
+        "name": "trajectory_burns_plot",
+        "path": "artifacts/runs/earth-400km-one-period-lvlh-rendezvous/bridge/trajectory_burns_plot.png",
+        "media_type": "image/png"
+      }
+    },
+    {
+      "name": "verification_comparison_plot",
+      "status": "generated",
+      "reason": null,
+      "artifacts": [
+        {
+          "name": "verification_comparison_plot_0",
+          "path": "artifacts/runs/earth-400km-one-period-lvlh-rendezvous/bridge/earth-400km-one-period-lvlh-rendezvous_cw_vs_gmat_trajectory.png",
+          "media_type": "image/png"
+        },
+        {
+          "name": "verification_comparison_plot_1",
+          "path": "artifacts/runs/earth-400km-one-period-lvlh-rendezvous/bridge/earth-400km-one-period-lvlh-rendezvous_cw_vs_gmat_error_history.png",
+          "media_type": "image/png"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "generated_script",
+      "path": "artifacts/runs/earth-400km-one-period-lvlh-rendezvous/bridge/generated_cw_rendezvous.script",
+      "media_type": "text/plain"
+    },
+    {
+      "name": "gui_preview_script",
+      "path": "artifacts/runs/earth-400km-one-period-lvlh-rendezvous/bridge/generated_cw_rendezvous_gui_preview.script",
+      "media_type": "text/plain"
+    },
+    {
+      "name": "trajectory_screenshot",
+      "path": "artifacts/runs/earth-400km-one-period-lvlh-rendezvous/bridge/trajectory.svg",
+      "media_type": "image/svg+xml"
+    }
+  ],
+  "not_generated": []
+}
