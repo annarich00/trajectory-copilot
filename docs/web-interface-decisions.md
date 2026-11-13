@@ -8,8 +8,9 @@ decisions, not a task list.
 ## Stored demo cases
 
 The first stored runs are Demo A (one period, expected NUMERICAL_DISAGREEMENT),
-Demo B (quarter period, expected VERIFIED) and Demo C (two-body coast, expected
-VERIFIED). Request text, expected outcomes and capture notes are in
+Demo B (quarter period, expected NUMERICAL_DISAGREEMENT unless a later
+capture establishes otherwise) and Demo C (the GEO request, expected
+OUT_OF_SCOPE). Request text, expected outcomes and capture notes are in
 `docs/web-demo-cases.md`. Do not confuse them with the benchmark cases in
 `evaluations/benchmark/` or the "Case B" on the course walkthrough page; say
 "Demo A/B/C".
@@ -55,9 +56,10 @@ Backlog tasks for it; do not reopen TJC-16.5.
   commands and a direct `run_rendezvous_workflow` run were tested. The Phase 2
   live backend will be the first to drive the whole prompt through pi, so
   budget for surprises and verify it explicitly.
-- **Two-body path:** TJC-16.5 records all three plot stages as
-  `not_generated` with reasons for the bounded two-body path. The interface
-  must show that status and reason, not fill the gap.
+- **Out-of-scope path:** Demo C stops after formalization returns
+  `OUT_OF_SCOPE`; downstream model selection, solving, and GMAT stages must be
+  recorded as not called/not generated with reasons. The interface must show
+  that status and reason, not claim a fallback or substitute a plot.
 
 ## Fixed pipeline the interface must reflect
 

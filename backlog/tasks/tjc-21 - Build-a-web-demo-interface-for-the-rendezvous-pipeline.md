@@ -4,7 +4,7 @@ title: Build a web demo interface for the /rendezvous workflow
 status: To Do
 assignee: []
 created_date: '2026-11-10 13:36'
-updated_date: '2026-11-12 13:35'
+updated_date: '2026-11-13 19:47'
 labels:
   - web-demo
 dependencies:
@@ -29,5 +29,4 @@ TJC-16.5 shows each plot live, but only in the pi terminal. For the advisor demo
 <!-- AC:BEGIN -->
 - [ ] #1 No child task changes the behavior of src/workflow.py::run_rendezvous_workflow or the TJC-16.5 artifact outputs
 - [ ] #2 Phase 1 child tasks are Done and the static replay of the three demo cases (Demo A, B, C) is published on GitHub Pages
-- [ ] #3 Phase 1 child tasks are Done and the static replay of the three demo cases (Demo A, B, C) is published on GitHub Pages
 <!-- AC:END -->

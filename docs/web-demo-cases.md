@@ -31,16 +31,39 @@ shorter arc to pass GMAT's tolerance.
 /rendezvous Earth is the central body, R_earth = 6378.137 km, μ = 398600.4418 km³/s². The target is in a circular orbit at 400 km altitude. LVLH frame: x radial outward, y along-track, z cross-track, right-handed. At t = 0, the chaser relative position is [0 m, 10000 m, 0 m] and relative velocity is [0 m/s, 0 m/s, 0 m/s]. Use two impulsive burns, one at departure and one at arrival. After 1388.406068 seconds (one quarter of the target's orbital period), reach relative position [0 m, 0 m, 0 m] and relative velocity [0 m/s, 0 m/s, 0 m/s]. Return the two burn vectors and terminal relative state.
 ```
 
-## Demo C: two-body coast, expect VERIFIED
+## Demo C: GEO request, expect OUT_OF_SCOPE
 
-A single-spacecraft inertial coast. It exercises the step-1 exception in
-`.pi/skills/rendezvous-pipeline-orchestrator/SKILL.md` (formalizer returns OUT OF SCOPE for this shape;
-the pipeline proceeds to the two-body path). Per TJC-16.5, the three plot
-stages are `not_generated` on this path, each with a reason. The UI must show
-that, and must not substitute another plot.
+A GEO-style out-of-scope example from `examples/geo_failure_case.yaml`. It
+must stop after formalization identifies the request as outside the supported
+primarily circular-LEO LVLH rendezvous scope. It must not claim a CW solve, a
+bounded two-body fallback, or a GMAT verification result. Downstream steps
+should be recorded as not called/not generated with truthful reasons; the UI
+must show those reasons and must not substitute another plot.
 
 ```
-/rendezvous A spacecraft is in Earth orbit with an initial inertial Cartesian state position [7778000, 0, 0] m, velocity [0, 7158.7124559338245, 0] m/s. Earth's gravitational parameter is 398600441800000.0 m^3/s^2. Propagate this state forward 900 seconds under point-mass gravity only (no thrust, no perturbations, no targeting). Report the final inertial Cartesian state.
+problem_type: rendezvous
+objective: minimize_delta_v
+reference_orbit:
+  orbit: geostationary
+  altitude_m: 35786000
+  radius_m: 42164000
+  gravitational_parameter_m3_s2: 398600441800000.0
+coordinate_frame:
+  frame: LVLH
+  convention: x radial, y along-track, z cross-track
+initial_relative_state:
+  position_m: [0.0, 14000000.0, 0.0]
+  velocity_mps: [0.0, 0.0, 0.0]
+terminal_conditions:
+  position_m: [0.0, 0.0, 0.0]
+  velocity_mps: [0.0, 0.0, 0.0]
+timing:
+  transfer_time_s: unknown
+maneuver_constraints:
+  burns: 2
+  burn_type: impulsive
+  max_delta_v_mps: unknown
+dynamics_model: CW
 ```
 
 ## Capture notes
@@ -52,5 +75,6 @@ that, and must not substitute another plot.
   `pi_demo_live/` and `circular_leo_400km_one_period_rendezvous*`), but they
   use different inputs (for example a 1000 m offset). Check the inputs before
   reusing any of them; do not relabel an earlier run as a demo case.
+- Demo C now uses the GEO failure-case pattern from `examples/geo_failure_case.yaml` and is an OUT_OF_SCOPE stop, not the two-body coast example.
 - A recorded `NEEDS CLARIFICATION` example is not yet chosen. The benchmark
   `evaluations/benchmark/case_d_ambiguous.txt` is a candidate.
