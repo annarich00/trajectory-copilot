@@ -18,6 +18,7 @@ so no real GMAT installation is required.
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -114,3 +115,38 @@ def test_cli_reports_invalid_json_input_as_explicit_error_not_a_crash():
     assert completed.returncode == 2
     payload = json.loads(completed.stdout)
     assert "error" in payload
+
+
+def _stages(result):
+    return {rec["stage"]: rec for rec in result["visualization_artifacts"]}
+
+
+def test_run_bridge_writes_scene_and_trajectory_plots_even_without_gmat(tmp_path):
+    """The pi tool's bridge must itself persist the pre-GMAT visuals into the run
+    directory (scene + trajectory/burns), and report the comparison plot as an
+    explicit not_generated record (GMAT never ran) rather than silently omitting it."""
+    result = run_bridge(dict(CW_CASE, output_dir=str(tmp_path)))
+    stages = _stages(result)
+    assert list(stages) == [
+        "relative_position_3d_scene", "trajectory_burns_plot", "verification_comparison_plot",
+    ]
+    assert stages["relative_position_3d_scene"]["status"] == "generated"
+    assert stages["trajectory_burns_plot"]["status"] == "generated"
+    assert (tmp_path / "relative_position_3d.html").stat().st_size > 0
+    assert (tmp_path / "trajectory_burns_plot.png").stat().st_size > 0
+    comparison = stages["verification_comparison_plot"]
+    assert comparison["status"] == "not_generated" and comparison["reason"]
+
+
+@pytest.mark.skipif(shutil.which("GmatConsole-R2026a") is None, reason="real GMAT not installed")
+def test_run_bridge_with_real_gmat_writes_all_three_visuals(tmp_path):
+    case = dict(CW_CASE, output_dir=str(tmp_path), gmat_executable="GmatConsole-R2026a")
+    result = run_bridge(case)
+    stages = _stages(result)
+    assert all(rec["status"] == "generated" for rec in stages.values()), stages
+    for rec in stages.values():
+        for path in rec["paths"]:
+            assert Path(path).stat().st_size > 0
+    assert len(stages["verification_comparison_plot"]["paths"]) == 2
+    manifest = json.loads((tmp_path / "run_manifest.json").read_text())
+    assert [s["name"] for s in manifest["steps"]][2:] == list(stages)

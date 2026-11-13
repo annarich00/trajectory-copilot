@@ -69,6 +69,7 @@ sys.path.insert(0, str(ROOT))
 
 import scripts.run_cw_gmat_slice as slice_runner  # noqa: E402
 from src.workflow import build_cw_run_manifest  # noqa: E402
+from src.workflow_visualization import comparison_stage, scene_stage, trajectory_stage  # noqa: E402
 
 REQUIRED_FIELDS = ("case_id", "mu_m3_s2", "reference_radius_m", "initial_relative_state", "transfer_time_s")
 
@@ -131,6 +132,19 @@ def run_bridge(structured_case: dict) -> dict:
     gmat_gui_executable = structured_case.get("gmat_gui_executable", "GMAT-R2026a")
     attempt_gui_screenshot = bool(structured_case.get("attempt_gui_screenshot", False))
 
+    # Persist the three TJC-16 visuals into output_dir from the tool path itself, at
+    # their stage boundaries: scene before the solve, trajectory/burns right after the
+    # solve (before GMAT), comparison after GMAT execution/parsing. Each record is
+    # also returned in ``visualization_artifacts``; a stage that cannot be drawn is
+    # reported ``not_generated`` with a reason, never skipped or faked.
+    visualization_artifacts: list = []
+    solved: dict = {}
+    visualization_artifacts.append(scene_stage(slice_case["state0"], slice_case["radius_m"], output_dir))
+
+    def _on_solution(solution) -> None:
+        solved["solution"] = solution
+        visualization_artifacts.append(trajectory_stage(solution, output_dir))
+
     result, _returncode = slice_runner.run_cw_rendezvous_gmat_verification(
         slice_case,
         output_dir,
@@ -138,9 +152,22 @@ def run_bridge(structured_case: dict) -> dict:
         gmat_gui_executable=gmat_gui_executable,
         skip_gui_screenshot=not attempt_gui_screenshot,
         timeout_s=float(structured_case.get("timeout_s", 180.0)),
+        on_solution=_on_solution,
     )
     result["output_dir"] = str(output_dir)
-    build_cw_run_manifest(structured_case["case_id"], output_dir, result)
+    report_dict = result["unified_verification_report"]
+    comparison_record = comparison_stage(
+        case_id=slice_case["case_id"], solution=solved.get("solution"),
+        initial_relative_state=slice_case["state0"],
+        comparison_status=report_dict["comparison"]["status"],
+        pos_tol_m=slice_case["pos_tol"], vel_tol_mps=slice_case["vel_tol"],
+        gmat_trajectory_report=output_dir / "d_trajectory.txt", output_dir=output_dir,
+    )
+    visualization_artifacts.append(comparison_record)
+    if comparison_record["status"] == "generated":
+        report_dict["comparison_plot_path"] = comparison_record["paths"][1]
+    result["visualization_artifacts"] = visualization_artifacts
+    build_cw_run_manifest(structured_case["case_id"], output_dir, result, visualization_artifacts)
     return result
 
 
