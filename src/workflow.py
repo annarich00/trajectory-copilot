@@ -83,6 +83,25 @@ ArtifactCallback = Callable[[dict], None]
 # verifies at this tolerance scale.
 TWO_BODY_DEFAULT_TOLERANCES = {"position_m": 1.0, "velocity_mps": 0.001}
 
+# Repo root, used only to turn absolute artifact paths into the browser-relative
+# paths the static demo site's server (site/server.js) actually serves under
+# /artifacts/... -- the demo page cannot fetch an absolute filesystem path.
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _relative_artifact_path(path) -> Optional[str]:
+    """Return ``path`` relative to the repo root with forward slashes, or
+    ``None`` if ``path`` is falsy. Falls back to the raw string for any path
+    outside the repo root (should not happen for artifacts this module writes).
+    """
+    if not path:
+        return None
+    resolved = Path(path).resolve()
+    try:
+        return resolved.relative_to(_REPO_ROOT).as_posix()
+    except ValueError:
+        return str(path)
+
 
 @dataclass(frozen=True)
 class RendezvousCase:
@@ -246,11 +265,37 @@ def build_cw_run_manifest(
     ``scripts/gmat_tool_bridge.py`` (the ``run_gmat_verification`` pi tool's
     Python half) -- so a run triggered through either path produces the
     identical saved-run contract the static demo site reads.
+
+    Each visualization stage record (3D scene, trajectory/burns plot,
+    comparison plot) is attached to its matching step as an ``artifact``/
+    ``artifacts`` entry with a repo-root-relative path (not an absolute
+    filesystem path), since the demo site's server only serves paths under
+    ``site/`` and ``artifacts/`` -- an absolute path would 404 in the
+    browser even though the file exists on disk.
     """
     output_dir = Path(output_dir)
     visualization_artifacts = visualization_artifacts or []
     verified = bool(result["verified"])
     trajectory_artifact = result.get("trajectory_artifact")
+
+    def _media_type(path: Optional[str]) -> str:
+        suffix = Path(path).suffix.lower() if path else ""
+        return {
+            ".png": "image/png", ".svg": "image/svg+xml", ".html": "text/html",
+        }.get(suffix, "application/octet-stream")
+
+    def _visualization_step(rec: dict) -> dict:
+        name = rec.get("name", rec.get("stage", "visualization"))
+        step = {"name": name, "status": rec.get("status"), "reason": rec.get("reason")}
+        paths = [p for p in (rec.get("paths") or []) if p]
+        artifacts = [
+            {"name": f"{name}_{i}" if len(paths) > 1 else name, "path": _relative_artifact_path(p), "media_type": _media_type(p)}
+            for i, p in enumerate(paths)
+        ]
+        if artifacts:
+            step["artifacts" if len(artifacts) > 1 else "artifact"] = artifacts if len(artifacts) > 1 else artifacts[0]
+        return step
+
     run_manifest = {
         "demo_id": case_id,
         "run_id": f"{case_id}-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}",
@@ -263,14 +308,11 @@ def build_cw_run_manifest(
         "steps": [
             {"name": "formalize_rendezvous_problem", "status": "completed"},
             {"name": "select_rendezvous_model", "status": "completed"},
-        ] + [
-            {"name": rec.get("name", rec.get("stage", "visualization")), "status": rec.get("status"), "reason": rec.get("reason")}
-            for rec in visualization_artifacts
-        ],
+        ] + [_visualization_step(rec) for rec in visualization_artifacts],
         "artifacts": [
-            {"name": "generated_script", "path": str(output_dir / "generated_cw_rendezvous.script"), "media_type": "text/plain"},
-            {"name": "gui_preview_script", "path": str(output_dir / "generated_cw_rendezvous_gui_preview.script"), "media_type": "text/plain"},
-            {"name": "trajectory_screenshot", "path": trajectory_artifact, "media_type": "image/png" if str(trajectory_artifact or "").endswith(".png") else "image/svg+xml"},
+            {"name": "generated_script", "path": _relative_artifact_path(output_dir / "generated_cw_rendezvous.script"), "media_type": "text/plain"},
+            {"name": "gui_preview_script", "path": _relative_artifact_path(output_dir / "generated_cw_rendezvous_gui_preview.script"), "media_type": "text/plain"},
+            {"name": "trajectory_screenshot", "path": _relative_artifact_path(trajectory_artifact), "media_type": _media_type(trajectory_artifact)},
         ],
         "not_generated": [
             {"name": rec.get("name", rec.get("stage", "visualization")), "reason": rec.get("reason")}
@@ -280,10 +322,10 @@ def build_cw_run_manifest(
     run_summary = {
         **run_manifest,
         "artifact_paths": {
-            "generated_script": str(output_dir / "generated_cw_rendezvous.script"),
-            "gui_preview_script": str(output_dir / "generated_cw_rendezvous_gui_preview.script"),
-            "trajectory_screenshot": trajectory_artifact,
-            "report_files": {key: str((output_dir / f"d_{key}.txt")) for key in ("init", "postburn1", "final", "trajectory")},
+            "generated_script": _relative_artifact_path(output_dir / "generated_cw_rendezvous.script"),
+            "gui_preview_script": _relative_artifact_path(output_dir / "generated_cw_rendezvous_gui_preview.script"),
+            "trajectory_screenshot": _relative_artifact_path(trajectory_artifact),
+            "report_files": {key: _relative_artifact_path(output_dir / f"d_{key}.txt") for key in ("init", "postburn1", "final", "trajectory")},
         },
     }
     (output_dir / "run_manifest.json").write_text(json.dumps(run_manifest, indent=2) + "\n")
