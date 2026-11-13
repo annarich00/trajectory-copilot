@@ -106,7 +106,7 @@
   <h1>Demo visualization pipeline for the rendezvous workflow</h1>
   <p class="lead">This standalone page mirrors the walkthrough style from the project’s evidence pages, but it focuses on the three stored demo runs: Demo A, Demo B and Demo C.</p>
 
-  <p class="sample-banner"><strong>Recorded run, sample data.</strong> This page replays saved data with no server and no API key. It reads each demo from the saved run contract under <code>artifacts/runs/&lt;demo_id&gt;/&lt;run_id&gt;/</code> when available, with the legacy saved-run data kept only as a compatibility fallback. To load any other case, open this page with <code>?case=&lt;case_id&gt;</code> (it tries <code>artifacts/runs/&lt;case_id&gt;</code> then <code>artifacts/runs/&lt;case_id&gt;/bridge</code>) or <code>?runDir=&lt;exact path&gt;</code>. The currently loaded directory is shown below the toolbar.</p>
+  <p class="sample-banner"><strong>Recorded run, sample data.</strong> This page replays saved data with no server and no API key. Demo A, Demo B and Demo C are embedded directly in <code>site/data/demo-runs.js</code> (regenerate with <code>scripts/build_embedded_demo_runs.py</code>), so this page works even opened directly as a file, with no local server required. To instead load any other captured run through a local server, open this page with <code>?case=&lt;case_id&gt;</code> (it tries <code>artifacts/runs/&lt;case_id&gt;</code> then <code>artifacts/runs/&lt;case_id&gt;/bridge</code>) or <code>?runDir=&lt;exact path&gt;</code>; the loaded directory is then shown below the toolbar.</p>
 
   <nav class="toolbar" aria-label="Demo selector, mode toggle and playback controls">
     <label>
