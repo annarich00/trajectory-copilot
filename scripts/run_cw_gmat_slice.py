@@ -295,6 +295,7 @@ def run_cw_rendezvous_gmat_verification(
     # that changes, every run falls back to the SVG plot below, and
     # ``screenshot_source`` records which artifact was actually produced.
     gui_preview_script_path = output_dir / "generated_cw_rendezvous_gui_preview.script"
+    run_manifest_gui_preview_path = gui_preview_script_path
     screenshot_path = output_dir / "trajectory.svg"
     screenshot_source = "svg_fallback"
     gui_result = None
@@ -324,6 +325,7 @@ def run_cw_rendezvous_gmat_verification(
         else validate_screenshot(screenshot_path)
     )
     base_result["trajectory_artifact"] = str(screenshot_path)
+    base_result["gui_preview_script"] = str(run_manifest_gui_preview_path)
     base_result["trajectory_artifact_nonempty"] = screenshot.ok
     base_result["screenshot_source"] = screenshot_source
     screenshot_media_type = "image/png" if screenshot_source == "gmat_gui" else "image/svg+xml"

@@ -269,6 +269,7 @@ def build_cw_run_manifest(
         ],
         "artifacts": [
             {"name": "generated_script", "path": str(output_dir / "generated_cw_rendezvous.script"), "media_type": "text/plain"},
+            {"name": "gui_preview_script", "path": str(output_dir / "generated_cw_rendezvous_gui_preview.script"), "media_type": "text/plain"},
             {"name": "trajectory_screenshot", "path": trajectory_artifact, "media_type": "image/png" if str(trajectory_artifact or "").endswith(".png") else "image/svg+xml"},
         ],
         "not_generated": [
@@ -280,6 +281,7 @@ def build_cw_run_manifest(
         **run_manifest,
         "artifact_paths": {
             "generated_script": str(output_dir / "generated_cw_rendezvous.script"),
+            "gui_preview_script": str(output_dir / "generated_cw_rendezvous_gui_preview.script"),
             "trajectory_screenshot": trajectory_artifact,
             "report_files": {key: str((output_dir / f"d_{key}.txt")) for key in ("init", "postburn1", "final", "trajectory")},
         },
