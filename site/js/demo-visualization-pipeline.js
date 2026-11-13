@@ -3,6 +3,25 @@
   const params = new URLSearchParams(location.search);
   const DELAY_MS = Math.max(0, Number(params.get('delay')) || 1500);
 
+  // Let the page point at any run directory, not only the three fixed demo
+  // slots: ?case=<case_id> tries artifacts/runs/<case_id> then
+  // artifacts/runs/<case_id>/bridge (the gmat_tool_bridge.py default), and
+  // ?runDir=<path> points at an exact directory. Either adds a "Custom run"
+  // option and selects it immediately.
+  const caseParam = params.get('case');
+  const runDirParam = params.get('runDir');
+  if (runDirParam || caseParam) {
+    const runDirs = runDirParam
+      ? [runDirParam]
+      : [`artifacts/runs/${caseParam}`, `artifacts/runs/${caseParam}/bridge`];
+    demos.custom = {
+      id: 'custom',
+      label: params.get('label') || caseParam || 'Custom run',
+      runDirs,
+      recordedLabel: 'Live run',
+    };
+  }
+
   const el = (id) => document.getElementById(id);
   const demoSelect = el('demo-select');
   const operatorBtn = el('mode-operator');
@@ -14,7 +33,15 @@
   const log = el('chat-log');
   const meta = el('run-meta');
 
-  let current = 'demoA';
+  if (demos.custom && demoSelect && !demoSelect.querySelector('option[value="custom"]')) {
+    const option = document.createElement('option');
+    option.value = 'custom';
+    option.textContent = demos.custom.label;
+    demoSelect.appendChild(option);
+  }
+
+  let current = demos.custom ? 'custom' : 'demoA';
+  if (demoSelect) demoSelect.value = current;
   let mode = 'operator';
   let shown = 0;
   let playing = true;
@@ -78,20 +105,30 @@
   const opened = new Set();
 
   function loadRun(demo) {
-    if (demo.run) return Promise.resolve(demo.run);
-    if (!demo.runDir) return Promise.resolve(null);
-    return fetch(`${demo.runDir}/run_summary.json`)
+    if (demo.run) return Promise.resolve({ run: demo.run, sourceDir: null });
+    const dirs = demo.runDirs || (demo.runDir ? [demo.runDir] : []);
+    if (!dirs.length) return Promise.resolve(null);
+    return dirs.reduce(
+      (chain, dir) => chain.catch(() => fetchRunFromDir(dir).then((run) => ({ run, sourceDir: dir }))),
+      Promise.reject(new Error('no run directories configured')),
+    );
+  }
+
+  function fetchRunFromDir(dir) {
+    return fetch(`${dir}/run_summary.json`)
       .then((response) => {
-        if (!response.ok) throw new Error(`Unable to load ${demo.runDir}/run_summary.json`);
+        if (!response.ok) throw new Error(`Unable to load ${dir}/run_summary.json`);
         return response.json();
       })
-      .catch(() => fetch(`${demo.runDir}/run_manifest.json`).then((response) => {
-        if (!response.ok) throw new Error(`Unable to load ${demo.runDir}/run_manifest.json`);
+      .catch(() => fetch(`${dir}/run_manifest.json`).then((response) => {
+        if (!response.ok) throw new Error(`Unable to load ${dir}/run_manifest.json`);
         return response.json();
       }));
   }
 
-  function normalizeRun(demo, run) {
+  function normalizeRun(demo, loaded) {
+    const run = loaded && loaded.run ? loaded.run : loaded;
+    const sourceDir = (loaded && loaded.sourceDir) || demo.runDir || (demo.runDirs && demo.runDirs[0]) || null;
     const manifest = run && run.manifest ? run.manifest : run;
     const summary = run && run.summary ? run.summary : run;
     const steps = (summary && summary.steps) || (manifest && manifest.steps) || [];
@@ -103,11 +140,13 @@
       request: summary?.request || manifest?.request || demo.request || '',
       steps,
       stop: summary?.stop || manifest?.stop || demo.stop || null,
+      sourceDir,
     };
   }
 
   function metaText(run, demo) {
-    return `${demo.label} · expected ${run.expected} · recorded ${run.recordedOutcome} · step ${Math.min(shown, run.steps.length)} of ${run.steps.length} · mode: ${mode}`;
+    const dirNote = run.sourceDir ? ` · reading from ${run.sourceDir}` : '';
+    return `${demo.label} · expected ${run.expected} · recorded ${run.recordedOutcome} · step ${Math.min(shown, run.steps.length)} of ${run.steps.length} · mode: ${mode}${dirNote}`;
   }
 
   function render(scroll) {

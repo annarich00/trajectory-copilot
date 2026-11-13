@@ -54,6 +54,7 @@ def test_site_loader_uses_run_manifest_primary_path():
     source = SITE_SCRIPT.read_text()
 
     assert "run_manifest.json" in source
-    assert "legacy saved-run data" not in source.lower() or "compatibility" in source.lower()
+    assert "run_summary.json" in source
     assert "normalizeRun" in source
-    assert "fetch(`${demo.runDir}/run_manifest.json`)" in source
+    assert "fetchRunFromDir" in source
+    assert "${dir}/run_manifest.json" in source
