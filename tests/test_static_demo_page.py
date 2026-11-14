@@ -7,6 +7,7 @@ checks keep that from regressing without needing a browser.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
@@ -57,10 +58,11 @@ def test_page_has_chat_log_and_playback_controls():
         assert f'id="{control_id}"' in html, control_id
 
 
-def test_playback_delay_defaults_to_1500ms_and_is_overridable_by_url():
+def test_agent_playback_defaults_to_2500ms_without_changing_typing_timing():
     js = JS.read_text()
     assert "URLSearchParams" in js and "DELAY_MS" in js
-    assert "1500" in js
+    assert "|| 2500" in js
+    assert "TYPING_DELAY_MS" in js and "|| 20" in js
 
 
 def test_script_shows_request_as_a_user_message_then_agent_steps():
@@ -69,5 +71,177 @@ def test_script_shows_request_as_a_user_message_then_agent_steps():
     assert js.index("msg user") < js.index("msg agent")
 
 
-def test_page_labels_data_as_sample_until_recaptured():
-    assert "sample data" in PAGE.read_text().lower()
+def test_page_uses_a_concise_disclosure_for_current_recorded_run_outcomes():
+    """The closed-by-default note accurately summarizes the reverified demos."""
+    html = PAGE.read_text()
+    assert '<details class="recording-info">' in html
+    assert "About these recorded demos" in html
+    assert "Demo A is NOT VERIFIED" in html
+    assert "Demo B is VERIFIED" in html
+    assert "20 m / 0.05 m/s" in html
+    assert "Demo C is UNSUPPORTED" in html
+
+
+def test_developer_mode_renders_visual_artifacts_without_textual_step_chrome():
+    """Developer mode presents an image artifact as the image itself, rather
+    than prepending its title, status, narrative, path, or raw JSON."""
+    js = JS.read_text()
+    assert "function developerImageMessage" in js
+    assert "developerImageMessage(step, index)" in js
+
+
+def test_page_has_no_operator_mode_or_mode_toggle():
+    """The owner chose the developer-oriented replay as the page's only view."""
+    assert 'id="mode-operator"' not in PAGE.read_text()
+    assert "mode === 'operator'" not in JS.read_text()
+
+
+def test_sole_view_has_no_stale_mode_reference():
+    """A removed mode toggle must not leave playback with an undefined variable."""
+    assert "mode === 'developer'" not in JS.read_text()
+
+
+def test_pipeline_steps_use_skill_or_tool_source_labels():
+    """Recorded responses identify their producing skill, tool, or artifact stage."""
+    js = JS.read_text()
+    assert "function stepSourceLabel" in js
+    assert "SKILL: RENDEZVOUS PIPELINE ORCHESTRATOR · TOOL: ORBITAL PROBLEM FORMALIZER" in js
+    assert "TOOL: ORBITAL MODEL SELECTOR" in js
+    assert "TOOL: GMAT VERIFICATION" in js
+
+
+def test_recorded_calculation_table_follows_gmat_and_precedes_comparison_plots():
+    """The table uses recorded solver/GMAT results and is inserted in pipeline order."""
+    js = JS.read_text()
+    assert "function calculationTableMessage" in js
+    assert "solve_cw_rendezvous" in js
+    assert "run_gmat_verification" in js
+    assert "if (step.name === 'run_gmat_verification') parts.push(calculationTableMessage(run));" in js
+
+
+def test_html_visualization_artifacts_render_inline_not_as_a_path_only():
+    """The recorded Plotly scene is part of the replay, not an opaque path."""
+    js = JS.read_text()
+    assert "function artifactFrameMarkup" in js
+    assert 'class="artifact-frame"' in js
+    assert "sandbox=\"allow-scripts allow-same-origin\"" in js
+
+
+def test_response_cards_do_not_show_a_reason_caption():
+    """Stored reasons remain data, not a repeated presentation label."""
+    assert '<strong>Reason:</strong>' not in JS.read_text()
+
+
+def test_visualization_renderers_reserve_space_for_legends_and_titles():
+    """Static artifacts must keep legends outside data axes and save their full bounds."""
+    trajectory = (ROOT / "src/visualization_trajectory.py").read_text()
+    comparison = (ROOT / "src/visualization_comparison.py").read_text()
+    scene = (ROOT / "src/visualization.py").read_text()
+    assert "bbox_to_anchor=(0.5, -0.16)" in trajectory
+    assert 'bbox_inches="tight"' in comparison
+    assert "legend=dict(orientation=\"h\"" in scene
+
+
+def test_user_message_omits_the_rendezvous_command_prefix():
+    """The stored command remains canonical, but readers see only its request."""
+    js = JS.read_text()
+    assert "function displayRequest" in js
+    assert "replace(/^\\/rendezvous\\b\\s*/i, '')" in js
+
+
+def test_replay_starts_blank_and_play_types_the_request_before_steps():
+    """The request is a Play-triggered typing animation, not preloaded text."""
+    js = JS.read_text()
+    assert "const TYPING_DELAY_MS" in js
+    assert "let typedRequestLength = 0;" in js
+    assert "if (typedRequestLength < request.length)" in js
+    assert "restart(false);" in js
+
+
+def test_typed_user_request_does_not_restart_entrance_animation_or_scroll():
+    """Each character update keeps the already-visible user bubble stable."""
+    assert ".msg.user { animation: none; }" in PAGE.read_text()
+    assert "typedRequestLength += 1;" in JS.read_text()
+    assert "render(false);" in JS.read_text()
+
+
+def test_first_agent_step_starts_when_request_typing_completes():
+    """Completing the typing animation must not leave playback idle."""
+    js = JS.read_text()
+    assert "if (typedRequestLength >= request.length) { reveal(1); schedule(); }" in js
+
+
+
+# --- embedded site data matches the three recorded runs (TJC-21.4) --------------
+# These read site/data/demo-runs.js exactly the way the page does (as a script
+# that assigns window.TCDemoRuns), so a regenerated data file that lost a
+# demo's request text or structured results fails here rather than in a browser.
+
+CANONICAL_STEP_NAMES = [
+    "formalize_rendezvous_problem",
+    "select_rendezvous_model",
+    "relative_position_3d_scene",
+    "solve_cw_rendezvous",
+    "trajectory_burns_plot",
+    "run_gmat_verification",
+    "verification_comparison_plot",
+]
+
+
+def _load_site_demo_runs() -> dict:
+    code = (
+        "const vm=require('vm');const fs=require('fs');const c={window:{}};vm.createContext(c);"
+        f"vm.runInContext(fs.readFileSync({str(DATA)!r},'utf8'),c);"
+        "console.log(JSON.stringify(c.window.TCDemoRuns))"
+    )
+    out = subprocess.run(["node", "-e", code], capture_output=True, text=True, timeout=120)
+    assert out.returncode == 0, out.stderr
+    return json.loads(out.stdout)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
+@pytest.mark.parametrize("demo_id", ["demoA", "demoB", "demoC"])
+def test_site_data_exposes_request_text_and_structured_step_results(demo_id: str):
+    run = _load_site_demo_runs()[demo_id]["run"]
+
+    assert run["request"].startswith("/rendezvous ")
+    assert run["request"] == run["source_request_text"]
+    assert run["request"] != run["case_id"]
+    assert [step["name"] for step in run["steps"]] == CANONICAL_STEP_NAMES
+    steps = {step["name"]: step for step in run["steps"]}
+    assert steps["formalize_rendezvous_problem"]["result"]["readiness"] == "READY_TO_SOLVE"
+    assert steps["select_rendezvous_model"]["result"]["selection"]
+    assert run["verified"] is (demo_id == "demoB")
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
+def test_site_data_demo_c_claims_no_cw_two_body_or_gmat_verification():
+    run = _load_site_demo_runs()["demoC"]["run"]
+
+    assert run["outcome"] == "UNSUPPORTED"
+    steps = {step["name"]: step for step in run["steps"]}
+    assert steps["select_rendezvous_model"]["result"]["deterministic_tool"] is None
+    for name in ("solve_cw_rendezvous", "run_gmat_verification"):
+        assert steps[name]["status"] == "not_called", name
+        assert steps[name]["reason"], name
+        assert "result" not in steps[name], name
+    for name in ("relative_position_3d_scene", "trajectory_burns_plot", "verification_comparison_plot"):
+        assert steps[name]["status"] == "not_generated", name
+        assert steps[name]["reason"], name
+        assert not steps[name].get("artifact") and not steps[name].get("artifacts"), name
+    assert "propagate_two_body_coast" not in json.dumps(run)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
+def test_site_data_records_the_reverified_gmat_outcomes_for_demo_a_and_b():
+    runs = _load_site_demo_runs()
+    demo_a = runs["demoA"]["run"]
+    demo_b = runs["demoB"]["run"]
+
+    assert demo_a["outcome"] == "NUMERICAL_DISAGREEMENT"
+    assert demo_b["outcome"] == "VERIFIED"
+    a_gmat = next(s for s in demo_a["steps"] if s["name"] == "run_gmat_verification")["result"]
+    b_gmat = next(s for s in demo_b["steps"] if s["name"] == "run_gmat_verification")["result"]
+    assert a_gmat["comparison"]["tolerances"] == {"position_m": 20, "velocity_mps": 0.05, "delta_v_mps": 0.001}
+    assert b_gmat["verified"] is True
+    assert b_gmat["comparison"]["status"] == "PASS"

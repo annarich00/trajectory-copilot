@@ -58,6 +58,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import textwrap
 
 import matplotlib
 
@@ -148,35 +149,39 @@ def plot_cw_vs_gmat_comparison(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Long saved-run identifiers are useful provenance, but must not run
+    # beyond the image boundary.  Wrap them rather than truncating words.
+    case_label = textwrap.fill(case_id, width=52)
+
     trajectory_plot_path = output_dir / f"{case_id}_cw_vs_gmat_trajectory.png"
-    fig = plt.figure(figsize=(7, 6))
+    fig = plt.figure(figsize=(10, 7))
+    fig.subplots_adjust(right=0.74, top=0.82)
     ax = fig.add_subplot(111, projection="3d")
     ax.plot(cw_states_si[:, 0], cw_states_si[:, 1], cw_states_si[:, 2], label="CW/two-body prediction", color="tab:blue")
     ax.plot(gmat_states_si[:, 0], gmat_states_si[:, 1], gmat_states_si[:, 2], label="GMAT (independent)", color="tab:orange", linestyle="--")
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax.set_zlabel("z [m]")
-    ax.set_title(f"CW/two-body vs. GMAT trajectory comparison -- case '{case_id}'")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(trajectory_plot_path)
+    ax.set_title(f"CW/two-body vs. GMAT trajectory comparison\ncase: {case_label}", pad=20)
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0)
+    fig.savefig(trajectory_plot_path, bbox_inches="tight", pad_inches=0.15)
     plt.close(fig)
 
     error_history_plot_path = output_dir / f"{case_id}_cw_vs_gmat_error_history.png"
-    fig, (ax_pos, ax_vel) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+    fig, (ax_pos, ax_vel) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
+    fig.subplots_adjust(right=0.72, top=0.83, hspace=0.08)
     ax_pos.plot(cw_times_s, position_error_m, color="tab:red", label="position error magnitude")
     ax_pos.axhline(pos_tol_m, color="black", linestyle=":", label=f"position tolerance ({pos_tol_m} m)")
     ax_pos.set_ylabel("position error [m]")
-    ax_pos.set_title(f"Position/velocity error history -- case '{case_id}' (status: {comparison_status})")
-    ax_pos.legend()
+    ax_pos.legend(loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0)
 
     ax_vel.plot(cw_times_s, velocity_error_mps, color="tab:red", label="velocity error magnitude")
     ax_vel.axhline(vel_tol_mps, color="black", linestyle=":", label=f"velocity tolerance ({vel_tol_mps} m/s)")
     ax_vel.set_xlabel("time [s]")
     ax_vel.set_ylabel("velocity error [m/s]")
-    ax_vel.legend()
-    fig.tight_layout()
-    fig.savefig(error_history_plot_path)
+    ax_vel.legend(loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0)
+    fig.suptitle(f"Position/velocity error history\ncase: {case_label} (status: {comparison_status})", y=0.97)
+    fig.savefig(error_history_plot_path, bbox_inches="tight", pad_inches=0.15)
     plt.close(fig)
 
     return ComparisonPlotResult(

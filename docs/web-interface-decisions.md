@@ -7,10 +7,11 @@ decisions, not a task list.
 
 ## Stored demo cases
 
-The first stored runs are Demo A (one period, expected NUMERICAL_DISAGREEMENT),
-Demo B (quarter period, expected NUMERICAL_DISAGREEMENT unless a later
-capture establishes otherwise) and Demo C (the GEO request, expected
-OUT_OF_SCOPE). Request text, expected outcomes and capture notes are in
+The first stored runs are Demo A (one period) and Demo B (quarter period),
+both of which recorded NUMERICAL_DISAGREEMENT when re-captured from real
+pipeline runs, and Demo C (a 14 000 km along-track LEO offset, recorded
+UNSUPPORTED by the model selector; this replaced the earlier GEO/OUT_OF_SCOPE
+framing). Request text, measured outcomes and capture notes are in
 `docs/web-demo-cases.md`. Do not confuse them with the benchmark cases in
 `evaluations/benchmark/` or the "Case B" on the course walkthrough page; say
 "Demo A/B/C".
@@ -129,7 +130,7 @@ These may be mentioned as future work.
 - **Failure vocabulary.** Reuse the existing statuses and failure modes from `src/gmat_verify.py` and `src/verification_report.py` (PASS/WARNING/FAIL/INCOMPLETE; MISSING_GMAT, EXECUTION_ERROR, MALFORMED_OUTPUT, NUMERICAL_DISAGREEMENT, SCREENSHOT_FAILURE, CW_TARGETING_INFEASIBLE). Do not invent new ones.
 - **Live agent tools.** Even for a local demo, restrict the live agent to workflow tools (formalizer, selector, workflow scripts, `run_gmat_verification`). Do not expose general shell access through the web UI.
 - **Do not modify** `src/workflow.py::run_rendezvous_workflow` behavior to suit the UI; the UI consumes existing outputs.
-- **Existing site.** `site/` and `run_site.sh` already serve an offline educational lab. Decide in a task whether the new UI extends it or lives in a new directory; the decisions above do not settle this.
+- **Retired educational SPA.** The prior offline educational lab, its server, and its mirrored source/reference files were removed at the project owner's request. The retained `site/` surface is only the standalone recorded-run replay (`demo-visualization-pipeline.html`, its script, and embedded data), which opens directly without a server.
 - **Repo hygiene.** Do not commit the course PDFs or lecture material that sit outside this repo. Follow `docs/task-commit-policy.md` and `docs/testing-policy.md`.
 
 ## Open items

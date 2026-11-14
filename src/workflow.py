@@ -122,6 +122,11 @@ class RendezvousCase:
     clarification_questions: tuple[str, ...] = ()
     out_of_scope_reason: str = ""
 
+    # The run's original natural-language request, recorded verbatim into the
+    # saved run so the demo page's operator message is the real request rather
+    # than ``case_id``. Empty when the caller did not supply one.
+    source_request_text: str = ""
+
     # Populated only when readiness is READY_TO_SOLVE.
     model_selection_case: Optional[ModelSelectionCase] = None
 
@@ -172,23 +177,31 @@ class WorkflowResult:
             "verified": self.verified,
             "verification_status": self.verification_status,
             "clarification_questions": list(self.clarification_questions),
-            "model_selection": (
-                {
-                    "selection": self.model_selection.selection,
-                    "qualified": self.model_selection.qualified,
-                    "reasons": list(self.model_selection.reasons),
-                    "assumptions": list(self.model_selection.assumptions),
-                    "concerns": list(self.model_selection.concerns),
-                    "deterministic_tool": self.model_selection.deterministic_tool,
-                    "missing_items": list(self.model_selection.missing_items),
-                }
-                if self.model_selection is not None
-                else None
-            ),
+            "model_selection": model_selection_dict(self.model_selection),
             "unified_verification_report": self.artifacts.get("unified_verification_report"),
             "artifacts": {key: value for key, value in self.artifacts.items() if key != "unified_verification_report"},
             "trust_statement": self.trust_statement,
         }
+
+
+def model_selection_dict(model_selection: Optional[ModelSelectionResult]) -> Optional[dict]:
+    """Return ``model_selection``'s seven recorded fields as a JSON-ready dict,
+    or ``None``. This is the same payload the ``select_rendezvous_model`` pi
+    tool returns (``scripts/model_selector_tool_bridge.py``), so a saved run's
+    ``select_rendezvous_model`` step carries the selector's own output rather
+    than a re-description of it.
+    """
+    if model_selection is None:
+        return None
+    return {
+        "selection": model_selection.selection,
+        "qualified": model_selection.qualified,
+        "reasons": list(model_selection.reasons),
+        "assumptions": list(model_selection.assumptions),
+        "concerns": list(model_selection.concerns),
+        "deterministic_tool": model_selection.deterministic_tool,
+        "missing_items": list(model_selection.missing_items),
+    }
 
 
 def _clarification_result(case: RendezvousCase) -> WorkflowResult:
@@ -254,6 +267,10 @@ def _unresolved_selection_result(case: RendezvousCase, model_selection: ModelSel
 
 def build_cw_run_manifest(
     case_id: str, output_dir: Path, result: dict, visualization_artifacts: Optional[list] = None,
+    *,
+    source_request_text: Optional[str] = None,
+    formalization: Optional[dict] = None,
+    model_selection: Optional[dict] = None,
 ) -> tuple[dict, dict]:
     """Build the ``run_manifest.json``/``run_summary.json`` payloads for one
     completed CW/GMAT verification ``result`` dict (the same shape
@@ -272,11 +289,25 @@ def build_cw_run_manifest(
     filesystem path), since the demo site's server only serves paths under
     ``site/`` and ``artifacts/`` -- an absolute path would 404 in the
     browser even though the file exists on disk.
+
+    ``source_request_text`` is the run's original natural-language request;
+    it is stored as both ``source_request_text`` and ``request`` (the field
+    the demo page reads) so the operator message is the real request rather
+    than a case ID. It is ``None`` when the caller did not record one -- the
+    case ID is never substituted for it.
+
+    ``formalization``/``model_selection`` are the structured results of the
+    two prose pipeline steps, recorded verbatim on their steps so the page's
+    expandable blocks have real content. A step whose structured result was
+    not recorded says so in its ``reason`` instead of carrying invented data,
+    and the ``run_gmat_verification`` step is ``not_called`` with GMAT's own
+    reason whenever GMAT was never executed.
     """
     output_dir = Path(output_dir)
     visualization_artifacts = visualization_artifacts or []
     verified = bool(result["verified"])
     trajectory_artifact = result.get("trajectory_artifact")
+    gmat = result.get("gmat") or {}
 
     def _media_type(path: Optional[str]) -> str:
         suffix = Path(path).suffix.lower() if path else ""
@@ -296,19 +327,75 @@ def build_cw_run_manifest(
             step["artifacts" if len(artifacts) > 1 else "artifact"] = artifacts if len(artifacts) > 1 else artifacts[0]
         return step
 
+    def _prose_tool_step(name: str, structured_result: Optional[dict]) -> dict:
+        """The formalizer/model-selector step: the CW path only exists because
+        both completed, but their structured results are only shown when the
+        caller actually recorded them."""
+        if structured_result is None:
+            return {
+                "name": name, "status": "completed",
+                "reason": f"This run did not record {name}'s structured result.",
+            }
+        return {"name": name, "status": "completed", "reason": None, "result": structured_result}
+
+    def _gmat_verification_step() -> dict:
+        """GMAT's own step: ``not_called`` with GMAT's recorded reason when the
+        executable was never invoked, so an unavailable GMAT is never shown as
+        a verification result."""
+        if not gmat.get("attempted"):
+            return {
+                "name": "run_gmat_verification", "status": "not_called",
+                "reason": gmat.get("reason") or result["verification_status"],
+            }
+        return {
+            "name": "run_gmat_verification", "status": "completed", "reason": None,
+            "result": {
+                "verified": verified,
+                "failure_mode": result["failure_mode"],
+                "verification_status": result["verification_status"],
+                "comparison": result.get("comparison"),
+                "gmat": {"attempted": True, "exit_status": gmat.get("exit_status"), "reason": gmat.get("reason")},
+            },
+        }
+
+    visualization_steps = {
+        rec.get("name", rec.get("stage", "visualization")): _visualization_step(rec)
+        for rec in visualization_artifacts
+    }
+    # Pipeline order, matching the stage boundaries the run actually passed
+    # through (scene before the solve, trajectory/burns right after it,
+    # comparison plot after GMAT); any other recorded stage keeps its order
+    # at the end rather than being dropped.
+    ordered_step_names = [
+        "formalize_rendezvous_problem", "select_rendezvous_model", "relative_position_3d_scene",
+        "solve_cw_rendezvous", "trajectory_burns_plot", "run_gmat_verification",
+        "verification_comparison_plot",
+    ]
+    steps = []
+    for name in ordered_step_names:
+        if name == "formalize_rendezvous_problem":
+            steps.append(_prose_tool_step(name, formalization))
+        elif name == "select_rendezvous_model":
+            steps.append(_prose_tool_step(name, model_selection))
+        elif name == "solve_cw_rendezvous":
+            steps.append({"name": name, "status": "completed", "reason": None, "result": result.get("cw")})
+        elif name == "run_gmat_verification":
+            steps.append(_gmat_verification_step())
+        elif name in visualization_steps:
+            steps.append(visualization_steps[name])
+    steps += [step for name, step in visualization_steps.items() if name not in ordered_step_names]
+
     run_manifest = {
         "demo_id": case_id,
         "run_id": f"{case_id}-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}",
         "case_id": case_id,
         "mode": "cw",
-        "request": f"{case_id}",
+        "source_request_text": source_request_text,
+        "request": source_request_text,
         "outcome": result["failure_mode"] or "VERIFIED",
         "verified": verified,
         "verification_status": result["verification_status"],
-        "steps": [
-            {"name": "formalize_rendezvous_problem", "status": "completed"},
-            {"name": "select_rendezvous_model", "status": "completed"},
-        ] + [_visualization_step(rec) for rec in visualization_artifacts],
+        "steps": steps,
         "artifacts": [
             {"name": "generated_script", "path": _relative_artifact_path(output_dir / "generated_cw_rendezvous.script"), "media_type": "text/plain"},
             {"name": "gui_preview_script", "path": _relative_artifact_path(output_dir / "generated_cw_rendezvous_gui_preview.script"), "media_type": "text/plain"},
@@ -392,7 +479,15 @@ def _run_cw_path(
     if comparison_record["status"] == "generated":
         report_dict["comparison_plot_path"] = comparison_record["paths"][1]
     if report_dict["solver"]["feasible"]:
-        build_cw_run_manifest(case.case_id, output_dir, result, visualization_artifacts)
+        build_cw_run_manifest(
+            case.case_id, output_dir, result, visualization_artifacts,
+            source_request_text=case.source_request_text or None,
+            formalization={
+                "readiness": case.readiness,
+                "clarification_questions": list(case.clarification_questions),
+            },
+            model_selection=model_selection_dict(model_selection),
+        )
     artifacts = {
         "generated_script": str(output_dir / "generated_cw_rendezvous.script"),
         "trajectory_screenshot": result.get("trajectory_artifact"),

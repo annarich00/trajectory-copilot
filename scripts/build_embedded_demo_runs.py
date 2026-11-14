@@ -9,19 +9,18 @@ each demo's ``run_summary.json``/``run_manifest.json`` (and its referenced
 image/HTML artifacts) via ``fetch()`` against a path like
 ``artifacts/runs/<case_id>/bridge/...``. Browsers block ``fetch()`` between
 local files under the ``file://`` protocol, so opening the HTML page
-directly (for example via a Windows/WSL UNC path, not through
-``./run_site.sh``) cannot load any of that -- the page looks like it
-"doesn't load."
+directly (for example via a Windows/WSL UNC path) cannot load any of
+that -- the page looks like it "doesn't load."
 
 This script embeds each demo's manifest and every small image artifact
 (PNG/SVG) directly as a ``data:`` URI inside ``site/data/demo-runs.js``'s
 ``demo.run`` field, which the existing loader already supports
 (``loadRun()`` returns ``demo.run`` immediately when present, skipping
 ``fetch()`` entirely). Large non-image artifacts (for example the ~5 MB
-Plotly 3D scene HTML) are left as plain relative links instead of being
-inlined, since ``<a href="...">`` to a sibling file still works from
-``file://`` even though ``fetch()`` does not, and inlining megabytes of
-HTML into a `<script>` tag would make the generated file unwieldy.
+Plotly 3D scene HTML) are left as relative artifact paths instead of being
+inlined; the page embeds those paths in a local iframe, while inlining
+megabytes of HTML into a `<script>` tag would make the generated file
+unwieldy.
 
 Usage::
 
@@ -36,23 +35,21 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SITE_DATA = ROOT / "site" / "data" / "demo-runs.js"
 
-# One real workflow run per demo slot (the demo site's three fixed slots),
-# or None when no run has been captured yet (Demo C): in that case the
-# existing docs/web-demo-cases.md-derived sample stays in
-# artifacts/saved_runs/demo_c/run.json and is embedded instead.
+# One real recorded workflow run per demo slot (the demo site's three fixed
+# slots); see docs/web-demo-cases.md. None of the three passed GMAT
+# verification: Demo A and Demo B recorded NUMERICAL_DISAGREEMENT, and Demo C
+# was refused by the model selector (UNSUPPORTED) before any solver ran, so it
+# has only a run_manifest.json and no artifacts.
 DEMO_RUN_DIRS = {
-    "demoA": ROOT / "artifacts/runs/earth-400km-one-period-lvlh-rendezvous/bridge",
-    "demoB": ROOT / "artifacts/runs/earth-400km-quarter-period-rendezvous/bridge",
-    "demoC": None,
+    "demoA": ROOT / "artifacts/runs/demo-a-400km-one-period-10km-alongtrack/bridge",
+    "demoB": ROOT / "artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge",
+    "demoC": ROOT / "artifacts/runs/demo-c-400km-quarter-period-14000km-alongtrack",
 }
 
-# Fallback sample data (not a real workflow run) when a demo has no captured
-# run yet; see docs/web-demo-cases.md and artifacts/saved_runs/README.md.
-SAMPLE_RUN_FILES = {
-    "demoA": ROOT / "artifacts/saved_runs/demo_a/run.json",
-    "demoB": ROOT / "artifacts/saved_runs/demo_b/run.json",
-    "demoC": ROOT / "artifacts/saved_runs/demo_c/run.json",
-}
+# A run's full record is its run_summary.json when the pipeline reached a GMAT
+# verification, and its run_manifest.json otherwise; the first of these that
+# exists in a run directory is the one embedded.
+RUN_FILE_NAMES = ("run_summary.json", "run_manifest.json")
 
 DEMO_LABELS = {"demoA": "Demo A", "demoB": "Demo B", "demoC": "Demo C"}
 
@@ -95,49 +92,35 @@ def _embed_step(repo_root: Path, step: dict) -> dict:
     return out
 
 
-def build_embedded_run(run_dir: Path) -> dict:
-    """Load one workflow run's ``run_summary.json`` and return a copy with
-    every inlinable artifact (PNG/SVG) replaced by a ``data:`` URI.
+def run_file_for(run_dir: Path) -> Path | None:
+    """Return the run's full record (see :data:`RUN_FILE_NAMES`), or ``None``
+    when the directory holds neither."""
+    for name in RUN_FILE_NAMES:
+        candidate = run_dir / name
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def build_embedded_run(run_file: Path) -> dict:
+    """Load one recorded run and return a copy with every inlinable artifact
+    (PNG/SVG) replaced by a ``data:`` URI.
     """
-    summary_path = run_dir / "run_summary.json"
-    run = json.loads(summary_path.read_text())
+    run = json.loads(run_file.read_text())
     run["steps"] = [_embed_step(ROOT, step) for step in run.get("steps", [])]
     if run.get("artifacts"):
         run["artifacts"] = [_embed_artifact(ROOT, a) for a in run["artifacts"]]
     return run
 
 
-def build_embedded_sample_run(sample_path: Path) -> dict:
-    """Load a pre-existing ``artifacts/saved_runs/<demo>/run.json`` sample
-    and inline its image artifacts the same way, for a demo with no
-    captured workflow run yet (Demo C).
-    """
-    run = json.loads(sample_path.read_text())
-    run["request"] = run.get("source_request_text", run.get("request", ""))
-    for step in run.get("steps", []):
-        artifact = step.get("artifact")
-        if artifact and artifact.get("path"):
-            media_type = artifact.get("media_type", "image/png")
-            full_path = ROOT / artifact["path"]
-            if media_type in INLINABLE_MEDIA_TYPES and full_path.is_file():
-                artifact["path"] = _data_uri(full_path, media_type)
-                artifact["embedded"] = True
-            else:
-                artifact["embedded"] = False
-    return run
-
-
 def main() -> int:
     entries = []
     for demo_id, label in DEMO_LABELS.items():
-        run_dir = DEMO_RUN_DIRS.get(demo_id)
-        if run_dir is not None and (run_dir / "run_summary.json").is_file():
-            run = build_embedded_run(run_dir)
-            source_note = f"embedded from {run_dir.relative_to(ROOT).as_posix()}"
-        else:
-            sample_path = SAMPLE_RUN_FILES[demo_id]
-            run = build_embedded_sample_run(sample_path)
-            source_note = f"embedded sample from {sample_path.relative_to(ROOT).as_posix()} (no captured workflow run yet)"
+        run_file = run_file_for(DEMO_RUN_DIRS[demo_id])
+        if run_file is None:
+            raise SystemExit(f"{demo_id}: no {' or '.join(RUN_FILE_NAMES)} in {DEMO_RUN_DIRS[demo_id]}")
+        run = build_embedded_run(run_file)
+        source_note = f"embedded from {run_file.relative_to(ROOT).as_posix()}"
         entries.append((demo_id, label, run, source_note))
 
     lines = ["// Generated by scripts/build_embedded_demo_runs.py -- do not hand-edit.",

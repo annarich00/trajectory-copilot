@@ -49,6 +49,16 @@ defaults):
 - ``attempt_gui_screenshot`` (bool, default ``false`` -- off by default here
   because a real GUI capture is slow/environment-dependent; opt in
   explicitly when a reachable display is actually wanted)
+- ``source_request_text`` (str) -- the run's original natural-language
+  request, recorded verbatim in the saved run so a replay shows the real
+  request instead of ``case_id``
+- ``formalization`` (object) -- the ``formalize_rendezvous_problem`` result
+  for this case, recorded verbatim on that step
+- ``model_selection`` (object) -- the ``select_rendezvous_model`` result for
+  this case, recorded verbatim on that step
+
+The last three are pass-through recording fields only: they are stored in the
+saved run untouched and never influence the GMAT verification itself.
 
 Usage::
 
@@ -167,7 +177,12 @@ def run_bridge(structured_case: dict) -> dict:
     if comparison_record["status"] == "generated":
         report_dict["comparison_plot_path"] = comparison_record["paths"][1]
     result["visualization_artifacts"] = visualization_artifacts
-    build_cw_run_manifest(structured_case["case_id"], output_dir, result, visualization_artifacts)
+    build_cw_run_manifest(
+        structured_case["case_id"], output_dir, result, visualization_artifacts,
+        source_request_text=structured_case.get("source_request_text") or None,
+        formalization=structured_case.get("formalization"),
+        model_selection=structured_case.get("model_selection"),
+    )
     return result
 
 

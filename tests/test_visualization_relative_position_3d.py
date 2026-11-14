@@ -210,3 +210,22 @@ def test_non_finite_trajectory_states_is_rejected_not_silently_rendered(bad_valu
     times = np.array([0.0, 10.0, 20.0])
     with pytest.raises(ValueError):
         plot_relative_position_3d(states, times, 7_000_000.0)
+
+
+def test_scene_includes_target_chaser_zoom_and_earth_overview_controls(tmp_path) -> None:
+    """The recorded scene provides explicit, honest views for the tiny relative
+    target/chaser separation and its illustrative Earth overview."""
+    states = np.array([[0.0, 10_000.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
+    result = plot_relative_position_3d(states, np.array([0.0, 100.0]), 6_778_137.0, output_path=tmp_path / "scene.html")
+
+    assert result.figure.layout.height == 780
+    assert list(result.figure.layout.scene.domain.y) == [0, 0.75]
+    assert result.figure.layout.title.y == 0.98
+    assert result.figure.layout.updatemenus[0].y == 0.88
+    assert result.figure.layout.legend.y == 0.79
+    buttons = result.figure.layout.updatemenus[0].buttons
+    labels = {button.label for button in buttons}
+    assert {"Zoom to target and chaser", "Earth overview"}.issubset(labels)
+    focus = next(button for button in buttons if button.label == "Zoom to target and chaser")
+    assert focus.args[0]["visible"] == [False, True, True]
+    assert focus.args[1]["scene.aspectmode"] == "cube"

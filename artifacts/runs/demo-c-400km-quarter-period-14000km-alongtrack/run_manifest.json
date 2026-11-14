@@ -1,0 +1,118 @@
+{
+  "demo_id": "demo-c-400km-quarter-period-14000km-alongtrack",
+  "run_id": "demo-c-400km-quarter-period-14000km-alongtrack-20261114T184500Z",
+  "case_id": "demo-c-400km-quarter-period-14000km-alongtrack",
+  "mode": null,
+  "source_request_text": "/rendezvous Earth is the central body, R_earth = 6378.137 km, \u03bc = 398600.4418 km\u00b3/s\u00b2. The target is in a circular orbit at 400 km altitude. LVLH frame: x radial outward, y along-track, z cross-track, right-handed. At t = 0, the chaser relative position is [0 m, 14000000 m, 0 m] and relative velocity is [0 m/s, 0 m/s, 0 m/s]. Use two impulsive burns, one at departure and one at arrival. After 1388.406068 seconds (one quarter of the target's orbital period), reach relative position [0 m, 0 m, 0 m] and relative velocity [0 m/s, 0 m/s, 0 m/s]. Return the two burn vectors and terminal relative state.",
+  "request": "/rendezvous Earth is the central body, R_earth = 6378.137 km, \u03bc = 398600.4418 km\u00b3/s\u00b2. The target is in a circular orbit at 400 km altitude. LVLH frame: x radial outward, y along-track, z cross-track, right-handed. At t = 0, the chaser relative position is [0 m, 14000000 m, 0 m] and relative velocity is [0 m/s, 0 m/s, 0 m/s]. Use two impulsive burns, one at departure and one at arrival. After 1388.406068 seconds (one quarter of the target's orbital period), reach relative position [0 m, 0 m, 0 m] and relative velocity [0 m/s, 0 m/s, 0 m/s]. Return the two burn vectors and terminal relative state.",
+  "outcome": "UNSUPPORTED",
+  "verified": false,
+  "verification_status": "NOT VERIFIED: UNSUPPORTED",
+  "stop": {
+    "state": "UNSUPPORTED",
+    "reason": "Violated CW assumption(s): locality. The case does not satisfy the bounded two-body coast contract (finite six-element inertial Cartesian state, positive mu, finite duration, positive RK4 step count, coast-only request) or requests an unsupported capability (targeting, maneuvers, optimization, thrust, or perturbations)."
+  },
+  "model_selection_case": {
+    "circularity": "supported",
+    "frame": "supported",
+    "other_physics": "supported",
+    "maneuver_assumptions": "supported",
+    "reference_radius_m": 6778137.0,
+    "relative_separation_m": 14000000.0,
+    "transfer_time_s": 1388.406068,
+    "mean_motion_rad_s": 0.0011313666536110225,
+    "initial_relative_state": [
+      0.0,
+      14000000.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "final_relative_state": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "is_coast_only_request": false
+  },
+  "steps": [
+    {
+      "name": "formalize_rendezvous_problem",
+      "status": "completed",
+      "reason": null,
+      "result": {
+        "readiness": "READY_TO_SOLVE",
+        "clarification_questions": []
+      }
+    },
+    {
+      "name": "select_rendezvous_model",
+      "status": "completed",
+      "reason": null,
+      "result": {
+        "selection": "UNSUPPORTED",
+        "qualified": false,
+        "reasons": [
+          "Violated CW assumption(s): locality.",
+          "The case does not satisfy the bounded two-body coast contract (finite six-element inertial Cartesian state, positive mu, finite duration, positive RK4 step count, coast-only request) or requests an unsupported capability (targeting, maneuvers, optimization, thrust, or perturbations)."
+        ],
+        "assumptions": [
+          "circularity: supported",
+          "locality: violated",
+          "duration_regime: supported",
+          "frame: supported",
+          "other_physics: supported",
+          "maneuver_assumptions: supported",
+          "targeting_conditioning: supported"
+        ],
+        "concerns": [],
+        "deterministic_tool": null,
+        "missing_items": []
+      }
+    },
+    {
+      "name": "relative_position_3d_scene",
+      "status": "not_generated",
+      "reason": "Model selection returned UNSUPPORTED, so the pipeline stopped before any visualization stage ran."
+    },
+    {
+      "name": "solve_cw_rendezvous",
+      "status": "not_called",
+      "reason": "Violated CW assumption(s): locality. The case does not satisfy the bounded two-body coast contract (finite six-element inertial Cartesian state, positive mu, finite duration, positive RK4 step count, coast-only request) or requests an unsupported capability (targeting, maneuvers, optimization, thrust, or perturbations). No CW solve and no bounded two-body coast were attempted."
+    },
+    {
+      "name": "trajectory_burns_plot",
+      "status": "not_generated",
+      "reason": "No solver ran, so there is no trajectory or burn vectors to plot."
+    },
+    {
+      "name": "run_gmat_verification",
+      "status": "not_called",
+      "reason": "No candidate solution exists to verify: model selection returned UNSUPPORTED before any solver ran. GMAT was never invoked, so this run is not VERIFIED."
+    },
+    {
+      "name": "verification_comparison_plot",
+      "status": "not_generated",
+      "reason": "GMAT never ran, so there is no GMAT trajectory to compare a CW solution against."
+    }
+  ],
+  "artifacts": [],
+  "not_generated": [
+    {
+      "name": "relative_position_3d_scene",
+      "reason": "Model selection returned UNSUPPORTED, so the pipeline stopped before any visualization stage ran."
+    },
+    {
+      "name": "trajectory_burns_plot",
+      "reason": "No solver ran, so there is no trajectory or burn vectors to plot."
+    },
+    {
+      "name": "verification_comparison_plot",
+      "reason": "GMAT never ran, so there is no GMAT trajectory to compare a CW solution against."
+    }
+  ]
+}

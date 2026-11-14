@@ -1,0 +1,160 @@
+{
+  "demo_id": "demo-b-400km-quarter-period-10km-alongtrack",
+  "run_id": "demo-b-400km-quarter-period-10km-alongtrack-20261120T192408Z",
+  "case_id": "demo-b-400km-quarter-period-10km-alongtrack",
+  "mode": "cw",
+  "source_request_text": "/rendezvous Earth is the central body, R_earth = 6378.137 km, \u03bc = 398600.4418 km\u00b3/s\u00b2. The target is in a circular orbit at 400 km altitude. LVLH frame: x radial outward, y along-track, z cross-track, right-handed. At t = 0, the chaser relative position is [0 m, 10000 m, 0 m] and relative velocity is [0 m/s, 0 m/s, 0 m/s]. Use two impulsive burns, one at departure and one at arrival. After 1388.406068 seconds (one quarter of the target's orbital period), reach relative position [0 m, 0 m, 0 m] and relative velocity [0 m/s, 0 m/s, 0 m/s]. Return the two burn vectors and terminal relative state.",
+  "request": "/rendezvous Earth is the central body, R_earth = 6378.137 km, \u03bc = 398600.4418 km\u00b3/s\u00b2. The target is in a circular orbit at 400 km altitude. LVLH frame: x radial outward, y along-track, z cross-track, right-handed. At t = 0, the chaser relative position is [0 m, 10000 m, 0 m] and relative velocity is [0 m/s, 0 m/s, 0 m/s]. Use two impulsive burns, one at departure and one at arrival. After 1388.406068 seconds (one quarter of the target's orbital period), reach relative position [0 m, 0 m, 0 m] and relative velocity [0 m/s, 0 m/s, 0 m/s]. Return the two burn vectors and terminal relative state.",
+  "outcome": "VERIFIED",
+  "verified": true,
+  "verification_status": "VERIFIED",
+  "steps": [
+    {
+      "name": "formalize_rendezvous_problem",
+      "status": "completed",
+      "reason": "This run did not record formalize_rendezvous_problem's structured result.",
+      "result": {
+        "readiness": "READY_TO_SOLVE",
+        "clarification_questions": []
+      }
+    },
+    {
+      "name": "select_rendezvous_model",
+      "status": "completed",
+      "reason": "This run did not record select_rendezvous_model's structured result.",
+      "result": {
+        "selection": "CW rendezvous",
+        "qualified": false,
+        "reasons": [
+          "All required CW assumptions (circularity, locality, duration/regime, frame, other physics, maneuver assumptions) are supported."
+        ],
+        "assumptions": [
+          "circularity: supported",
+          "locality: supported",
+          "duration_regime: supported",
+          "frame: supported",
+          "other_physics: supported",
+          "maneuver_assumptions: supported",
+          "targeting_conditioning: supported"
+        ],
+        "concerns": [],
+        "deterministic_tool": "src.cw.two_burn_targeting",
+        "missing_items": []
+      }
+    },
+    {
+      "name": "relative_position_3d_scene",
+      "status": "generated",
+      "reason": null,
+      "artifact": {
+        "name": "relative_position_3d_scene",
+        "path": "artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/relative_position_3d.html",
+        "media_type": "text/html"
+      }
+    },
+    {
+      "name": "solve_cw_rendezvous",
+      "status": "completed",
+      "reason": null,
+      "result": {
+        "mean_motion_radps": 0.0011313666536110225,
+        "transfer_time_s": 1388.406068,
+        "targeting_status": "unique",
+        "targeting_reason": "Phi_rv is well-conditioned; returned the unique inverse solution.",
+        "condition_number": 2.861357832048585,
+        "rank": 3,
+        "reachability_residual_m": 3.7821176784831e-12,
+        "final_state_m_mps": [
+          -2.28178567415051e-13,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "dv0_mps": [
+          6.882606529398794,
+          -3.4413032639715575,
+          0.0
+        ],
+        "dv1_mps": [
+          6.882606529398794,
+          3.441303263971557,
+          0.0
+        ],
+        "total_delta_v_mps": 15.389976061468609
+      }
+    },
+    {
+      "name": "trajectory_burns_plot",
+      "status": "generated",
+      "reason": null,
+      "artifact": {
+        "name": "trajectory_burns_plot",
+        "path": "artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/trajectory_burns_plot.png",
+        "media_type": "image/png"
+      }
+    },
+    {
+      "name": "run_gmat_verification",
+      "status": "completed",
+      "reason": null,
+      "result": {
+        "verified": true,
+        "failure_mode": null,
+        "verification_status": "VERIFIED",
+        "comparison": {
+          "status": "PASS",
+          "position_error_m": 19.59964958623741,
+          "velocity_error_mps": 0.029825608867457328,
+          "tolerances": {
+            "position_m": 20,
+            "velocity_mps": 0.05,
+            "delta_v_mps": 0.001
+          },
+          "reason": "GMAT final state matches the CW analytical final state within tolerance."
+        },
+        "gmat": {
+          "attempted": true,
+          "exit_status": 0,
+          "reason": "GMAT exited successfully."
+        }
+      }
+    },
+    {
+      "name": "verification_comparison_plot",
+      "status": "generated",
+      "reason": null,
+      "artifacts": [
+        {
+          "name": "verification_comparison_plot_0",
+          "path": "artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/demo-b-400km-quarter-period-10km-alongtrack_cw_vs_gmat_trajectory.png",
+          "media_type": "image/png"
+        },
+        {
+          "name": "verification_comparison_plot_1",
+          "path": "artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/demo-b-400km-quarter-period-10km-alongtrack_cw_vs_gmat_error_history.png",
+          "media_type": "image/png"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "generated_script",
+      "path": "artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/generated_cw_rendezvous.script",
+      "media_type": "text/plain"
+    },
+    {
+      "name": "gui_preview_script",
+      "path": "artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/generated_cw_rendezvous_gui_preview.script",
+      "media_type": "text/plain"
+    },
+    {
+      "name": "trajectory_screenshot",
+      "path": "artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/trajectory.svg",
+      "media_type": "image/svg+xml"
+    }
+  ],
+  "not_generated": []
+}

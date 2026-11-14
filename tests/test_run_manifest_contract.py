@@ -16,17 +16,40 @@ viewing an arbitrary *other* run through a local server.
 """
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
+import sys
 from pathlib import Path
 
 import pytest
 
 
 ROOT = Path(__file__).parents[1]
+sys.path.insert(0, str(ROOT))
+
+from src.model_selector import ModelSelectionCase, select_model  # noqa: E402
+from src.workflow import build_cw_run_manifest, model_selection_dict, run_rendezvous_workflow  # noqa: E402
+
 RUNTIME_ROOT = ROOT / "artifacts/runs"
 SITE_DATA = ROOT / "site/data/demo-runs.js"
 SITE_SCRIPT = ROOT / "site/js/demo-visualization-pipeline.js"
+
+# The three recorded demo runs committed under artifacts/runs/: their
+# run_manifest.json/run_summary.json are the recorded truth the static page
+# replays (Demo A, B and C in docs/web-demo-cases.md). Demo A and Demo B
+# reached a real GMAT verification and recorded NUMERICAL_DISAGREEMENT; Demo C
+# was refused by the model selector before any solver ran, so it has only a
+# run_manifest.json.
+DEMO_A_RUN_DIR = RUNTIME_ROOT / "demo-a-400km-one-period-10km-alongtrack/bridge"
+DEMO_B_RUN_DIR = RUNTIME_ROOT / "demo-b-400km-quarter-period-10km-alongtrack/bridge"
+DEMO_C_RUN_FILE = RUNTIME_ROOT / "demo-c-400km-quarter-period-14000km-alongtrack/run_manifest.json"
+
+VERIFIED_DEMO_RUN_FILES = tuple(
+    run_dir / name
+    for run_dir in (DEMO_A_RUN_DIR, DEMO_B_RUN_DIR)
+    for name in ("run_manifest.json", "run_summary.json")
+)
 
 
 @pytest.mark.parametrize("demo_id", ["demo_a", "demo_b", "demo_c"])
@@ -77,3 +100,266 @@ def test_site_loader_uses_run_manifest_primary_path():
     assert "normalizeRun" in source
     assert "fetchRunFromDir" in source
     assert "${dir}/run_manifest.json" in source
+
+
+# --- structured per-step results and request text (TJC-21.4) ---------------------
+# The page renders each step's expandable details from ``step.result``, so a
+# manifest that reduces a completed tool step to name/status leaves those blocks
+# empty. These checks pin the structured payload down at the point it is built.
+
+CANONICAL_STEP_NAMES = [
+    "formalize_rendezvous_problem",
+    "select_rendezvous_model",
+    "relative_position_3d_scene",
+    "solve_cw_rendezvous",
+    "trajectory_burns_plot",
+    "run_gmat_verification",
+    "verification_comparison_plot",
+]
+
+MODEL_SELECTION_RESULT_KEYS = {
+    "selection", "qualified", "reasons", "assumptions", "concerns", "deterministic_tool", "missing_items",
+}
+
+# The six required assumption items src/model_selector.py::REQUIRED_ITEMS judges;
+# a run may also record the optional seventh targeting-conditioning signal.
+REQUIRED_ASSUMPTION_ITEMS = (
+    "circularity", "locality", "duration_regime", "frame", "other_physics", "maneuver_assumptions",
+)
+
+REQUEST_TEXT = (
+    "/rendezvous Earth is the central body. After one orbital period, reach relative "
+    "position [0 m, 0 m, 0 m]."
+)
+
+
+def _missing_gmat_result() -> dict:
+    """A ``run_cw_rendezvous_gmat_verification``-shaped result for a run whose CW
+    solve succeeded but where GMAT itself was never executed (MISSING_GMAT)."""
+    return {
+        "case_id": "structured_results_case",
+        "cw": {
+            "targeting_status": "unique", "targeting_reason": "Phi_rv is well-conditioned.",
+            "transfer_time_s": 1388.406068, "total_delta_v_mps": 1.2,
+        },
+        "gmat": {"attempted": False, "exit_status": None, "stdout": "", "stderr": "",
+                  "reason": "GMAT executable not found on PATH."},
+        "comparison": {"status": None, "position_error_m": None, "velocity_error_mps": None,
+                        "tolerances": {"position_m": 1.0}},
+        "trajectory_artifact": None,
+        "verified": False,
+        "failure_mode": "MISSING_GMAT",
+        "verification_status": "NOT VERIFIED: MISSING_GMAT: GMAT executable not found on PATH.",
+    }
+
+
+def _visualization_records() -> list:
+    return [
+        {"stage": "relative_position_3d_scene", "status": "generated",
+         "paths": ["artifacts/runs/structured_results_case/relative_position_3d.html"], "reason": None},
+        {"stage": "trajectory_burns_plot", "status": "generated",
+         "paths": ["artifacts/runs/structured_results_case/trajectory_burns_plot.png"], "reason": None},
+        {"stage": "verification_comparison_plot", "status": "not_generated", "paths": [],
+         "reason": "GMAT never ran, so there is no GMAT trajectory to compare against."},
+    ]
+
+
+def test_build_cw_run_manifest_preserves_structured_step_results(tmp_path):
+    manifest, summary = build_cw_run_manifest(
+        "structured_results_case", tmp_path, _missing_gmat_result(), _visualization_records(),
+        source_request_text=REQUEST_TEXT,
+        formalization={"readiness": "READY_TO_SOLVE", "clarification_questions": []},
+        model_selection={
+            "selection": "CW rendezvous", "qualified": False,
+            "reasons": ["All required CW assumptions are supported."],
+            "assumptions": [
+                "circularity: supported", "locality: supported", "duration_regime: supported",
+                "frame: supported", "other_physics: supported", "maneuver_assumptions: supported",
+            ],
+            "concerns": [], "deterministic_tool": "src.cw.two_burn_targeting", "missing_items": [],
+        },
+    )
+
+    steps = {step["name"]: step for step in manifest["steps"]}
+    assert [step["name"] for step in manifest["steps"]] == CANONICAL_STEP_NAMES
+    assert steps["formalize_rendezvous_problem"]["result"]["readiness"] == "READY_TO_SOLVE"
+    selection_result = steps["select_rendezvous_model"]["result"]
+    assert set(selection_result) == MODEL_SELECTION_RESULT_KEYS
+    recorded_items = {item.split(":")[0] for item in selection_result["assumptions"]}
+    assert recorded_items.issuperset(REQUIRED_ASSUMPTION_ITEMS)
+    assert steps["solve_cw_rendezvous"]["result"]["targeting_status"] == "unique"
+    assert summary["steps"] == manifest["steps"]
+
+
+def test_build_cw_run_manifest_records_request_text_not_case_id(tmp_path):
+    manifest, summary = build_cw_run_manifest(
+        "structured_results_case", tmp_path, _missing_gmat_result(), _visualization_records(),
+        source_request_text=REQUEST_TEXT,
+    )
+
+    assert manifest["request"] == REQUEST_TEXT
+    assert manifest["request"] != manifest["case_id"]
+    assert summary["request"] == REQUEST_TEXT
+
+
+def test_build_cw_run_manifest_keeps_not_called_and_not_generated_reasons(tmp_path):
+    """A GMAT verification that never executed, and a plot that was never drawn,
+    each keep their own truthful reason and carry no invented result numbers."""
+    manifest, _summary = build_cw_run_manifest(
+        "structured_results_case", tmp_path, _missing_gmat_result(), _visualization_records(),
+    )
+
+    steps = {step["name"]: step for step in manifest["steps"]}
+    gmat_step = steps["run_gmat_verification"]
+    assert gmat_step["status"] == "not_called"
+    assert gmat_step["reason"] == "GMAT executable not found on PATH."
+    assert "result" not in gmat_step
+    comparison_step = steps["verification_comparison_plot"]
+    assert comparison_step["status"] == "not_generated"
+    assert comparison_step["reason"]
+    assert manifest["not_generated"] == [
+        {"name": "verification_comparison_plot", "reason": comparison_step["reason"]},
+    ]
+
+
+@pytest.mark.parametrize(
+    "run_file", VERIFIED_DEMO_RUN_FILES, ids=lambda path: f"{path.parent.parent.name}-{path.name}"
+)
+def test_gmat_verified_demo_runs_carry_request_text_and_structured_results(run_file: Path):
+    """Demo A and Demo B are the recorded runs that actually reached GMAT: each
+    must carry its original natural-language request (not its case_id) and the
+    structured results its completed steps produced. Demo B is independently
+    verified under the re-recorded 20 m / 0.05 m/s tolerance contract.
+    """
+    run = json.loads(run_file.read_text())
+
+    assert run["request"].startswith("/rendezvous ")
+    assert run["request"] == run["source_request_text"]
+    assert run["request"] != run["case_id"]
+    assert "relative position is [0 m, 10000 m, 0 m]" in run["request"]
+    is_demo_b = run_file.parent.parent.name.startswith("demo-b-")
+    assert run["outcome"] == ("VERIFIED" if is_demo_b else "NUMERICAL_DISAGREEMENT")
+    assert run["verified"] is is_demo_b
+
+    steps = {step["name"]: step for step in run["steps"]}
+    assert [step["name"] for step in run["steps"]] == CANONICAL_STEP_NAMES
+    assert steps["formalize_rendezvous_problem"]["result"]["readiness"] == "READY_TO_SOLVE"
+    assert set(steps["select_rendezvous_model"]["result"]) == MODEL_SELECTION_RESULT_KEYS
+    assert steps["select_rendezvous_model"]["result"]["selection"] == "CW rendezvous"
+    recorded_items = {item.split(":")[0] for item in steps["select_rendezvous_model"]["result"]["assumptions"]}
+    assert recorded_items.issuperset(REQUIRED_ASSUMPTION_ITEMS)
+    assert steps["solve_cw_rendezvous"]["result"]["targeting_status"]
+    gmat_result = steps["run_gmat_verification"]["result"]
+    assert gmat_result["comparison"]["tolerances"] == {"position_m": 20, "velocity_mps": 0.05, "delta_v_mps": 0.001}
+    if is_demo_b:
+        assert gmat_result["failure_mode"] is None
+        assert gmat_result["verified"] is True
+        assert gmat_result["comparison"]["status"] == "PASS"
+    else:
+        assert gmat_result["failure_mode"] == "NUMERICAL_DISAGREEMENT"
+        assert gmat_result["verified"] is False
+        assert gmat_result["comparison"]["status"] == "FAIL"
+        assert gmat_result["comparison"]["position_error_m"] > gmat_result["comparison"]["tolerances"]["position_m"]
+
+
+def test_demo_c_run_is_refused_by_model_selection_and_claims_no_verification():
+    """Demo C's recorded run stops at ``select_rendezvous_model`` returning
+    UNSUPPORTED for its violated locality assumption. No CW solve, no bounded
+    two-body coast and no GMAT verification may be represented as having run,
+    and every downstream step must carry its own truthful reason.
+    """
+    run = json.loads(DEMO_C_RUN_FILE.read_text())
+
+    assert run["request"] == run["source_request_text"]
+    assert "relative position is [0 m, 14000000 m, 0 m]" in run["request"]
+    assert run["outcome"] == "UNSUPPORTED"
+    assert run["verified"] is False
+    assert "VERIFIED:" not in run["verification_status"].removeprefix("NOT VERIFIED:")
+
+    steps = {step["name"]: step for step in run["steps"]}
+    assert [step["name"] for step in run["steps"]] == CANONICAL_STEP_NAMES
+    assert steps["formalize_rendezvous_problem"]["result"]["readiness"] == "READY_TO_SOLVE"
+    selection = steps["select_rendezvous_model"]["result"]
+    assert set(selection) == MODEL_SELECTION_RESULT_KEYS
+    assert selection["selection"] == "UNSUPPORTED"
+    assert selection["deterministic_tool"] is None
+    assert "Violated CW assumption(s): locality." in selection["reasons"]
+    assert "locality: violated" in selection["assumptions"]
+
+    for name in ("solve_cw_rendezvous", "run_gmat_verification"):
+        assert steps[name]["status"] == "not_called", name
+        assert steps[name]["reason"], name
+        assert "result" not in steps[name], name
+    for name in ("relative_position_3d_scene", "trajectory_burns_plot", "verification_comparison_plot"):
+        assert steps[name]["status"] == "not_generated", name
+        assert steps[name]["reason"], name
+    assert {entry["name"] for entry in run["not_generated"]} == {
+        "relative_position_3d_scene", "trajectory_burns_plot", "verification_comparison_plot",
+    }
+
+
+def test_demo_c_model_selection_matches_live_select_rendezvous_model_output():
+    """Demo C's stored refusal is the deterministic selector's own output for its
+    recorded ``model_selection_case``, not hand-written text."""
+    run = json.loads(DEMO_C_RUN_FILE.read_text())
+    live = select_model(ModelSelectionCase(**run["model_selection_case"]))
+    stored = next(s["result"] for s in run["steps"] if s["name"] == "select_rendezvous_model")
+
+    assert stored == {
+        "selection": live.selection,
+        "qualified": live.qualified,
+        "reasons": list(live.reasons),
+        "assumptions": list(live.assumptions),
+        "concerns": list(live.concerns),
+        "deterministic_tool": live.deterministic_tool,
+        "missing_items": list(live.missing_items),
+    }
+
+
+# --- the two build_cw_run_manifest call sites record these fields themselves ----
+# A future run must capture its request text and prose-step results without a
+# manual backfill, so each call site is checked where it actually writes the run.
+
+
+def test_workflow_cw_path_records_request_text_and_prose_step_results(tmp_path):
+    """``src/workflow.py``'s CW path passes the case's own request text, its
+    recorded readiness, and the live ``select_model`` result into the manifest."""
+    from tests.test_workflow import _cw_ready_case  # noqa: PLC0415 -- reuses the proven CW fixture
+
+    case = dataclasses.replace(_cw_ready_case(), source_request_text=REQUEST_TEXT)
+    run_rendezvous_workflow(case, output_dir=tmp_path, gmat_executable="definitely-not-gmat")
+
+    manifest = json.loads((tmp_path / "run_manifest.json").read_text())
+    assert manifest["request"] == REQUEST_TEXT
+    assert manifest["source_request_text"] == REQUEST_TEXT
+    steps = {step["name"]: step for step in manifest["steps"]}
+    assert steps["formalize_rendezvous_problem"]["result"]["readiness"] == "READY_TO_SOLVE"
+    selection = steps["select_rendezvous_model"]["result"]
+    assert set(selection) == MODEL_SELECTION_RESULT_KEYS
+    assert selection == model_selection_dict(select_model(case.model_selection_case))
+
+
+def test_gmat_tool_bridge_records_the_request_text_and_results_it_is_given(tmp_path):
+    """The ``run_gmat_verification`` bridge stores its ``source_request_text``/
+    ``formalization``/``model_selection`` input fields verbatim in the run it writes."""
+    from scripts.gmat_tool_bridge import run_bridge  # noqa: PLC0415 -- the bridge under test
+    from tests.test_gmat_tool_bridge import CW_CASE  # noqa: PLC0415
+
+    formalization = {"readiness": "READY_TO_SOLVE", "clarification_questions": []}
+    model_selection = model_selection_dict(select_model(ModelSelectionCase(
+        circularity="supported", frame="supported", other_physics="supported",
+        maneuver_assumptions="supported", reference_radius_m=CW_CASE["reference_radius_m"],
+        relative_separation_m=200.0, transfer_time_s=CW_CASE["transfer_time_s"],
+        mean_motion_rad_s=0.0011440643014205707,
+    )))
+    run_bridge(dict(
+        CW_CASE, output_dir=str(tmp_path), source_request_text=REQUEST_TEXT,
+        formalization=formalization, model_selection=model_selection,
+    ))
+
+    manifest = json.loads((tmp_path / "run_manifest.json").read_text())
+    assert manifest["request"] == REQUEST_TEXT
+    assert manifest["source_request_text"] == REQUEST_TEXT
+    steps = {step["name"]: step for step in manifest["steps"]}
+    assert steps["formalize_rendezvous_problem"]["result"] == formalization
+    assert steps["select_rendezvous_model"]["result"] == model_selection

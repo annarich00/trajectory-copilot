@@ -141,7 +141,11 @@ def plot_relative_trajectory(
     xs, ys = trajectory[:, 0], trajectory[:, 1]
     span = float(max(np.ptp(xs), np.ptp(ys), 1.0))
 
-    fig, ax = plt.subplots(figsize=(7, 6))
+    # Keep the key below the axes.  Tall/narrow equal-scale LVLH paths can
+    # place burn annotations near either side, so a side legend can obscure
+    # those labels even when it is outside the data rectangle.
+    fig, ax = plt.subplots(figsize=(8, 7))
+    fig.subplots_adjust(bottom=0.22)
     ax.plot(xs, ys, "-", color="tab:blue", linewidth=1.5, label="Chaser path")
     ax.plot(0.0, 0.0, marker="^", linestyle="None", markersize=10, color="black", label="Target")
     ax.plot(burn1_xy[0], burn1_xy[1], marker="o", linestyle="None", markersize=9, color="tab:orange", label="Burn 1")
@@ -154,7 +158,7 @@ def plot_relative_trajectory(
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax.set_title(title)
-    ax.legend(loc="best", fontsize=8)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=3, borderaxespad=0, fontsize=8)
 
     # Matplotlib's autoscale (dataLim) only tracks plotted line/marker data,
     # not quiver arrows or text; the dv annotations can otherwise fall
@@ -174,7 +178,7 @@ def plot_relative_trajectory(
     ax.set_aspect("equal", adjustable="box")
     ax.grid(True, linestyle=":", linewidth=0.5)
 
-    fig.savefig(output_path, format="png")
+    fig.savefig(output_path, format="png", bbox_inches="tight", pad_inches=0.15)
     if return_figure:
         return output_path, fig
     plt.close(fig)

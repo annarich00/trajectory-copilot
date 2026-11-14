@@ -212,17 +212,58 @@ def plot_relative_position_3d(
         )
     )
 
+    # The relative trajectory is only kilometres wide while the illustrative
+    # Earth is thousands of kilometres across.  Provide an explicit focus
+    # control that hides the illustrative sphere and bounds all axes around
+    # the authoritative target/chaser coordinates.
+    focus_points = np.vstack([chief_pos, chaser_positions_inertial])
+    focus_min = focus_points.min(axis=0)
+    focus_max = focus_points.max(axis=0)
+    focus_pad = np.maximum(0.2 * (focus_max - focus_min), 1_000.0)
+    focus_ranges = [[float(focus_min[i] - focus_pad[i]), float(focus_max[i] + focus_pad[i])] for i in range(3)]
+
     fig.update_layout(
-        title=(
-            f"Relative position (target/chaser) -- ILLUSTRATIVE anchoring at "
-            f"radius={target_orbit_radius_m:,.0f} m; chaser offset is the exact relative state"
+        height=780,
+        title=dict(
+            text=(
+                f"Relative position (target/chaser) -- ILLUSTRATIVE anchoring at "
+                f"radius={target_orbit_radius_m:,.0f} m; chaser offset is the exact relative state"
+            ),
+            x=0.5, y=0.98, xanchor="center", yanchor="top",
         ),
         scene=dict(
             xaxis_title="x [m] (inertial, illustrative anchor)",
             yaxis_title="y [m] (inertial, illustrative anchor)",
             zaxis_title="z [m] (inertial, illustrative anchor)",
             aspectmode="data",
+            domain=dict(x=[0, 1], y=[0, 0.75]),
         ),
+        # Put the key outside the 3D scene and reserve explicit margins for
+        # it, the title, and the illustrative-anchor note so none overlap or
+        # clip when the HTML is opened at common browser widths.
+        legend=dict(orientation="h", x=0.5, y=0.79, xanchor="center", yanchor="bottom"),
+        updatemenus=[
+            dict(
+                type="buttons", direction="right", x=0.5, y=0.88, xanchor="center", yanchor="bottom",
+                buttons=[
+                    dict(
+                        label="Zoom to target and chaser", method="update",
+                        args=[
+                            {"visible": [False, True, True]},
+                            {"scene.xaxis.range": focus_ranges[0], "scene.yaxis.range": focus_ranges[1], "scene.zaxis.range": focus_ranges[2], "scene.aspectmode": "cube"},
+                        ],
+                    ),
+                    dict(
+                        label="Earth overview", method="update",
+                        args=[
+                            {"visible": [True, True, True]},
+                            {"scene.xaxis.autorange": True, "scene.yaxis.autorange": True, "scene.zaxis.autorange": True, "scene.aspectmode": "data"},
+                        ],
+                    ),
+                ],
+            )
+        ],
+        margin=dict(l=0, r=20, b=115, t=185),
         annotations=[
             dict(
                 text=ILLUSTRATIVE_ANNOTATION_TEXT,

@@ -149,4 +149,13 @@ def test_run_bridge_with_real_gmat_writes_all_three_visuals(tmp_path):
             assert Path(path).stat().st_size > 0
     assert len(stages["verification_comparison_plot"]["paths"]) == 2
     manifest = json.loads((tmp_path / "run_manifest.json").read_text())
-    assert [s["name"] for s in manifest["steps"]][2:] == list(stages)
+    # The manifest interleaves the three visualization stages with the tool steps
+    # in pipeline order (src/workflow.py::build_cw_run_manifest), so each stage
+    # appears once and in the same relative order the bridge produced it.
+    step_names = [s["name"] for s in manifest["steps"]]
+    assert [name for name in step_names if name in stages] == list(stages)
+    assert step_names == [
+        "formalize_rendezvous_problem", "select_rendezvous_model", "relative_position_3d_scene",
+        "solve_cw_rendezvous", "trajectory_burns_plot", "run_gmat_verification",
+        "verification_comparison_plot",
+    ]
