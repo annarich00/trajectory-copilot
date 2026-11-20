@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="620" viewBox="0 0 960 620" role="img" aria-labelledby="title desc">
+  <title id="title">CW two-burn total delta-v versus transfer time</title>
+  <desc id="desc">Line graph for 15 uniformly spaced candidate transfer times from 0.1 through 5 orbital periods. The lowest plotted total delta-v is 0.240083 m/s at 5 orbital periods.</desc>
+  <rect width="960" height="620" fill="white"/>
+  <text x="480" y="32" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="bold">CW two-burn total Δv vs. transfer time</text>
+  <g stroke="#d0d7de" stroke-width="1">
+    <line x1="90" y1="540" x2="900" y2="540"/><line x1="90" y1="420" x2="900" y2="420"/><line x1="90" y1="300" x2="900" y2="300"/><line x1="90" y1="180" x2="900" y2="180"/><line x1="90" y1="60" x2="900" y2="60"/>
+    <line x1="90" y1="60" x2="90" y2="540"/><line x1="252" y1="60" x2="252" y2="540"/><line x1="414" y1="60" x2="414" y2="540"/><line x1="576" y1="60" x2="576" y2="540"/><line x1="738" y1="60" x2="738" y2="540"/><line x1="900" y1="60" x2="900" y2="540"/>
+  </g>
+  <g stroke="#24292f" stroke-width="2"><line x1="90" y1="60" x2="90" y2="540"/><line x1="90" y1="540" x2="900" y2="540"/></g>
+  <g fill="#24292f" font-family="sans-serif" font-size="13" text-anchor="end"><text x="82" y="544">0</text><text x="82" y="424">10</text><text x="82" y="304">20</text><text x="82" y="184">30</text><text x="82" y="64">40</text></g>
+  <g fill="#24292f" font-family="sans-serif" font-size="13" text-anchor="middle"><text x="90" y="562">0</text><text x="252" y="562">1</text><text x="414" y="562">2</text><text x="576" y="562">3</text><text x="738" y="562">4</text><text x="900" y="562">5</text><text x="495" y="602" font-size="15">Transfer time (orbital periods)</text></g>
+  <text x="22" y="300" transform="rotate(-90 22 300)" text-anchor="middle" font-family="sans-serif" font-size="15">Total Δv (m/s)</text>
+  <polyline fill="none" stroke="#0969da" stroke-width="2.5" points="106.2,86.72 162.9,458.16 219.6,517.07 276.3,517.97 333,472.12 389.7,530.05 446.4,526.57 503.1,505.11 559.8,534.35 616.5,528.60 673.2,521.69 729.9,536.24 786.6,528.65 843.3,529.36 900,537.12"/>
+  <g fill="#0969da"><circle cx="106.2" cy="86.72" r="4"/><circle cx="162.9" cy="458.16" r="4"/><circle cx="219.6" cy="517.07" r="4"/><circle cx="276.3" cy="517.97" r="4"/><circle cx="333" cy="472.12" r="4"/><circle cx="389.7" cy="530.05" r="4"/><circle cx="446.4" cy="526.57" r="4"/><circle cx="503.1" cy="505.11" r="4"/><circle cx="559.8" cy="534.35" r="4"/><circle cx="616.5" cy="528.60" r="4"/><circle cx="673.2" cy="521.69" r="4"/><circle cx="729.9" cy="536.24" r="4"/><circle cx="786.6" cy="528.65" r="4"/><circle cx="843.3" cy="529.36" r="4"/></g>
+  <circle cx="900" cy="537.12" r="6" fill="#cf222e"/><text x="890" y="522" text-anchor="end" font-family="sans-serif" font-size="13" fill="#cf222e">minimum: 0.240083 m/s</text>
+</svg>

@@ -1,0 +1,171 @@
+{
+  "demo_id": "earth-400km-5p",
+  "run_id": "earth-400km-5p-20261120T221955Z",
+  "case_id": "earth-400km-5p",
+  "mode": "cw",
+  "source_request_text": "/rendezvous The target is in a circular Earth orbit at 400 km altitude (R_earth = 6378.137 km, mu = 398600.4418 km^3/s^2). Use right-handed LVLH/RIC: x radial outward, y along-track, z orbit-normal. At t = 0, the chaser state is [0, 10000, 0] m and [0, 0, 0] m/s. Use two impulsive burns to reach zero relative position and velocity; evaluate 15 equally spaced transfer times from 0.1 through 5 orbital periods, report the least total delta-v, and plot delta-v versus time.",
+  "request": "/rendezvous The target is in a circular Earth orbit at 400 km altitude (R_earth = 6378.137 km, mu = 398600.4418 km^3/s^2). Use right-handed LVLH/RIC: x radial outward, y along-track, z orbit-normal. At t = 0, the chaser state is [0, 10000, 0] m and [0, 0, 0] m/s. Use two impulsive burns to reach zero relative position and velocity; evaluate 15 equally spaced transfer times from 0.1 through 5 orbital periods, report the least total delta-v, and plot delta-v versus time.",
+  "outcome": "NUMERICAL_DISAGREEMENT",
+  "verified": false,
+  "verification_status": "NOT VERIFIED: NUMERICAL_DISAGREEMENT (FAIL): GMAT final state exceeds 10.0x tolerance; gross numerical disagreement.",
+  "relaxed_tolerance_follow_up": "At 20 m position / 0.2 m/s velocity tolerances, the 0.10 orbital periods (555.362 s) candidate is VERIFIED: total delta-v 37.773305 m/s, position error 2.320 m, and velocity error 0.006524 m/s. The 0.45-period candidate fails position tolerance (90.569 m), and the low-delta-v five-period result remains an unverified five-period minimum because its position error is about 1391 m.",
+  "steps": [
+    {
+      "name": "formalize_rendezvous_problem",
+      "title": "Formalize the clarified rendezvous request",
+      "developer": "READY TO SOLVE — Earth constants, the LVLH convention, endpoints, and the 15-time scan are specified.",
+      "status": "completed",
+      "reason": null,
+      "result": {"readiness": "READY_TO_SOLVE", "clarification_questions": [], "summary": "Earth circular-chief LVLH rendezvous with two impulsive burns and 15 equally spaced candidate times from 0.1 to 5 orbital periods."}
+    },
+    {
+      "name": "select_rendezvous_model",
+      "title": "Select the relative-motion model",
+      "developer": "CW rendezvous selected with a duration-regime qualification because the scan extends to five orbital periods.",
+      "status": "completed",
+      "reason": null,
+      "result": {"selection": "CW rendezvous", "qualified": true, "reasons": ["All required assumptions are supported, but the duration regime is a boundary condition."], "assumptions": ["circularity: supported", "locality: supported", "duration_regime: boundary", "frame: supported", "other_physics: supported", "maneuver_assumptions: supported", "targeting_conditioning: unknown"], "concerns": ["Verify each candidate against independent numerical propagation before treating it as a clean pass."], "deterministic_tool": "src.cw.two_burn_targeting", "missing_items": []}
+    },
+    {
+      "name": "relative_position_3d_scene",
+      "title": "Generate the 3D relative-position scene",
+      "developer": "Generated for the selected five-period minimum candidate before GMAT verification.",
+      "status": "generated",
+      "reason": null,
+      "artifact": {
+        "name": "relative_position_3d_scene",
+        "path": "artifacts/runs/earth-400km-15time-scan/relative_position_3d.html",
+        "media_type": "text/html"
+      }
+    },
+    {
+      "name": "solve_cw_rendezvous",
+      "title": "Evaluate the 15 CW transfer-time candidates",
+      "developer": "The sampled minimum occurs at 5.00 orbital periods; this singular-reachable candidate is solver-only until independently verified.",
+      "status": "completed",
+      "reason": null,
+      "result": {
+        "mean_motion_radps": 0.0011313666536110225,
+        "transfer_time_s": 27768.121356261134,
+        "targeting_status": "singular-reachable",
+        "targeting_reason": "Phi_rv is singular or ill-conditioned; terminal position is reachable. Returned initial velocity is the SVD-pseudoinverse minimum-norm solution.",
+        "condition_number": 1.9728002532515308e+16,
+        "rank": 1,
+        "reachability_residual_m": 0.0,
+        "final_state_m_mps": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "dv0_mps": [
+          0.0,
+          0.12004173024768688,
+          0.0
+        ],
+        "dv1_mps": [
+          1.1469652355795535e-15,
+          -0.12004173024768688,
+          0.0
+        ],
+        "total_delta_v_mps": 0.24008346049537377
+      }
+    },
+    {
+      "name": "trajectory_burns_plot",
+      "title": "Generate trajectory/burn and scan plots",
+      "developer": "The trajectory/burn plot and the complete 15-point total-delta-v scan are recorded before GMAT execution.",
+      "status": "generated",
+      "reason": null,
+      "artifacts": [
+        {"name": "trajectory_burns_plot", "path": "artifacts/runs/earth-400km-15time-scan/trajectory_burns_plot.png", "media_type": "image/png", "scope_note": "Shows only the selected five-period minimum candidate; it does not depict all 15 evaluated transfer times."},
+        {"name": "delta_v_vs_time", "path": "artifacts/runs/earth-400km-15time-scan/delta_v_vs_time.svg", "media_type": "image/svg+xml"}
+      ]
+    },
+    {
+      "name": "run_gmat_verification",
+      "title": "Independently verify the sampled minimum in GMAT",
+      "developer": "GMAT completed but disagreed with the CW terminal state, so the minimum is not verified.",
+      "status": "completed",
+      "reason": null,
+      "result": {
+        "verified": false,
+        "failure_mode": "NUMERICAL_DISAGREEMENT",
+        "verification_status": "NOT VERIFIED: NUMERICAL_DISAGREEMENT (FAIL): GMAT final state exceeds 10.0x tolerance; gross numerical disagreement.",
+        "comparison": {
+          "status": "FAIL",
+          "position_error_m": 1391.2580999302322,
+          "velocity_error_mps": 0.00024381639842473965,
+          "tolerances": {
+            "position_m": 1,
+            "velocity_mps": 0.001,
+            "delta_v_mps": 0.001
+          },
+          "reason": "GMAT final state exceeds 10.0x tolerance; gross numerical disagreement."
+        },
+        "gmat": {
+          "attempted": true,
+          "exit_status": 0,
+          "reason": "GMAT exited successfully."
+        }
+      }
+    },
+    {
+      "name": "verification_comparison_plot",
+      "title": "Plot CW-versus-GMAT comparison",
+      "developer": "Generated comparison plots show the numerical disagreement for the five-period candidate.",
+      "status": "generated",
+      "reason": null,
+      "artifacts": [
+        {
+          "name": "verification_comparison_plot_0",
+          "path": "artifacts/runs/earth-400km-15time-scan/earth-400km-5p_cw_vs_gmat_trajectory.png",
+          "media_type": "image/png",
+          "scope_note": "Shows only the selected five-period minimum candidate; it does not depict all 15 evaluated transfer times."
+        },
+        {
+          "name": "verification_comparison_plot_1",
+          "path": "artifacts/runs/earth-400km-15time-scan/earth-400km-5p_cw_vs_gmat_error_history.png",
+          "media_type": "image/png",
+          "scope_note": "Shows only the selected five-period minimum candidate; it does not depict all 15 evaluated transfer times."
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "generated_script",
+      "path": "artifacts/runs/earth-400km-15time-scan/generated_cw_rendezvous.script",
+      "media_type": "text/plain"
+    },
+    {
+      "name": "gui_preview_script",
+      "path": "artifacts/runs/earth-400km-15time-scan/generated_cw_rendezvous_gui_preview.script",
+      "media_type": "text/plain"
+    },
+    {
+      "name": "trajectory_screenshot",
+      "path": "artifacts/runs/earth-400km-15time-scan/trajectory.svg",
+      "media_type": "image/svg+xml"
+    },
+    {
+      "name": "delta_v_vs_time",
+      "path": "artifacts/runs/earth-400km-15time-scan/delta_v_vs_time.svg",
+      "media_type": "image/svg+xml"
+    }
+  ],
+  "not_generated": [],
+  "artifact_paths": {
+    "generated_script": "artifacts/runs/earth-400km-15time-scan/generated_cw_rendezvous.script",
+    "gui_preview_script": "artifacts/runs/earth-400km-15time-scan/generated_cw_rendezvous_gui_preview.script",
+    "trajectory_screenshot": "artifacts/runs/earth-400km-15time-scan/trajectory.svg",
+    "report_files": {
+      "init": "artifacts/runs/earth-400km-15time-scan/d_init.txt",
+      "postburn1": "artifacts/runs/earth-400km-15time-scan/d_postburn1.txt",
+      "final": "artifacts/runs/earth-400km-15time-scan/d_final.txt",
+      "trajectory": "artifacts/runs/earth-400km-15time-scan/d_trajectory.txt"
+    }
+  }
+}

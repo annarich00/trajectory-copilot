@@ -84,7 +84,11 @@
   }
 
   function imageMarkup(artifact) {
+    const scopeNote = artifact.scope_note
+      ? `<p class="artifact-scope-note">${esc(artifact.scope_note)}</p>`
+      : '';
     return `<img class="artifact-img" alt="${esc(artifact.name || artifact.path)}" src="${esc(artifact.path)}" style="max-width:100%;height:auto" />
+      ${scopeNote}
       <p class="artifact-missing warn" hidden>Artifact file not available to this page: ${esc(artifact.path)}. The recorded status is unchanged and no substitute image is shown.</p>`;
   }
 
@@ -141,6 +145,10 @@
     const stop = demo.stop ? `<p><span class="warn">${esc(demo.stop.state)}</span> — ${esc(demo.stop.reason)}</p>` : '';
     return `<div class="msg agent final"><div class="who">SKILL: RENDEZVOUS PIPELINE ORCHESTRATOR · RECORDED RUN SUMMARY</div><h3>Result</h3>
       <p><strong>${esc(demo.label)}</strong> finishes with <strong>${esc(demo.recordedOutcome)}</strong>. Verification: <strong>${esc(demo.verificationStatus)}</strong>.</p>${stop}</div>`;
+  }
+
+  function relaxedToleranceFollowUpMessage(text) {
+    return `<section class="msg agent final"><div class="who">TOOL: GMAT VERIFICATION · RECORDED FOLLOW-UP</div><h3>Relaxed-tolerance GMAT check</h3><p>${esc(text)}</p></section>`;
   }
 
   function formatCalculationNumber(value) {
@@ -220,6 +228,7 @@
       request: summary?.request || manifest?.request || demo.request || '',
       steps,
       stop: summary?.stop || manifest?.stop || demo.stop || null,
+      relaxedToleranceFollowUp: summary?.relaxed_tolerance_follow_up || manifest?.relaxed_tolerance_follow_up || null,
       sourceDir,
     };
   }
@@ -247,7 +256,11 @@
       parts.push(stepMessage(step, index, opened.has(index)));
       if (step.name === 'run_gmat_verification') parts.push(calculationTableMessage(run));
     });
-    if (requestIsComplete && shown >= run.steps.length) { parts.push(finalMessage({ ...demo, ...run })); finalShown = true; } else { finalShown = false; }
+    if (requestIsComplete && shown >= run.steps.length) {
+      parts.push(finalMessage({ ...demo, ...run }));
+      if (run.relaxedToleranceFollowUp) parts.push(relaxedToleranceFollowUpMessage(run.relaxedToleranceFollowUp));
+      finalShown = true;
+    } else { finalShown = false; }
     log.innerHTML = parts.join('');
     meta.textContent = metaText(run, demo);
     playBtn.textContent = playing && !finalShown ? 'Pause' : 'Play';

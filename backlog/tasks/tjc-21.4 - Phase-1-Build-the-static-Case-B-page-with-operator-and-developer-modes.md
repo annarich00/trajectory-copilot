@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@worker'
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-20 22:03'
+updated_date: '2026-11-20 22:51'
 labels:
   - web-demo
 dependencies:
@@ -117,6 +117,16 @@ This is the page the advisor will see on GitHub Pages and the front end that Pha
 35. Remove the retired educational SPA, its display mirrors, server/runner, and synchronization tool; retain only the standalone recorded-run demo plus its embedded data and update stale repository documentation.
 
 36. Update the root README that GitHub displays with a concise recorded-demo section, its direct-file location, and the current verified/not-verified/unsupported demo outcomes.
+
+37. Add the recorded Earth 400 km, 15-candidate time-scan result as Demo D, including its solver-only minimum, GMAT numerical-disagreement result, and delta-v-versus-time artifact; regenerate the embedded static data and verify the standalone replay.
+
+38. Add an explicit Demo D disclosure explaining that its trajectory/burn and GMAT-comparison visuals depict only the selected five-period minimum, while the delta-v plot contains all 15 evaluated times.
+
+39. Attach a clear scope note to every Demo D graph that depicts the selected five-period candidate (trajectory/burn and both CW-versus-GMAT comparison plots), while leaving the all-candidate delta-v scan unqualified.
+
+40. Add a bottom-of-page, clearly scoped relaxed-tolerance GMAT follow-up section that records the verified 0.10-period candidate, its delta-v/errors/tolerances, and distinguishes it from the unverified five-period minimum.
+
+41. Move the relaxed-tolerance follow-up from the global page footer into a Demo D-only recorded agent-response card, sourced by Demo D's embedded run data so it never appears for another demo or by default.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -223,6 +233,16 @@ Playback pacing: RED: PYTHONPATH=. uv run --with-requirements requirements-dev.t
 Retired-site removal: removed the legacy educational SPA, its CSS, page modules, pedagogical JS, mirrored source/reference/evaluation files, Node server, root runner, and mirror-sync tool at the owner’s request. Retained only the standalone replay page, its required JavaScript, and its embedded run data. Removed the demo page’s obsolete CSS dependency and documented that the retained site surface is serverless. Updated the embedded-run builder documentation for iframe-rendered HTML artifacts. PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 43 passed. Confirmed the retained site tree has exactly site/demo-visualization-pipeline.html, site/js/demo-visualization-pipeline.js, and site/data/demo-runs.js.
 
 Root README update: added the GitHub-displayed Recorded rendezvous demo section, identifies the standalone replay file, states it opens locally without a server/API key, and summarizes the current recorded Demo A/B/C outcomes and tolerance contract.
+
+Demo D (15-time Earth 400 km scan): RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py -> 3 failed (Demo D absent from embedded data). GREEN: added the recorded scan run, its source request/formalization/model-selection metadata, solver-only 5-period minimum, GMAT NUMERICAL_DISAGREEMENT result, and delta-v-versus-time SVG to the fixed demo builder/page; regenerated site/data/demo-runs.js. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 46 passed.
+
+Demo D visual-scope disclaimer: RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_page_discloses_demo_d_artifact_scope -> FAILED because the clarification was absent. GREEN: added the closed-disclosure note stating trajectory/burn and GMAT-comparison visuals show only the selected five-period minimum, while the delta-v plot includes all 15 times. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 47 passed.
+
+Per-graph Demo D scope labels: RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_demo_d_marks_every_selected_five_period_graph_with_a_scope_note -> FAILED (scope_note absent). GREEN: rendered recorded artifact scope notes below each image; attached them to the 5-period trajectory/burn and both CW-vs-GMAT plots, but not to the all-candidate delta-v scan. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 48 passed.
+
+Relaxed-tolerance follow-up section: RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_page_records_the_relaxed_tolerance_gmat_follow_up_at_the_bottom -> FAILED because no section existed. GREEN: added a bottom-of-page section recording the 0.10-period verified candidate (37.773305 m/s; 2.320 m and 0.006524 m/s errors at 20 m / 0.2 m/s tolerances), plus the 0.45-period and five-period caveats. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 49 passed.
+
+Demo D-only follow-up response: RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_relaxed_tolerance_follow_up_is_a_demo_d_agent_response_only -> FAILED because the follow-up was a global footer. GREEN: removed the static footer, stored the text solely as Demo D's relaxed_tolerance_follow_up record, and render it only as a final recorded GMAT agent-response card for that run. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 49 passed.
 <!-- SECTION:NOTES:END -->
 
 ## Comments

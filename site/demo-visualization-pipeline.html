@@ -96,6 +96,7 @@
   .msg.developer-image .artifact-img { display: block; width: 100%; }
   .artifact-frame { display: block; width: 100%; height: 780px; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
   .msg.developer-image .artifact-missing { margin: 0; padding: 10px 14px; border: 1px dashed var(--warning); border-radius: 8px; }
+  .artifact-scope-note { margin: 0 0 18px; padding: 8px 12px; border-left: 3px solid #ad7952; background: #fbf6f0; color: var(--ink); font-size: .9rem; }
   .msg.calculations { max-width: 100%; }
   .calculations h3 { margin: 0 0 10px; }
   .calculation-table-wrap { overflow-x: auto; }
@@ -117,11 +118,12 @@
 <main>
   <p class="mode">Standalone walkthrough</p>
   <h1>Demo visualization pipeline for the rendezvous workflow</h1>
-  <p class="lead">This standalone page mirrors the walkthrough style from the project’s evidence pages, but it focuses on the three stored demo runs: Demo A, Demo B and Demo C.</p>
+  <p class="lead">This standalone page mirrors the walkthrough style from the project’s evidence pages and replays four stored demo runs: Demo A, Demo B, Demo C, and Demo D’s 15-time transfer scan.</p>
 
   <details class="recording-info">
     <summary>About these recorded demos</summary>
-    <p>Demo A is NOT VERIFIED after a GMAT numerical disagreement. Demo B is VERIFIED at 20 m / 0.05 m/s. Demo C is UNSUPPORTED and stops before solving or GMAT. The replay is embedded, local, and needs no server or API key.</p>
+    <p>Demo A is NOT VERIFIED after a GMAT numerical disagreement. Demo B is VERIFIED at 20 m / 0.05 m/s. Demo C is UNSUPPORTED and stops before solving or GMAT. Demo D’s 15-time scan identifies a solver-only minimum but is NOT VERIFIED after GMAT disagreement. The replay is embedded, local, and needs no server or API key.</p>
+    <p><strong>Demo D visual scope:</strong> Demo D trajectory/burn and GMAT-comparison visuals show only the selected five-period minimum candidate. Its delta-v-versus-time plot contains all 15 evaluated transfer times.</p>
     <p class="muted">For a locally captured run, use <code>?case=&lt;case_id&gt;</code> or <code>?runDir=&lt;exact path&gt;</code>.</p>
   </details>
 
@@ -132,6 +134,7 @@
         <option value="demoA">Demo A</option>
         <option value="demoB">Demo B</option>
         <option value="demoC">Demo C</option>
+        <option value="demoD">Demo D — 15-time scan</option>
       </select>
     </label>
     <span class="spacer"></span>
@@ -145,6 +148,7 @@
   <section class="chat" id="chat-log" aria-live="polite" aria-label="Replay of the recorded run">
     <p>Loading demo data…</p>
   </section>
+
 </main>
 
 <script src="data/demo-runs.js"></script>

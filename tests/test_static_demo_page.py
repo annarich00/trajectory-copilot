@@ -36,7 +36,7 @@ def test_page_script_and_data_are_referenced_and_exist():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
-def test_demo_data_file_parses_and_has_three_demos():
+def test_demo_data_file_parses_and_has_four_demos():
     code = (
         "const vm=require('vm');const fs=require('fs');const c={window:{}};vm.createContext(c);"
         f"vm.runInContext(fs.readFileSync({str(DATA)!r},'utf8'),c);"
@@ -44,7 +44,7 @@ def test_demo_data_file_parses_and_has_three_demos():
     )
     out = subprocess.run(["node", "-e", code], capture_output=True, text=True, timeout=60)
     assert out.returncode == 0, out.stderr
-    assert out.stdout.strip() == "demoA,demoB,demoC"
+    assert out.stdout.strip() == "demoA,demoB,demoC,demoD"
 
 
 # --- chat-style playback (TJC-21.4 scope change) ---------------------------------
@@ -88,6 +88,40 @@ def test_developer_mode_renders_visual_artifacts_without_textual_step_chrome():
     js = JS.read_text()
     assert "function developerImageMessage" in js
     assert "developerImageMessage(step, index)" in js
+
+
+def test_demo_d_marks_every_selected_five_period_graph_with_a_scope_note():
+    """Only the scan graph represents all candidates; every 5-period graph says so."""
+    run = _load_site_demo_runs()["demoD"]["run"]
+    plotted_steps = {step["name"]: step for step in run["steps"]}
+    trajectory = plotted_steps["trajectory_burns_plot"]["artifacts"]
+    comparison = plotted_steps["verification_comparison_plot"]["artifacts"]
+
+    selected_note = "Shows only the selected five-period minimum candidate"
+    assert trajectory[0]["scope_note"].startswith(selected_note)
+    assert "scope_note" not in trajectory[1]
+    assert all(artifact["scope_note"].startswith(selected_note) for artifact in comparison)
+    assert "artifact-scope-note" in JS.read_text()
+
+
+def test_relaxed_tolerance_follow_up_is_a_demo_d_agent_response_only():
+    """The follow-up is recorded data for Demo D, never a global footer."""
+    html = PAGE.read_text()
+    runs = _load_site_demo_runs()
+
+    assert 'id="relaxed-tolerance-follow-up"' not in html
+    assert "relaxedToleranceFollowUpMessage" in JS.read_text()
+    assert "relaxed_tolerance_follow_up" in runs["demoD"]["run"]
+    assert "0.10 orbital periods (555.362 s)" in runs["demoD"]["run"]["relaxed_tolerance_follow_up"]
+    for demo_id in ("demoA", "demoB", "demoC"):
+        assert "relaxed_tolerance_follow_up" not in runs[demo_id]["run"]
+
+
+def test_page_discloses_demo_d_artifact_scope():
+    """Demo D's trajectory and comparison images must not be mistaken for all scan candidates."""
+    html = PAGE.read_text()
+    assert "Demo D trajectory/burn and GMAT-comparison visuals show only the selected five-period minimum candidate." in html
+    assert "Its delta-v-versus-time plot contains all 15 evaluated transfer times." in html
 
 
 def test_page_has_no_operator_mode_or_mode_toggle():
@@ -200,7 +234,7 @@ def _load_site_demo_runs() -> dict:
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
-@pytest.mark.parametrize("demo_id", ["demoA", "demoB", "demoC"])
+@pytest.mark.parametrize("demo_id", ["demoA", "demoB", "demoC", "demoD"])
 def test_site_data_exposes_request_text_and_structured_step_results(demo_id: str):
     run = _load_site_demo_runs()[demo_id]["run"]
 
@@ -212,6 +246,21 @@ def test_site_data_exposes_request_text_and_structured_step_results(demo_id: str
     assert steps["formalize_rendezvous_problem"]["result"]["readiness"] == "READY_TO_SOLVE"
     assert steps["select_rendezvous_model"]["result"]["selection"]
     assert run["verified"] is (demo_id == "demoB")
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
+def test_site_data_demo_d_records_the_15_time_scan_and_unverified_minimum():
+    run = _load_site_demo_runs()["demoD"]["run"]
+    steps = {step["name"]: step for step in run["steps"]}
+
+    assert run["outcome"] == "NUMERICAL_DISAGREEMENT"
+    assert run["verified"] is False
+    assert steps["solve_cw_rendezvous"]["result"]["transfer_time_s"] == pytest.approx(27768.121356261134)
+    assert steps["solve_cw_rendezvous"]["result"]["total_delta_v_mps"] == pytest.approx(0.24008346049537377)
+    assert steps["run_gmat_verification"]["result"]["comparison"]["position_error_m"] == pytest.approx(1391.2580999302322)
+    scan = next(artifact for artifact in run["artifacts"] if artifact["name"] == "delta_v_vs_time")
+    assert scan["media_type"] == "image/svg+xml"
+    assert scan["path"].startswith("data:image/svg+xml;base64,")
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")

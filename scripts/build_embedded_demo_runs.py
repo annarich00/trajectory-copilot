@@ -35,15 +35,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SITE_DATA = ROOT / "site" / "data" / "demo-runs.js"
 
-# One real recorded workflow run per demo slot (the demo site's three fixed
-# slots); see docs/web-demo-cases.md. None of the three passed GMAT
-# verification: Demo A and Demo B recorded NUMERICAL_DISAGREEMENT, and Demo C
-# was refused by the model selector (UNSUPPORTED) before any solver ran, so it
-# has only a run_manifest.json and no artifacts.
+# One real recorded workflow run per demo slot; see docs/web-demo-cases.md.
+# Demo A recorded NUMERICAL_DISAGREEMENT, Demo B passed at its recorded
+# tolerances, Demo C was refused by the model selector (UNSUPPORTED), and
+# Demo D records a 15-candidate transfer-time scan whose minimum is not
+# GMAT-verified.
 DEMO_RUN_DIRS = {
     "demoA": ROOT / "artifacts/runs/demo-a-400km-one-period-10km-alongtrack/bridge",
     "demoB": ROOT / "artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge",
     "demoC": ROOT / "artifacts/runs/demo-c-400km-quarter-period-14000km-alongtrack",
+    "demoD": ROOT / "artifacts/runs/earth-400km-15time-scan",
 }
 
 # A run's full record is its run_summary.json when the pipeline reached a GMAT
@@ -51,7 +52,7 @@ DEMO_RUN_DIRS = {
 # exists in a run directory is the one embedded.
 RUN_FILE_NAMES = ("run_summary.json", "run_manifest.json")
 
-DEMO_LABELS = {"demoA": "Demo A", "demoB": "Demo B", "demoC": "Demo C"}
+DEMO_LABELS = {"demoA": "Demo A", "demoB": "Demo B", "demoC": "Demo C", "demoD": "Demo D — 15-time scan"}
 
 # Inlined as data: URIs; anything else (notably the ~5 MB Plotly 3D scene
 # HTML) is left as a plain relative link instead.
