@@ -1,0 +1,43 @@
+name: Deploy recorded demo to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble the minimal Pages payload
+        run: |
+          set -euo pipefail
+          mkdir -p _site/artifacts/runs/demo-a-400km-one-period-10km-alongtrack/bridge
+          mkdir -p _site/artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge
+          cp site/index.html site/demo-visualization-pipeline.html _site/
+          mkdir -p _site/js _site/data
+          cp site/js/demo-visualization-pipeline.js _site/js/
+          cp site/data/demo-runs.js _site/data/
+          cp artifacts/runs/demo-a-400km-one-period-10km-alongtrack/bridge/relative_position_3d.html _site/artifacts/runs/demo-a-400km-one-period-10km-alongtrack/bridge/
+          cp artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/relative_position_3d.html _site/artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/
+          touch _site/.nojekyll
+          ! grep -RInE '/home/|api[_-]?key|BEGIN (RSA|OPENSSH)' _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

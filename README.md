@@ -13,7 +13,7 @@ The recovered baseline contains:
 
 ## Recorded rendezvous demo
 
-Open [`site/demo-visualization-pipeline.html`](site/demo-visualization-pipeline.html) directly after cloning the repository. It replays three recorded rendezvous cases without a server or API key.
+Open the [recorded rendezvous demo on GitHub Pages](https://annarich00.github.io/trajectory-copilot/) or, after cloning, open [`site/demo-visualization-pipeline.html`](site/demo-visualization-pipeline.html) directly. It replays three recorded rendezvous cases without a server or API key.
 
 - **Demo A:** GMAT comparison is not verified (`NUMERICAL_DISAGREEMENT`).
 - **Demo B:** GMAT comparison is verified at a 20 m position tolerance and 0.05 m/s velocity tolerance.
@@ -34,18 +34,3 @@ On Windows, replace `.venv/bin/python` with `.venv\\Scripts\\python.exe`.
 The recovered baseline was originally exercised with Python 3.12.14, NumPy 2.5.3, and pytest 9.1.1. See `docs/baseline-provenance.md` for origin and baseline results.
 
 This project intentionally uses plain `venv`/`pip` (not `uv`) for the core environment; see `docs/uv-adoption-decision.md` for the recorded decision and rationale, including why `uv` is used elsewhere in this repo for the isolated Poliastro verification environment only.
-
-## CW-to-GMAT early vertical slice
-
-One reproducible circular-LEO quarter-orbit CW rendezvous is specified in
-`examples/cw_gmat_vertical_slice.yaml`. Run the complete slice with:
-
-```bash
-.venv/bin/python scripts/run_cw_gmat_slice.py --output-dir /tmp/cw-gmat-slice
-```
-
-Set `GMAT_EXECUTABLE=/path/to/GMAT` (or pass `--gmat`) to invoke GMAT
-non-interactively. The command writes its generated script, `trajectory.svg`, and
-`verification_result.json`. It exits nonzero and reports `NOT VERIFIED` when GMAT
-is absent, fails, or does not provide a parseable final state; it never represents
-the deterministic CW result or fallback plot as GMAT verification.
