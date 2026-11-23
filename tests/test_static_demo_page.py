@@ -29,6 +29,14 @@ def test_no_inline_script_body_under_script_src_self():
             assert not match.group("body").strip(), "inline script is blocked by the page CSP"
 
 
+def test_pages_payload_includes_demo_d_relative_scene():
+    """Demo D's inline scene needs its HTML artifact in the deployed Pages payload."""
+    workflow = (ROOT / ".github/workflows/deploy-pages.yml").read_text()
+    scene = "artifacts/runs/earth-400km-15time-scan/relative_position_3d.html"
+    assert f"mkdir -p _site/{scene.rsplit('/', 1)[0]}" in workflow
+    assert f"cp {scene} _site/{scene.rsplit('/', 1)[0]}/" in workflow
+
+
 def test_page_script_and_data_are_referenced_and_exist():
     html = PAGE.read_text()
     for src in re.findall(r'<script src="([^"]+)"', html):

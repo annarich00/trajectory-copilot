@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@worker'
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-20 22:10'
+updated_date: '2026-11-23 21:03'
 labels:
   - web-demo
 dependencies:
@@ -42,6 +42,8 @@ The repo needs something visible for the advisor and as a project record. Pages 
 
 <!-- SECTION:PLAN:BEGIN -->
 1. Create a minimal Pages entry point that opens the retained recorded-run demo. 2. Add a GitHub Pages workflow that publishes only the entry point, demo files, embedded data, and the two required Plotly HTML artifacts. 3. Link the Pages URL from the root README and verify the deploy payload contains no absolute paths, keys, or retired-site files.
+
+4. Include Demo D's recorded relative-position HTML artifact in the minimal Pages payload, so its inline 3D iframe does not request a 404 path after deployment.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -50,4 +52,6 @@ The repo needs something visible for the advisor and as a project record. Pages 
 Implemented Pages deployment: a minimal index redirects to the standalone replay; the workflow publishes only the index, demo HTML/JS/data, and the two required 3D artifact HTML files. The root README links https://annarich00.github.io/trajectory-copilot/. Local payload rehearsal confirmed no /home paths, API-key patterns, or private-key headers. PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 43 passed.
 
 README cleanup: removed the retired CW-to-GMAT early vertical-slice section and its local command from the GitHub-displayed README at the owner’s request; the recorded-demo section remains the project-facing demo guidance.
+
+Demo D Pages 3D scene fix: live URL https://annarich00.github.io/trajectory-copilot/artifacts/runs/earth-400km-15time-scan/relative_position_3d.html returned HTTP 404 because the Pages payload copied only Demo A/B scene HTML. RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_pages_payload_includes_demo_d_relative_scene -> FAILED because the workflow lacked the Demo D directory/copy commands. GREEN: added the Demo D scene to the minimal Pages payload. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 50 passed.
 <!-- SECTION:NOTES:END -->

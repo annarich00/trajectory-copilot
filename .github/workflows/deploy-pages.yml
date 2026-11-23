@@ -27,12 +27,14 @@ jobs:
           set -euo pipefail
           mkdir -p _site/artifacts/runs/demo-a-400km-one-period-10km-alongtrack/bridge
           mkdir -p _site/artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge
+          mkdir -p _site/artifacts/runs/earth-400km-15time-scan
           cp site/index.html site/demo-visualization-pipeline.html _site/
           mkdir -p _site/js _site/data
           cp site/js/demo-visualization-pipeline.js _site/js/
           cp site/data/demo-runs.js _site/data/
           cp artifacts/runs/demo-a-400km-one-period-10km-alongtrack/bridge/relative_position_3d.html _site/artifacts/runs/demo-a-400km-one-period-10km-alongtrack/bridge/
           cp artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/relative_position_3d.html _site/artifacts/runs/demo-b-400km-quarter-period-10km-alongtrack/bridge/
+          cp artifacts/runs/earth-400km-15time-scan/relative_position_3d.html _site/artifacts/runs/earth-400km-15time-scan/
           touch _site/.nojekyll
           ! grep -RInE '/home/|api[_-]?key|BEGIN (RSA|OPENSSH)' _site
       - uses: actions/configure-pages@v5
