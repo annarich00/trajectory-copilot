@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@worker'
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-24 20:25'
+updated_date: '2026-11-24 20:30'
 labels:
   - web-demo
 dependencies:
@@ -50,6 +50,8 @@ The repo needs something visible for the advisor and as a project record. Pages 
 6. Version the deployed demo script URL so a GitHub Pages cache cannot keep an iframe-path fix on an older JavaScript asset after a site deployment.
 
 7. Provide a visible direct-link fallback beneath each embedded HTML visualization, so a reader can open the 3D scene in a standalone tab even if an iframe is cached or blocked.
+
+8. Make the Pages artifact name unique per GitHub Actions run attempt and pass that exact name to deploy-pages, preventing a retry from leaving two indistinguishable github-pages artifacts.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -64,4 +66,6 @@ Demo D Pages 3D scene fix: live URL https://annarich00.github.io/trajectory-copi
 Hosted iframe base-path fix: the newly deployed Demo D scene file returned HTTP 200, but the browser iframe still failed because artifactUrl turned artifacts/... into ../artifacts/...; from /trajectory-copilot/demo-visualization-pipeline.html that requests /artifacts/... at the GitHub user-site root. RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_hosted_artifact_urls_preserve_the_github_pages_repository_base -> FAILED because hosted repository-base handling was absent. GREEN: file:// retains ../artifacts/ behavior; hosted pages now use /<repository-base>/artifacts/... . Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 51 passed.
 
 Direct 3D-scene link fallback: RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_html_visualizations_offer_a_direct_open_link -> FAILED because HTML iframes had no direct-link fallback. GREEN: every embedded HTML visualization now includes an Open this 3D scene in a new tab link using the same resolved artifact URL, so it works even when an iframe is stale or blocked. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 52 passed.
+
+Pages retry artifact ambiguity: owner provided the deploy-pages failure: two artifacts named github-pages existed in one rerun, so deploy-pages could not choose a single artifact. RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_pages_deployment_uses_one_unique_artifact_per_run_attempt -> FAILED because upload/deploy used the default ambiguous name. GREEN: upload-pages-artifact and deploy-pages now share github-pages-${{ github.run_attempt }}, producing one unique artifact per attempt. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 53 passed.
 <!-- SECTION:NOTES:END -->
