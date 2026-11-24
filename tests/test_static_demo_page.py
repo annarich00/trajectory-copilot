@@ -77,6 +77,15 @@ JS = ROOT / "site/js/demo-visualization-pipeline.js"
 CONTROL_IDS = ("chat-log", "play-pause", "next-step", "show-all", "restart")
 
 
+def test_right_arrow_uses_the_next_step_control_outside_form_fields():
+    """Keyboard navigation advances the replay without breaking the demo selector."""
+    js = JS.read_text()
+    assert "document.addEventListener('keydown'" in js
+    assert "event.key !== 'ArrowRight'" in js
+    assert "nextBtn.click();" in js
+    assert "SELECT" in js and "TEXTAREA" in js and "INPUT" in js
+
+
 def test_page_has_chat_log_and_playback_controls():
     html = PAGE.read_text()
     for control_id in CONTROL_IDS:

@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@worker'
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-20 22:51'
+updated_date: '2026-11-24 20:35'
 labels:
   - web-demo
 dependencies:
@@ -127,6 +127,8 @@ This is the page the advisor will see on GitHub Pages and the front end that Pha
 40. Add a bottom-of-page, clearly scoped relaxed-tolerance GMAT follow-up section that records the verified 0.10-period candidate, its delta-v/errors/tolerances, and distinguishes it from the unverified five-period minimum.
 
 41. Move the relaxed-tolerance follow-up from the global page footer into a Demo D-only recorded agent-response card, sourced by Demo D's embedded run data so it never appears for another demo or by default.
+
+42. Add a guarded ArrowRight keyboard shortcut that invokes the existing Next step control without interfering with form controls or modified browser shortcuts.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -243,6 +245,8 @@ Per-graph Demo D scope labels: RED: PYTHONPATH=. uv run --with-requirements requ
 Relaxed-tolerance follow-up section: RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_page_records_the_relaxed_tolerance_gmat_follow_up_at_the_bottom -> FAILED because no section existed. GREEN: added a bottom-of-page section recording the 0.10-period verified candidate (37.773305 m/s; 2.320 m and 0.006524 m/s errors at 20 m / 0.2 m/s tolerances), plus the 0.45-period and five-period caveats. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 49 passed.
 
 Demo D-only follow-up response: RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_relaxed_tolerance_follow_up_is_a_demo_d_agent_response_only -> FAILED because the follow-up was a global footer. GREEN: removed the static footer, stored the text solely as Demo D's relaxed_tolerance_follow_up record, and render it only as a final recorded GMAT agent-response card for that run. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 49 passed.
+
+ArrowRight next-step cue: RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_right_arrow_uses_the_next_step_control_outside_form_fields -> FAILED because no document-level shortcut existed. GREEN: ArrowRight now clicks the existing Next step control, retaining its request-completion and one-step semantics; modified shortcuts and INPUT/TEXTAREA/SELECT/BUTTON/contenteditable targets are excluded. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 54 passed.
 <!-- SECTION:NOTES:END -->
 
 ## Comments

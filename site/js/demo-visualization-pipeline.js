@@ -359,6 +359,12 @@
     if (typedRequestLength < request.length) { typedRequestLength = request.length; render(false); return; }
     reveal(1);
   });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowRight' || event.altKey || event.ctrlKey || event.metaKey) return;
+    const target = event.target;
+    if (target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(target?.tagName)) return;
+    if (!nextBtn.disabled) { event.preventDefault(); nextBtn.click(); }
+  });
   allBtn.addEventListener('click', () => {
     const run = currentRun || demos[current];
     playing = false;
