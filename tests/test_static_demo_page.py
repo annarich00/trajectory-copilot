@@ -29,6 +29,13 @@ def test_no_inline_script_body_under_script_src_self():
             assert not match.group("body").strip(), "inline script is blocked by the page CSP"
 
 
+def test_html_visualizations_offer_a_direct_open_link():
+    """A reader can open a 3D scene directly when its embedded iframe is unavailable."""
+    js = JS.read_text()
+    assert "Open this 3D scene in a new tab" in js
+    assert 'target="_blank"' in js
+
+
 def test_pages_payload_includes_demo_d_relative_scene():
     """Demo D's inline scene needs its HTML artifact in the deployed Pages payload."""
     workflow = (ROOT / ".github/workflows/deploy-pages.yml").read_text()

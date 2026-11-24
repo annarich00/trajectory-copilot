@@ -103,6 +103,7 @@
   function artifactFrameMarkup(artifact) {
     const path = artifactUrl(artifact);
     return `<iframe class="artifact-frame" title="${esc(artifact.name || 'Recorded visualization artifact')}" src="${esc(path)}" sandbox="allow-scripts allow-same-origin"></iframe>
+      <p class="artifact-open-link"><a href="${esc(path)}" target="_blank" rel="noopener">Open this 3D scene in a new tab</a></p>
       <p class="artifact-missing warn" hidden>Artifact file not available to this page: ${esc(artifact.path)}. The recorded status is unchanged and no substitute visualization is shown.</p>`;
   }
 
