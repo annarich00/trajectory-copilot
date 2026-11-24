@@ -38,11 +38,8 @@ jobs:
           touch _site/.nojekyll
           ! grep -RInE '/home/|api[_-]?key|BEGIN (RSA|OPENSSH)' _site
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
-          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
           path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
-        with:
-          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}

@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@worker'
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-24 20:38'
+updated_date: '2026-11-24 20:41'
 labels:
   - web-demo
 dependencies:
@@ -54,6 +54,8 @@ The repo needs something visible for the advisor and as a project record. Pages 
 8. Make the Pages artifact name unique per GitHub Actions run attempt and pass that exact name to deploy-pages, preventing a retry from leaving two indistinguishable github-pages artifacts.
 
 9. Include both GitHub Actions run ID and attempt in the Pages artifact name, so distinct workflow runs cannot collide on github-pages-1 and retries remain independently deployable.
+
+10. Restore the documented default github-pages artifact contract for fresh push-triggered deployments and upgrade the Pages-upload wrapper, avoiding deploy-pages custom-name metadata lookup failures; publish via a new push rather than retrying a prior run.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -72,4 +74,6 @@ Direct 3D-scene link fallback: RED: PYTHONPATH=. uv run --with-requirements requ
 Pages retry artifact ambiguity: owner provided the deploy-pages failure: two artifacts named github-pages existed in one rerun, so deploy-pages could not choose a single artifact. RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_pages_deployment_uses_one_unique_artifact_per_run_attempt -> FAILED because upload/deploy used the default ambiguous name. GREEN: upload-pages-artifact and deploy-pages now share github-pages-${{ github.run_attempt }}, producing one unique artifact per attempt. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 53 passed.
 
 Pages artifact still missing after the first naming fix: the upload step reported success but deploy-pages did not find github-pages-1. The name was only attempt-scoped, so distinct workflow runs reused it. RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_pages_deployment_uses_one_unique_artifact_per_run_attempt -> FAILED after the test required run ID plus attempt. GREEN: upload/deploy now share github-pages-${{ github.run_id }}-${{ github.run_attempt }}, unique across workflow runs and retries. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 54 passed.
+
+Pages deployment metadata regression: deploy-pages found one custom artifact but then failed its metadata lookup for github-pages-<run-id>-2. The supported upload-pages-artifact v3 wrapper already used upload-artifact v4; custom artifact naming added unnecessary deploy-pages metadata risk. RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_pages_deployment_uses_the_default_single_artifact_contract -> FAILED because workflow used upload-pages-artifact v3 and custom artifact_name. GREEN: restored the documented default github-pages artifact contract and upgraded upload-pages-artifact to v4; fresh push-triggered workflows get one artifact and deploy-pages uses its default. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 54 passed.
 <!-- SECTION:NOTES:END -->

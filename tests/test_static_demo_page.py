@@ -44,14 +44,13 @@ def test_pages_payload_includes_demo_d_relative_scene():
     assert f"cp {scene} _site/{scene.rsplit('/', 1)[0]}/" in workflow
 
 
-def test_pages_deployment_uses_one_unique_artifact_per_run_attempt():
-    """Retrying a Pages run must not make deploy-pages choose between duplicate artifacts."""
+def test_pages_deployment_uses_the_default_single_artifact_contract():
+    """A fresh push uses the documented github-pages default artifact contract."""
     workflow = (ROOT / ".github/workflows/deploy-pages.yml").read_text()
-    artifact_name = "github-pages-${{ github.run_id }}-${{ github.run_attempt }}"
 
-    assert workflow.count("actions/upload-pages-artifact@v3") == 1
-    assert f"name: {artifact_name}" in workflow
-    assert workflow.count(f"artifact_name: {artifact_name}") == 1
+    assert workflow.count("actions/upload-pages-artifact@v4") == 1
+    assert "path: _site" in workflow
+    assert workflow.count("artifact_name:") == 0
 
 
 def test_page_script_and_data_are_referenced_and_exist():
