@@ -94,7 +94,10 @@
 
   function artifactUrl(artifact) {
     const path = artifact.path || '';
-    return path.startsWith('artifacts/') ? `../${path}` : path;
+    if (!path.startsWith('artifacts/')) return path;
+    if (location.protocol === 'file:') return `../${path}`;
+    const repositoryBase = location.pathname.split('/').filter(Boolean)[0];
+    return repositoryBase ? `/${repositoryBase}/${path}` : `/${path}`;
   }
 
   function artifactFrameMarkup(artifact) {

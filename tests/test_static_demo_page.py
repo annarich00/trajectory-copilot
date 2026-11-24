@@ -161,6 +161,15 @@ def test_recorded_calculation_table_follows_gmat_and_precedes_comparison_plots()
     assert "if (step.name === 'run_gmat_verification') parts.push(calculationTableMessage(run));" in js
 
 
+def test_hosted_artifact_urls_preserve_the_github_pages_repository_base():
+    """A project Pages URL must not resolve Demo D's artifact at the user-site root."""
+    js = JS.read_text()
+    assert "function artifactUrl" in js
+    assert "if (location.protocol === 'file:') return `../${path}`;" in js
+    assert "const repositoryBase = location.pathname.split('/').filter(Boolean)[0];" in js
+    assert "return repositoryBase ? `/${repositoryBase}/${path}` : `/${path}`;" in js
+
+
 def test_html_visualization_artifacts_render_inline_not_as_a_path_only():
     """The recorded Plotly scene is part of the replay, not an opaque path."""
     js = JS.read_text()
