@@ -47,7 +47,7 @@ def test_pages_payload_includes_demo_d_relative_scene():
 def test_pages_deployment_uses_one_unique_artifact_per_run_attempt():
     """Retrying a Pages run must not make deploy-pages choose between duplicate artifacts."""
     workflow = (ROOT / ".github/workflows/deploy-pages.yml").read_text()
-    artifact_name = "github-pages-${{ github.run_attempt }}"
+    artifact_name = "github-pages-${{ github.run_id }}-${{ github.run_attempt }}"
 
     assert workflow.count("actions/upload-pages-artifact@v3") == 1
     assert f"name: {artifact_name}" in workflow

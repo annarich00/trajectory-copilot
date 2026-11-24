@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@worker'
 created_date: '2026-11-10 13:37'
-updated_date: '2026-11-24 20:30'
+updated_date: '2026-11-24 20:38'
 labels:
   - web-demo
 dependencies:
@@ -52,6 +52,8 @@ The repo needs something visible for the advisor and as a project record. Pages 
 7. Provide a visible direct-link fallback beneath each embedded HTML visualization, so a reader can open the 3D scene in a standalone tab even if an iframe is cached or blocked.
 
 8. Make the Pages artifact name unique per GitHub Actions run attempt and pass that exact name to deploy-pages, preventing a retry from leaving two indistinguishable github-pages artifacts.
+
+9. Include both GitHub Actions run ID and attempt in the Pages artifact name, so distinct workflow runs cannot collide on github-pages-1 and retries remain independently deployable.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -68,4 +70,6 @@ Hosted iframe base-path fix: the newly deployed Demo D scene file returned HTTP 
 Direct 3D-scene link fallback: RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_html_visualizations_offer_a_direct_open_link -> FAILED because HTML iframes had no direct-link fallback. GREEN: every embedded HTML visualization now includes an Open this 3D scene in a new tab link using the same resolved artifact URL, so it works even when an iframe is stale or blocked. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 52 passed.
 
 Pages retry artifact ambiguity: owner provided the deploy-pages failure: two artifacts named github-pages existed in one rerun, so deploy-pages could not choose a single artifact. RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_pages_deployment_uses_one_unique_artifact_per_run_attempt -> FAILED because upload/deploy used the default ambiguous name. GREEN: upload-pages-artifact and deploy-pages now share github-pages-${{ github.run_attempt }}, producing one unique artifact per attempt. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 53 passed.
+
+Pages artifact still missing after the first naming fix: the upload step reported success but deploy-pages did not find github-pages-1. The name was only attempt-scoped, so distinct workflow runs reused it. RED: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py::test_pages_deployment_uses_one_unique_artifact_per_run_attempt -> FAILED after the test required run ID plus attempt. GREEN: upload/deploy now share github-pages-${{ github.run_id }}-${{ github.run_attempt }}, unique across workflow runs and retries. Validation: PYTHONPATH=. uv run --with-requirements requirements-dev.txt pytest -q tests/test_static_demo_page.py tests/test_run_manifest_contract.py -> 54 passed.
 <!-- SECTION:NOTES:END -->
